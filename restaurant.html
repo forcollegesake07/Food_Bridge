@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Dashboard | FoodBridge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            orange: '#F97316', 
+                            green: '#10B981',
+                            dark: '#1F2937'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col hidden" id="page-body">
+    <!-- Body is hidden until auth check passes -->
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm w-full py-4 px-6 fixed top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center">
+                <i class="fa-solid fa-hand-holding-heart text-brand-orange text-2xl mr-2"></i>
+                <span class="font-bold text-xl text-brand-dark">Food<span class="text-brand-green">Bridge</span></span>
+                <span class="ml-3 bg-brand-orange/10 text-brand-orange text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">Restaurant Panel</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="nav-username" class="text-sm font-medium text-gray-600 hidden md:block"></span>
+                <button onclick="logout()" class="text-sm text-gray-500 hover:text-red-500 font-medium transition flex items-center">
+                    <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Log Out
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow pt-24 px-4 pb-12 max-w-7xl mx-auto w-full">
+        
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-brand-dark">Make a Donation</h1>
+            <p class="text-gray-500 mt-1">Share your surplus food with those in need.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- LEFT: Donation Form -->
+            <div class="lg:col-span-1">
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 sticky top-28">
+                    <form id="donation-form" onsubmit="submitDonation(event)" class="space-y-5">
+                        
+                        <!-- Dish Name -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dish Name</label>
+                            <input type="text" id="food-name" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-orange outline-none" placeholder="e.g. Rice and Dal">
+                        </div>
+
+                        <!-- Servings -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Serves (No. of People)</label>
+                            <input type="number" id="food-qty" required min="1" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-orange outline-none" placeholder="e.g. 20">
+                        </div>
+
+                        <!-- Food Image Upload -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Food Image (Optional)</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition cursor-pointer relative overflow-hidden">
+                                <input type="file" id="food-image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewImage(this)">
+                                <div id="upload-placeholder">
+                                    <i class="fa-solid fa-camera text-gray-400 text-2xl mb-2"></i>
+                                    <p class="text-xs text-gray-500">Click to upload photo</p>
+                                </div>
+                                <img id="image-preview" class="hidden w-full h-40 object-cover rounded-md mt-2 mx-auto relative z-10 pointer-events-none">
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">*Small file size recommended</p>
+                        </div>
+
+                        <button type="submit" id="btn-submit" class="w-full bg-brand-orange hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition shadow-md flex justify-center items-center">
+                            <i class="fa-solid fa-paper-plane mr-2"></i> Post Donation
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- RIGHT: My Active Donations List -->
+            <div class="lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">Your Past Donations</h2>
+                </div>
+
+                <!-- Container for donations -->
+                <div id="donations-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <p class="text-gray-500 col-span-2 text-center py-10">Loading your data...</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // ==========================================
+        // PASTE YOUR FIREBASE CONFIGURATION HERE
+        // ==========================================
+        const firebaseConfig = {
+             apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0",
+  authDomain: "panel-9e1a6.firebaseapp.com",
+  projectId: "panel-9e1a6",
+  storageBucket: "panel-9e1a6.firebasestorage.app",
+  messagingSenderId: "491001640513",
+  appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0"
+        };
+
+        if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+            alert("Please paste your Firebase Config in restaurant.html!");
+        } else {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUser = null;
+        let currentUserData = null;
+
+        // 1. Check Authentication (Redirect if not logged in)
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                // Fetch user name
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (userDoc.exists) {
+                    currentUserData = userDoc.data();
+                    document.getElementById('nav-username').innerText = currentUserData.name;
+                    
+                    // Show Page
+                    document.getElementById('page-body').classList.remove('hidden');
+                    
+                    // Load Data
+                    loadMyDonations();
+                }
+            } else {
+                // Not logged in -> Go to Login
+                window.location.href = 'login.html';
+            }
+        });
+
+        // 2. Image Preview Logic
+        let base64Image = ""; 
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('image-preview').src = e.target.result;
+                    document.getElementById('image-preview').classList.remove('hidden');
+                    document.getElementById('upload-placeholder').classList.add('hidden');
+                    base64Image = e.target.result; // Store for upload
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 3. Submit Donation to Database
+        async function submitDonation(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit');
+            btn.innerText = "Posting...";
+            btn.disabled = true;
+
+            const foodName = document.getElementById('food-name').value;
+            const foodQty = document.getElementById('food-qty').value;
+
+            try {
+                await db.collection('donations').add({
+                    restaurantId: currentUser.uid,
+                    restaurantName: currentUserData.name,
+                    foodName: foodName,
+                    servings: parseInt(foodQty),
+                    imageUrl: base64Image || null, // Stores image as string
+                    status: "Available",
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                alert("Donation posted successfully!");
+                e.target.reset();
+                document.getElementById('image-preview').classList.add('hidden');
+                document.getElementById('upload-placeholder').classList.remove('hidden');
+                base64Image = "";
+
+            } catch (error) {
+                console.error(error);
+                alert("Error posting donation: " + error.message);
+            } finally {
+                btn.innerText = "Post Donation";
+                btn.disabled = false;
+            }
+        }
+
+        // 4. Load Data (Real-time Listener)
+        function loadMyDonations() {
+            // ONLY fetch donations where restaurantId == current logged in user
+            db.collection('donations')
+              .where("restaurantId", "==", currentUser.uid)
+              .orderBy("createdAt", "desc")
+              .onSnapshot((snapshot) => {
+                  const list = document.getElementById('donations-list');
+                  list.innerHTML = ""; // Clear current list
+
+                  if (snapshot.empty) {
+                      list.innerHTML = '<p class="text-gray-400 col-span-2 text-center py-4">You haven\'t posted any donations yet.</p>';
+                      return;
+                  }
+
+                  snapshot.forEach((doc) => {
+                      const data = doc.data();
+                      const statusColor = data.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500';
+                      
+                      // Use a placeholder if no image uploaded
+                      const imgDisplay = data.imageUrl ? data.imageUrl : 'https://placehold.co/400x300?text=No+Image';
+
+                      const html = `
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex">
+                            <div class="w-1/3 bg-gray-200">
+                                <img src="${imgDisplay}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="w-2/3 p-4 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="font-bold text-lg text-gray-800">${data.foodName}</h3>
+                                        <span class="text-xs font-bold px-2 py-1 rounded-full ${statusColor}">${data.status}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-1">
+                                        <i class="fa-solid fa-users text-brand-orange mr-1"></i> Serves ${data.servings}
+                                    </p>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-3">
+                                    Posted: ${data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}
+                                </div>
+                            </div>
+                        </div>
+                      `;
+                      list.innerHTML += html;
+                  });
+              });
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            });
+        }
+    </script>
+</body>
+</html>
