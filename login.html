@@ -85,7 +85,6 @@
 
                 <!-- SIGNUP FORM -->
                 <form id="signup-form" onsubmit="handleSignup(event)" class="space-y-4 hidden">
-                    
                     <!-- Role Selection -->
                     <div class="grid grid-cols-2 gap-3 mb-2">
                         <div class="relative">
@@ -122,9 +121,43 @@
                     </button>
                 </form>
 
+                <!-- GOOGLE SIGN IN BUTTON -->
+                <div class="mt-6">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
+                        <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-gray-400 font-bold">Or continue with</span></div>
+                    </div>
+                    <button onclick="handleGoogleLogin()" class="w-full mt-4 flex items-center justify-center gap-3 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold py-3 rounded-lg transition shadow-sm">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
+                        Google
+                    </button>
+                </div>
+
                 <!-- Status/Error Message -->
                 <p id="auth-message" class="text-center text-sm mt-4 hidden"></p>
 
+            </div>
+        </div>
+    </div>
+
+    <!-- ROLE SELECTION MODAL (For New Google Users) -->
+    <div id="google-role-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl animate-fade-in text-center">
+            <div class="w-16 h-16 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-user-tag"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Complete Profile</h3>
+            <p class="text-sm text-gray-500 mb-6">You're almost there! Are you a Restaurant or an Orphanage?</p>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="finalizeGoogleRole('restaurant')" class="p-4 border-2 border-orange-100 bg-orange-50 hover:bg-orange-100 hover:border-brand-orange rounded-xl transition group">
+                    <i class="fa-solid fa-utensils text-2xl text-brand-orange mb-2 block"></i>
+                    <span class="text-xs font-bold text-gray-700">Restaurant</span>
+                </button>
+                <button onclick="finalizeGoogleRole('orphanage')" class="p-4 border-2 border-green-100 bg-green-50 hover:bg-green-100 hover:border-brand-green rounded-xl transition group">
+                    <i class="fa-solid fa-child-reaching text-2xl text-brand-green mb-2 block"></i>
+                    <span class="text-xs font-bold text-gray-700">Orphanage</span>
+                </button>
             </div>
         </div>
     </div>
@@ -134,12 +167,12 @@
         // PASTE YOUR FIREBASE CONFIGURATION HERE
         // ==========================================
         const firebaseConfig = {
-           apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0",
-           authDomain: "panel-9e1a6.firebaseapp.com",
-  projectId: "panel-9e1a6",
-  storageBucket: "panel-9e1a6.firebasestorage.app",
-  messagingSenderId: "491001640513",
-  appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0"
+            apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0",
+            authDomain: "panel-9e1a6.firebaseapp.com",
+            projectId: "panel-9e1a6",
+            storageBucket: "panel-9e1a6.firebasestorage.app",
+            messagingSenderId: "491001640513",
+            appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0"
         };
 
         if (firebaseConfig.apiKey === "YOUR_API_KEY") {
@@ -148,6 +181,10 @@
         } else {
             firebase.initializeApp(firebaseConfig);
         }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let pendingGoogleUser = null; // Temp storage for role selection
 
         function toggleView(view) {
             const loginForm = document.getElementById('login-form');
@@ -161,14 +198,12 @@
             if (view === 'login') {
                 loginForm.classList.remove('hidden');
                 signupForm.classList.add('hidden');
-                
                 tabLogin.className = "w-1/2 py-4 font-bold text-sm text-brand-orange border-b-2 border-brand-orange transition-colors";
                 tabSignup.className = "w-1/2 py-4 font-bold text-sm text-gray-400 hover:text-gray-600 transition-colors";
                 title.innerText = "Sign in to start connecting.";
             } else {
                 loginForm.classList.add('hidden');
                 signupForm.classList.remove('hidden');
-                
                 tabSignup.className = "w-1/2 py-4 font-bold text-sm text-brand-green border-b-2 border-brand-green transition-colors";
                 tabLogin.className = "w-1/2 py-4 font-bold text-sm text-gray-400 hover:text-gray-600 transition-colors";
                 title.innerText = "Join the community today.";
@@ -179,16 +214,77 @@
             const el = document.getElementById('auth-message');
             el.innerText = msg;
             el.className = `text-center text-sm mt-4 block font-medium ${type === 'error' ? 'text-red-500' : 'text-green-600'}`;
+            el.classList.remove('hidden');
         }
 
-        // --- AUTH LOGIC WITH ABSOLUTE REDIRECTS ---
+        function performRedirect(role) {
+            setTimeout(() => {
+                if (role === 'restaurant') {
+                    window.location.href = "https://forcollegesake07.github.io/Food_Bridge/restaurant.html";
+                } else {
+                    window.location.href = "https://forcollegesake07.github.io/Food_Bridge/orphanages.html";
+                }
+            }, 1000);
+        }
+
+        // --- GOOGLE SIGN IN LOGIC ---
+
+        async function handleGoogleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            
+            try {
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+
+                // Check if user exists in Firestore
+                const doc = await db.collection('users').doc(user.uid).get();
+
+                if (doc.exists) {
+                    // OLD USER: Just redirect based on stored role
+                    const userData = doc.data();
+                    showMessage(`Welcome back, ${userData.name}!`, "success");
+                    performRedirect(userData.role);
+                } else {
+                    // NEW USER: We don't know the role yet!
+                    // Show modal to ask user
+                    pendingGoogleUser = user;
+                    document.getElementById('google-role-modal').classList.remove('hidden');
+                }
+
+            } catch (error) {
+                console.error(error);
+                showMessage(error.message, "error");
+            }
+        }
+
+        async function finalizeGoogleRole(role) {
+            if (!pendingGoogleUser) return;
+
+            try {
+                // Save the new Google user with their selected role
+                await db.collection('users').doc(pendingGoogleUser.uid).set({
+                    name: pendingGoogleUser.displayName || "Google User",
+                    email: pendingGoogleUser.email,
+                    role: role,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                document.getElementById('google-role-modal').classList.add('hidden');
+                showMessage("Account setup complete!", "success");
+                performRedirect(role);
+
+            } catch (error) {
+                console.error(error);
+                alert("Error saving role: " + error.message);
+            }
+        }
+
+        // --- EMAIL/PASSWORD LOGIC ---
 
         async function handleSignup(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-signup');
-            const originalText = btn.innerText;
-            btn.innerText = "Creating Account...";
-            btn.disabled = true;
+            btn.innerText = "Creating Account..."; btn.disabled = true;
 
             const name = document.getElementById('signup-name').value;
             const email = document.getElementById('signup-email').value;
@@ -199,7 +295,6 @@
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
 
-                // Save Role to DB
                 await firebase.firestore().collection('users').doc(user.uid).set({
                     name: name,
                     email: email,
@@ -208,30 +303,19 @@
                 });
 
                 showMessage("Account created! Redirecting...", "success");
-                
-                // REDIRECT LOGIC
-                setTimeout(() => {
-                    if(role === 'restaurant') {
-                        window.location.href = "https://forcollegesake07.github.io/Food_Bridge/restaurant.html";
-                    } else {
-                        window.location.href = "https://forcollegesake07.github.io/Food_Bridge/orphanages.html";
-                    }
-                }, 1500);
+                performRedirect(role);
 
             } catch (error) {
                 console.error(error);
                 showMessage(error.message, "error");
-                btn.innerText = originalText;
-                btn.disabled = false;
+                btn.innerText = "Create Account"; btn.disabled = false;
             }
         }
 
         async function handleLogin(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-login');
-            const originalText = btn.innerText;
-            btn.innerText = "Signing In...";
-            btn.disabled = true;
+            btn.innerText = "Signing In..."; btn.disabled = true;
 
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
@@ -240,32 +324,21 @@
                 const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
                 const user = userCredential.user;
 
-                // Check Role in DB
-                const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+                const doc = await db.collection('users').doc(user.uid).get();
                 
                 if (doc.exists) {
                     const userData = doc.data();
                     showMessage(`Welcome back, ${userData.name}!`, "success");
-                    
-                    // REDIRECT LOGIC
-                    setTimeout(() => {
-                        if (userData.role === 'restaurant') {
-                            window.location.href = "https://forcollegesake07.github.io/Food_Bridge/restaurant.html";
-                        } else {
-                            window.location.href = "https://forcollegesake07.github.io/Food_Bridge/orphanages.html";
-                        }
-                    }, 1500);
+                    performRedirect(userData.role);
                 } else {
                     showMessage("User role not found.", "error");
-                    btn.innerText = originalText;
-                    btn.disabled = false;
+                    btn.innerText = "Sign In"; btn.disabled = false;
                 }
 
             } catch (error) {
                 console.error(error);
                 showMessage("Invalid email or password.", "error");
-                btn.innerText = originalText;
-                btn.disabled = false;
+                btn.innerText = "Sign In"; btn.disabled = false;
             }
         }
     </script>
