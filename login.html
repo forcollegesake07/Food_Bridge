@@ -147,8 +147,14 @@
                 <i class="fa-solid fa-user-tag"></i>
             </div>
             <h3 class="text-xl font-bold text-gray-800 mb-2">Complete Profile</h3>
-            <p class="text-sm text-gray-500 mb-6">You're almost there! Are you a Restaurant or an Orphanage?</p>
+            <p class="text-sm text-gray-500 mb-6">Enter your details to continue.</p>
             
+            <div class="mb-4 text-left">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Organization Name</label>
+                <input type="text" id="google-org-name" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="e.g. Tasty Bites or Sunshine Home">
+            </div>
+
+            <p class="text-xs text-gray-400 mb-2 font-bold uppercase tracking-wider">Select Account Type</p>
             <div class="grid grid-cols-2 gap-4">
                 <button onclick="finalizeGoogleRole('restaurant')" class="p-4 border-2 border-orange-100 bg-orange-50 hover:bg-orange-100 hover:border-brand-orange rounded-xl transition group">
                     <i class="fa-solid fa-utensils text-2xl text-brand-orange mb-2 block"></i>
@@ -259,13 +265,20 @@
 
         async function finalizeGoogleRole(role) {
             if (!pendingGoogleUser) return;
+            
+            const orgName = document.getElementById('google-org-name').value.trim();
+            if (!orgName) {
+                alert("Please enter your Organization Name.");
+                return;
+            }
 
             try {
-                // Save the new Google user with their selected role
+                // Save the new Google user with their selected role AND entered name
                 await db.collection('users').doc(pendingGoogleUser.uid).set({
-                    name: pendingGoogleUser.displayName || "Google User",
+                    name: orgName, // Use the entered organization name
                     email: pendingGoogleUser.email,
                     role: role,
+                    googleDisplayName: pendingGoogleUser.displayName, // Keep original name just in case
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
