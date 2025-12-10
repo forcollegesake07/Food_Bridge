@@ -22,33 +22,24 @@
                         brand: {
                             orange: '#F97316', 
                             green: '#10B981',
-                            teal: '#14B8A6',
                             dark: '#1F2937',
-                            light: '#F0FDFA' // Light teal background
+                            light: '#F0FDFA'
                         }
                     },
                     animation: {
-                        'fade-in': 'fadeIn 0.5s ease-out',
-                        'slide-up': 'slideUp 0.5s ease-out',
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
                     },
                     keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(20px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' },
-                        }
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
                     }
                 }
             }
         }
     </script>
     <style>
-        body {
-            background: linear-gradient(135deg, #F0FDFA 0%, #fff 100%);
-        }
+        body { background: linear-gradient(135deg, #F0FDFA 0%, #fff 100%); }
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -70,14 +61,15 @@
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Orphanage Portal</span>
                 </div>
             </div>
-            <div class="flex items-center gap-6">
-                <div class="hidden md:flex flex-col items-end">
-                    <span class="text-xs text-gray-400 font-medium uppercase">Logged in as</span>
-                    <span id="nav-username" class="text-sm font-bold text-brand-dark">Loading...</span>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <button onclick="toggleProfileModal()" class="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-full transition">
+                        <div class="w-8 h-8 rounded-full bg-brand-dark text-white flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <span id="nav-username" class="text-sm font-bold text-brand-dark hidden md:block">Loading...</span>
+                    </button>
                 </div>
-                <button onclick="logout()" class="group flex items-center justify-center w-10 h-10 rounded-full bg-red-50 hover:bg-red-100 text-red-500 transition-all duration-300">
-                    <i class="fa-solid fa-power-off group-hover:scale-110 transition-transform"></i>
-                </button>
             </div>
         </div>
     </nav>
@@ -88,91 +80,72 @@
         <div class="mb-10 animate-fade-in flex justify-between items-end">
             <div>
                 <h1 class="text-4xl font-bold text-brand-dark mb-2">Find Food Nearby <span class="text-brand-green">🌱</span></h1>
-                <p class="text-gray-500 text-lg">Browse available donations from our restaurant partners.</p>
-            </div>
-            
-            <!-- Simple Filter -->
-            <div class="hidden md:flex gap-2">
-                <span class="px-4 py-2 bg-brand-green text-white rounded-full text-sm font-bold shadow-lg shadow-green-200">Available Now</span>
-                <span class="px-4 py-2 bg-white text-gray-500 rounded-full text-sm font-bold border border-gray-100">Nearby</span>
+                <p class="text-gray-500 text-lg">Browse available donations.</p>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            <!-- LEFT: Available Donations Feed (8 Cols) -->
+            <!-- LEFT: Feed (8 Cols) -->
             <div class="lg:col-span-8 animate-slide-up" style="animation-delay: 0.1s;">
                 <div class="glass-card p-8 rounded-3xl shadow-xl border border-teal-50 min-h-[500px]">
-                    <div class="flex items-center mb-6">
-                        <div class="w-10 h-10 rounded-full bg-brand-green text-white flex items-center justify-center mr-3 font-bold shadow-lg shadow-green-200">
-                            <i class="fa-solid fa-utensils"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-gray-800">Live Feed</h2>
-                    </div>
-
-                    <!-- FEED CONTAINER -->
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Live Feed</h2>
                     <div id="feed-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Loading Skeletons -->
-                        <div class="bg-gray-50 rounded-2xl p-4 animate-pulse h-64"></div>
                         <div class="bg-gray-50 rounded-2xl p-4 animate-pulse h-64"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- RIGHT: My Claimed History (4 Cols) -->
+            <!-- RIGHT: Claims (4 Cols) -->
             <div class="lg:col-span-4 animate-slide-up" style="animation-delay: 0.2s;">
                 <div class="glass-card p-6 rounded-3xl shadow-lg border border-gray-100 sticky top-28 h-auto">
-                    <div class="flex items-center mb-6">
-                        <div class="w-10 h-10 rounded-full bg-brand-orange text-white flex items-center justify-center mr-3 font-bold shadow-lg shadow-orange-100">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-gray-800">Your Claims</h2>
-                    </div>
-
-                    <!-- CLAIMS CONTAINER -->
-                    <div id="claims-container" class="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                        <div class="text-center py-8">
-                            <p class="text-gray-400 text-sm">Loading history...</p>
-                        </div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Your Claims</h2>
+                    <div id="claims-container" class="space-y-4 max-h-[600px] overflow-y-auto">
+                        <p class="text-gray-400 text-center text-sm py-4">Loading history...</p>
                     </div>
                 </div>
             </div>
         </div>
-
     </main>
 
-    <!-- Success Toast Notification -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-brand-dark text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-4 z-50 min-w-[300px] border-l-4 border-brand-green">
-        <div class="bg-green-500/20 p-2 rounded-full">
-            <i class="fa-solid fa-check text-brand-green text-lg"></i>
-        </div>
-        <div>
-            <h4 class="font-bold text-sm">Action Successful!</h4>
-            <p class="text-xs text-gray-300 mt-0.5" id="toast-message">Donation claimed.</p>
+    <!-- PROFILE MODAL -->
+    <div id="profile-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-fade-in relative">
+            <button onclick="toggleProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-brand-green text-white rounded-full flex items-center justify-center mx-auto mb-3 text-2xl"><i class="fa-solid fa-house-chimney"></i></div>
+                <h3 class="text-xl font-bold text-gray-800">Orphanage Details</h3>
+                <p class="text-sm text-gray-500">Provide your address so restaurants can contact you.</p>
+            </div>
+            <form onsubmit="saveProfile(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label>
+                    <input type="tel" id="profile-phone" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-green outline-none" placeholder="+91 98765 43210">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Full Address</label>
+                    <textarea id="profile-address" rows="3" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-green outline-none" placeholder="Street, Area, City"></textarea>
+                </div>
+                <button type="submit" class="w-full py-3 bg-brand-green text-white font-bold rounded-xl hover:bg-teal-600 transition">Save Changes</button>
+                <button type="button" onclick="logout()" class="w-full py-3 text-red-500 font-bold hover:bg-red-50 rounded-xl transition">Log Out</button>
+            </form>
         </div>
     </div>
 
     <!-- Confirm Claim Modal -->
-    <div id="confirm-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div id="confirm-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
         <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-scale-up">
-            <div class="text-center">
-                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-green text-3xl">
-                    <i class="fa-solid fa-hand-holding-heart"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">Confirm Claim?</h3>
-                <p class="text-gray-500 text-sm mb-6">You are claiming this donation. The restaurant will be notified to expect you.</p>
-                <div class="flex gap-3">
-                    <button onclick="closeModal()" class="flex-1 py-3 rounded-xl border border-gray-200 font-bold text-gray-500 hover:bg-gray-50 transition">Cancel</button>
-                    <button id="confirm-btn" class="flex-1 py-3 rounded-xl bg-brand-green text-white font-bold hover:bg-green-600 shadow-lg shadow-green-200 transition">Yes, Claim it</button>
-                </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Confirm Claim?</h3>
+            <p class="text-gray-500 text-sm mb-6">You are claiming this donation.</p>
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 py-3 rounded-xl border border-gray-200 font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
+                <button id="confirm-btn" class="flex-1 py-3 rounded-xl bg-brand-green text-white font-bold hover:bg-green-600 shadow-lg">Yes, Claim it</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // FIREBASE CONFIGURATION (PASTE KEYS HERE)
-        // ==========================================
+        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0",
             authDomain: "panel-9e1a6.firebaseapp.com",
@@ -181,31 +154,28 @@
             messagingSenderId: "491001640513",
             appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0"
         };
-
-        if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-             console.log("Firebase config placeholder detected.");
-        } else {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (firebaseConfig.apiKey === "YOUR_API_KEY") console.log("Config missing");
+        else firebase.initializeApp(firebaseConfig);
 
         const auth = firebase.auth();
         const db = firebase.firestore();
-        
         let currentUser = null;
-        let currentUserData = null;
+        let userData = {};
         let selectedDonationId = null;
 
-        // 1. Auth Listener
+        // AUTH & INIT
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                if (userDoc.exists) {
-                    currentUserData = userDoc.data();
-                    document.getElementById('nav-username').innerText = currentUserData.name;
+                const doc = await db.collection('users').doc(user.uid).get();
+                if (doc.exists) {
+                    userData = doc.data();
+                    document.getElementById('nav-username').innerText = userData.name;
                     document.getElementById('page-body').classList.remove('hidden');
                     
-                    // Initialize Data Listeners
+                    document.getElementById('profile-phone').value = userData.phone || "";
+                    document.getElementById('profile-address').value = userData.address || "";
+                    
                     loadAvailableDonations();
                     loadMyClaims();
                 }
@@ -214,157 +184,110 @@
             }
         });
 
-        // 2. Load Available Donations (The Feed)
+        // PROFILE LOGIC
+        function toggleProfileModal() { document.getElementById('profile-modal').classList.toggle('hidden'); }
+        async function saveProfile(e) {
+            e.preventDefault();
+            const phone = document.getElementById('profile-phone').value;
+            const address = document.getElementById('profile-address').value;
+            try {
+                await db.collection('users').doc(currentUser.uid).update({ phone, address });
+                userData.phone = phone; userData.address = address;
+                toggleProfileModal();
+                alert("Profile Updated!");
+            } catch(err) { console.error(err); }
+        }
+
+        // LOAD FEED
         function loadAvailableDonations() {
             db.collection('donations')
-              .where("status", "==", "Available") // Only fetch unclaimed food
+              .where("status", "==", "Available")
               .orderBy("createdAt", "desc")
-              .onSnapshot((snapshot) => {
+              .onSnapshot(snapshot => {
                   const container = document.getElementById('feed-container');
                   container.innerHTML = "";
+                  if (snapshot.empty) { container.innerHTML = "<p class='text-center p-10 col-span-2 text-gray-400'>No food available.</p>"; return; }
 
-                  if (snapshot.empty) {
-                      container.innerHTML = `
-                        <div class="col-span-1 md:col-span-2 flex flex-col items-center justify-center text-center py-20">
-                            <div class="bg-gray-100 p-6 rounded-full mb-4">
-                                <i class="fa-solid fa-mug-hot text-gray-300 text-4xl"></i>
-                            </div>
-                            <h3 class="text-gray-900 font-bold text-lg">No food available right now</h3>
-                            <p class="text-gray-400 text-sm mt-1">Please check back later.</p>
+                  snapshot.forEach(doc => {
+                      const data = doc.data();
+                      const img = data.imageUrl || 'https://placehold.co/400x300?text=Food';
+                      
+                      // Show Restaurant Address in Card
+                      const restDetails = `
+                        <div class="mt-3 text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                            <p><i class="fa-solid fa-location-dot text-brand-orange mr-1"></i> ${data.restaurantAddress || 'Address unavailable'}</p>
+                            <p class="mt-1"><i class="fa-solid fa-phone text-brand-orange mr-1"></i> ${data.restaurantPhone || 'Phone unavailable'}</p>
                         </div>
                       `;
-                      return;
-                  }
 
-                  snapshot.forEach((doc) => {
-                      const data = doc.data();
-                      const imgDisplay = data.imageUrl ? data.imageUrl : 'https://placehold.co/400x300/e2e8f0/94a3b8?text=Food+Image';
-                      const timeAgo = data.createdAt ? getTimeAgo(data.createdAt.seconds) : 'Just now';
-
-                      const html = `
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300 flex flex-col">
-                            <div class="h-48 overflow-hidden relative">
-                                <img src="${imgDisplay}" class="w-full h-full object-cover">
-                                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-brand-dark shadow-sm">
-                                    ${timeAgo}
-                                </div>
-                            </div>
+                      container.innerHTML += `
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                            <img src="${img}" class="h-40 w-full object-cover">
                             <div class="p-5 flex-grow flex flex-col justify-between">
                                 <div>
-                                    <div class="flex items-center gap-2 mb-1 text-gray-400 text-xs uppercase font-bold tracking-wider">
-                                        <i class="fa-solid fa-store"></i> ${data.restaurantName}
-                                    </div>
-                                    <h3 class="font-bold text-xl text-brand-dark mb-2">${data.foodName}</h3>
-                                    <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                                        <span class="bg-orange-50 text-brand-orange px-2 py-1 rounded-md font-bold">
-                                            <i class="fa-solid fa-users mr-1"></i> Serves ${data.servings}
-                                        </span>
-                                    </div>
+                                    <h3 class="font-bold text-xl text-brand-dark">${data.foodName}</h3>
+                                    <p class="text-sm font-bold text-brand-orange mb-2">${data.restaurantName}</p>
+                                    <p class="text-sm text-gray-600 mb-2">Serves ${data.servings} people</p>
+                                    ${restDetails}
                                 </div>
-                                <button onclick="openConfirmModal('${doc.id}')" class="w-full py-3 bg-brand-green hover:bg-teal-600 text-white font-bold rounded-xl shadow-lg shadow-green-100 transition-all active:scale-[0.98]">
-                                    Claim Donation
-                                </button>
+                                <button onclick="openConfirmModal('${doc.id}')" class="w-full mt-4 py-3 bg-brand-green text-white font-bold rounded-xl hover:bg-teal-600 transition">Claim Donation</button>
                             </div>
                         </div>
                       `;
-                      container.innerHTML += html;
                   });
               });
         }
 
-        // 3. Load Claim History (Sidebar)
-        function loadMyClaims() {
-            db.collection('donations')
-              .where("claimedBy", "==", currentUser.uid)
-              .orderBy("claimedAt", "desc")
-              .onSnapshot((snapshot) => {
-                  const container = document.getElementById('claims-container');
-                  container.innerHTML = "";
-
-                  if (snapshot.empty) {
-                      container.innerHTML = '<p class="text-gray-400 text-center text-sm py-4">You haven\'t claimed anything yet.</p>';
-                      return;
-                  }
-
-                  snapshot.forEach((doc) => {
-                      const data = doc.data();
-                      const date = data.claimedAt ? new Date(data.claimedAt.seconds * 1000).toLocaleDateString() : 'Recent';
-                      
-                      const html = `
-                        <div class="flex items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
-                            <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-green-500 text-lg shadow-sm mr-3">
-                                <i class="fa-solid fa-check"></i>
-                            </div>
-                            <div class="flex-grow">
-                                <h4 class="font-bold text-gray-800 text-sm line-clamp-1">${data.foodName}</h4>
-                                <p class="text-xs text-gray-500">${data.restaurantName}</p>
-                            </div>
-                            <span class="text-[10px] font-bold text-gray-400">${date}</span>
-                        </div>
-                      `;
-                      container.innerHTML += html;
-                  });
-              });
-        }
-
-        // 4. Claim Logic
-        function openConfirmModal(docId) {
-            selectedDonationId = docId;
-            document.getElementById('confirm-modal').classList.remove('hidden');
-            document.getElementById('confirm-btn').onclick = () => processClaim(docId);
-        }
-
-        function closeModal() {
-            document.getElementById('confirm-modal').classList.add('hidden');
-            selectedDonationId = null;
-        }
-
+        // CLAIM LOGIC
+        function openConfirmModal(id) { selectedDonationId = id; document.getElementById('confirm-modal').classList.remove('hidden'); document.getElementById('confirm-btn').onclick = () => processClaim(id); }
+        function closeModal() { document.getElementById('confirm-modal').classList.add('hidden'); }
+        
         async function processClaim(docId) {
-            const btn = document.getElementById('confirm-btn');
-            btn.innerText = "Processing...";
-            
+            // Validate Profile before claiming
+            if(!userData.address || !userData.phone) {
+                alert("Please add your Address and Phone in profile settings before claiming!");
+                closeModal(); toggleProfileModal(); return;
+            }
+
             try {
-                // Update Firestore: sending name and email is key for Restaurant Dashboard
                 await db.collection('donations').doc(docId).update({
                     status: "Claimed",
                     claimedBy: currentUser.uid,
-                    orphanageName: currentUserData.name, // Sending Name
-                    orphanageEmail: currentUserData.email, // Sending Email for contact
+                    orphanageName: userData.name,
+                    orphanagePhone: userData.phone,    // Sending Phone
+                    orphanageAddress: userData.address, // Sending Address
                     claimedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
                 closeModal();
-                showToast("Successfully claimed! Restaurant has been notified.");
-                
-            } catch (error) {
-                console.error("Error claiming:", error);
-                alert("Failed to claim. It might have been taken.");
-                closeModal();
-            } finally {
-                btn.innerText = "Yes, Claim it";
+                alert("Claimed successfully!");
+            } catch(err) {
+                console.error(err);
+                alert("Error claiming donation.");
             }
         }
 
-        // Helper: Time Ago
-        function getTimeAgo(seconds) {
-            const now = Math.floor(Date.now() / 1000);
-            const diff = now - seconds;
-            if (diff < 60) return 'Just now';
-            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-            return Math.floor(diff / 86400) + 'd ago';
+        function loadMyClaims() {
+             db.collection('donations')
+              .where("claimedBy", "==", currentUser.uid)
+              .orderBy("claimedAt", "desc")
+              .onSnapshot(snapshot => {
+                  const el = document.getElementById('claims-container');
+                  el.innerHTML = "";
+                  if(snapshot.empty) el.innerHTML = "<p class='text-center text-sm text-gray-400'>No claims yet.</p>";
+                  snapshot.forEach(doc => {
+                      const d = doc.data();
+                      el.innerHTML += `
+                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 mb-2">
+                            <h4 class="font-bold text-gray-800 text-sm">${d.foodName}</h4>
+                            <p class="text-xs text-gray-500">${d.restaurantName}</p>
+                            <p class="text-[10px] text-gray-400 mt-1">${new Date(d.claimedAt.seconds*1000).toLocaleDateString()}</p>
+                        </div>
+                      `;
+                  });
+              });
         }
 
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-message').innerText = message;
-            toast.classList.remove('translate-y-32', 'opacity-0');
-            setTimeout(() => toast.classList.add('translate-y-32', 'opacity-0'), 3000);
-        }
-
-        function logout() {
-            auth.signOut().then(() => window.location.href = 'index.html');
-        }
+        function logout() { auth.signOut().then(() => window.location.href = 'index.html'); }
     </script>
 </body>
 </html>
