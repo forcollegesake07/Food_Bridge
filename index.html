@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodBridge | Zero Waste Initiative</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            orange: '#F97316', // Primary Action
+                            green: '#10B981',  // Success/Nature
+                            dark: '#1F2937',
+                            light: '#FFF7ED'   // Light orange tint
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Styles */
+        .hero-bg {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+        .food-card-img {
+            height: 180px;
+            width: 100%;
+            object-fit: cover;
+        }
+        /* Smooth fade transition for views */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .view-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Logo -->
+                <div class="flex items-center cursor-pointer" onclick="app.showView('landing')">
+                    <i class="fa-solid fa-hand-holding-heart text-brand-orange text-3xl mr-2"></i>
+                    <span class="font-bold text-xl text-brand-dark tracking-wide">Food<span class="text-brand-green">Bridge</span></span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <div id="nav-guest" class="flex space-x-4">
+                        <button onclick="app.showAuth('login')" class="text-gray-600 hover:text-brand-orange font-medium transition">Log In</button>
+                        <button onclick="app.showAuth('signup')" class="bg-brand-orange hover:bg-orange-600 text-white px-5 py-2 rounded-full font-medium transition shadow-md">Create Account</button>
+                    </div>
+                    <div id="nav-user" class="hidden flex items-center space-x-4">
+                        <span id="user-greeting" class="text-gray-700 font-medium">Hello, User</span>
+                        <button onclick="app.logout()" class="text-red-500 hover:text-red-700 font-medium border border-red-200 px-4 py-1 rounded-full hover:bg-red-50 transition">Sign Out</button>
+                    </div>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button class="text-gray-600 text-2xl"><i class="fa-solid fa-bars"></i></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow pt-16">
+
+        <!-- VIEW: LANDING PAGE -->
+        <div id="view-landing" class="view-section active">
+            <div class="hero-bg h-[90vh] flex items-center justify-center text-center text-white px-4">
+                <div class="max-w-3xl mx-auto">
+                    <span class="bg-brand-green/20 text-brand-green bg-opacity-20 border border-brand-green/40 px-4 py-1 rounded-full text-sm font-semibold uppercase tracking-wider mb-6 inline-block backdrop-blur-sm">FoodBridge Initiative</span>
+                    <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                        Connect Surplus to <br><span class="text-brand-orange">Those in Need</span>
+                    </h1>
+                    <p class="text-xl mb-10 text-gray-200">
+                        A real-time platform connecting restaurants with orphanages. 
+                        Stop wasting food. Start saving lives.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="app.showAuth('signup', 'restaurant')" class="bg-brand-orange hover:bg-orange-600 text-white font-bold py-4 px-8 rounded-full shadow-lg transition transform hover:scale-105 flex items-center justify-center">
+                            <i class="fa-solid fa-utensils mr-2"></i> I'm a Restaurant
+                        </button>
+                        <button onclick="app.showAuth('signup', 'orphanage')" class="bg-white hover:bg-gray-100 text-brand-dark font-bold py-4 px-8 rounded-full shadow-lg transition transform hover:scale-105 flex items-center justify-center">
+                            <i class="fa-solid fa-child-reaching mr-2 text-brand-green"></i> I'm an Orphanage
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Project Concepts (Replaced Stats) -->
+            <div class="bg-white py-16 border-b">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl font-bold text-brand-dark">How FoodBridge Works</h2>
+                        <p class="text-gray-500 mt-2">Bridging the communication gap to reduce food wastage.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+                        <!-- Feature 1 -->
+                        <div class="p-6 rounded-xl hover:bg-orange-50 transition duration-300">
+                            <div class="w-14 h-14 mx-auto bg-orange-100 rounded-full flex items-center justify-center text-brand-orange text-2xl mb-4">
+                                <i class="fa-solid fa-bowl-food"></i>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2">Surplus Posting</h3>
+                            <p class="text-sm text-gray-600">Restaurants upload details of leftover edible food instantly via a simple form.</p>
+                        </div>
+
+                        <!-- Feature 2 -->
+                        <div class="p-6 rounded-xl hover:bg-green-50 transition duration-300">
+                            <div class="w-14 h-14 mx-auto bg-green-100 rounded-full flex items-center justify-center text-brand-green text-2xl mb-4">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2">Real-Time Access</h3>
+                            <p class="text-sm text-gray-600">Orphanages view available food immediately on their dashboard without delay.</p>
+                        </div>
+
+                        <!-- Feature 3 -->
+                        <div class="p-6 rounded-xl hover:bg-blue-50 transition duration-300">
+                            <div class="w-14 h-14 mx-auto bg-blue-100 rounded-full flex items-center justify-center text-blue-500 text-2xl mb-4">
+                                <i class="fa-solid fa-hand-pointer"></i>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2">One-Click Claim</h3>
+                            <p class="text-sm text-gray-600">Simple accept/decline functionality to secure food donations quickly.</p>
+                        </div>
+
+                        <!-- Feature 4 -->
+                        <div class="p-6 rounded-xl hover:bg-purple-50 transition duration-300">
+                            <div class="w-14 h-14 mx-auto bg-purple-100 rounded-full flex items-center justify-center text-purple-500 text-2xl mb-4">
+                                <i class="fa-solid fa-envelope-circle-check"></i>
+                            </div>
+                            <h3 class="font-bold text-lg mb-2">Confirmation</h3>
+                            <p class="text-sm text-gray-600">Automated email notifications sent to both parties to coordinate pickup.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: AUTH / LOGIN -->
+        <div id="view-auth" class="view-section">
+            <div class="min-h-[80vh] flex items-center justify-center bg-brand-light px-4 py-12">
+                <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+                    <div class="bg-brand-dark p-6 text-white text-center">
+                        <h2 id="auth-title" class="text-2xl font-bold">Welcome Back</h2>
+                        <p class="text-gray-400 text-sm mt-1">Please log in to continue</p>
+                    </div>
+                    <div class="p-8">
+                        <div class="space-y-4">
+                            <!-- Demo Login Buttons for Ease -->
+                            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-6">
+                                <p class="text-xs text-yellow-800 font-bold mb-2 uppercase text-center">Select a Demo Role</p>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button onclick="app.login('restaurant')" class="bg-white border border-gray-300 hover:border-brand-orange hover:text-brand-orange text-gray-700 py-2 rounded-lg text-sm font-medium transition flex flex-col items-center justify-center p-4">
+                                        <i class="fa-solid fa-utensils text-xl mb-1"></i>
+                                        Restaurant
+                                    </button>
+                                    <button onclick="app.login('orphanage')" class="bg-white border border-gray-300 hover:border-brand-green hover:text-brand-green text-gray-700 py-2 rounded-lg text-sm font-medium transition flex flex-col items-center justify-center p-4">
+                                        <i class="fa-solid fa-child-reaching text-xl mb-1"></i>
+                                        Orphanage
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="relative flex py-2 items-center">
+                                <div class="flex-grow border-t border-gray-200"></div>
+                                <span class="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase">Or enter credentials</span>
+                                <div class="flex-grow border-t border-gray-200"></div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                <input type="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition" placeholder="you@example.com">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition" placeholder="••••••••">
+                            </div>
+                            <button class="w-full bg-brand-dark hover:bg-gray-800 text-white font-bold py-3 rounded-lg transition mt-4">
+                                Sign In
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: RESTAURANT DASHBOARD -->
+        <div id="view-restaurant" class="view-section">
+            <div class="max-w-7xl mx-auto px-4 py-8">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-brand-dark">Restaurant Dashboard</h2>
+                        <p class="text-gray-500">Manage your donations and reduce waste.</p>
+                    </div>
+                    <button onclick="document.getElementById('post-food-modal').classList.remove('hidden')" class="bg-brand-orange hover:bg-orange-600 text-white px-6 py-3 rounded-lg shadow-md font-bold transition flex items-center">
+                        <i class="fa-solid fa-plus mr-2"></i> Donate Food
+                    </button>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
+                        <div class="bg-orange-100 p-4 rounded-full text-brand-orange mr-4">
+                            <i class="fa-solid fa-box-open text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold">12</div>
+                            <div class="text-sm text-gray-500">Total Donations</div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
+                        <div class="bg-green-100 p-4 rounded-full text-brand-green mr-4">
+                            <i class="fa-solid fa-check-double text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold">85 kg</div>
+                            <div class="text-sm text-gray-500">Food Saved</div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
+                        <div class="bg-blue-100 p-4 rounded-full text-blue-500 mr-4">
+                            <i class="fa-solid fa-people-roof text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold">5</div>
+                            <div class="text-sm text-gray-500">Orphanages Helped</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold text-gray-700 mb-4">Your Recent Posts</h3>
+                <div id="restaurant-posts-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Posts will be injected here by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: ORPHANAGE DASHBOARD -->
+        <div id="view-orphanage" class="view-section">
+            <div class="max-w-7xl mx-auto px-4 py-8">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-brand-dark">Available Donations</h2>
+                        <p class="text-gray-500">Find fresh food nearby for your center.</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 flex gap-2">
+                        <span class="px-4 py-2 bg-white border rounded-lg text-sm font-medium text-gray-600"><i class="fa-solid fa-location-dot mr-2 text-brand-orange"></i> Near Bengaluru</span>
+                        <span class="px-4 py-2 bg-white border rounded-lg text-sm font-medium text-gray-600"><i class="fa-solid fa-filter mr-2 text-brand-green"></i> Veg Only</span>
+                    </div>
+                </div>
+
+                <div id="orphanage-feed-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Donation Feed injected here -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- POST FOOD MODAL (Hidden by default) -->
+    <div id="post-food-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100">
+            <div class="bg-brand-orange p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-bowl-food mr-2"></i> Donate Surplus Food</h3>
+                <button onclick="document.getElementById('post-food-modal').classList.add('hidden')" class="hover:bg-orange-700 rounded-full w-8 h-8 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form onsubmit="app.handlePostFood(event)">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Food Item Name</label>
+                        <input type="text" id="food-name" required class="w-full px-3 py-2 border rounded-lg focus:ring-brand-orange focus:border-brand-orange" placeholder="e.g., Rice and Dal, 50 Rotis">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity (approx)</label>
+                            <input type="text" id="food-qty" required class="w-full px-3 py-2 border rounded-lg" placeholder="Serves 20 people">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Prepared Time</label>
+                            <input type="time" id="food-time" required class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Food Type</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="food-type" value="Veg" class="text-brand-orange focus:ring-brand-orange" checked>
+                                <span class="ml-2 text-sm">Veg</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="food-type" value="Non-Veg" class="text-brand-orange focus:ring-brand-orange">
+                                <span class="ml-2 text-sm">Non-Veg</span>
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-brand-dark hover:bg-gray-800 text-white font-bold py-3 rounded-lg transition">
+                        Post Donation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-brand-dark text-white px-6 py-4 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition duration-300 flex items-center z-50">
+        <i class="fa-solid fa-circle-check text-brand-green text-xl mr-3"></i>
+        <div>
+            <h4 class="font-bold text-sm" id="toast-title">Success</h4>
+            <p class="text-xs text-gray-300" id="toast-message">Operation completed successfully.</p>
+        </div>
+    </div>
+
+    <script>
+        // MOCK DATA & STATE MANAGEMENT
+        const app = {
+            currentUser: null,
+            
+            // Mock Database of existing donations
+            donations: [
+                {
+                    id: 1,
+                    restaurant: "Spicy Spoon Bistro",
+                    item: "Vegetable Biryani",
+                    quantity: "Serves 15",
+                    time: "1:30 PM",
+                    type: "Veg",
+                    status: "Available",
+                    image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
+                },
+                {
+                    id: 2,
+                    restaurant: "Burger King Outlet",
+                    item: "Buns and Patties (Uncooked)",
+                    quantity: "50 Units",
+                    time: "11:00 AM",
+                    type: "Non-Veg",
+                    status: "Claimed",
+                    image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
+                },
+                {
+                    id: 3,
+                    restaurant: "Hotel Empire",
+                    item: "Ghee Rice & Dal",
+                    quantity: "Serves 30",
+                    time: "2:15 PM",
+                    type: "Veg",
+                    status: "Available",
+                    image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
+                }
+            ],
+
+            // Navigation Logic
+            showView: function(viewId) {
+                // Hide all views
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                // Show requested view
+                document.getElementById(`view-${viewId}`).classList.add('active');
+                
+                // Update Nav Bar visibility
+                const isAuth = this.currentUser !== null;
+                document.getElementById('nav-guest').style.display = isAuth ? 'none' : 'flex';
+                document.getElementById('nav-user').style.display = isAuth ? 'flex' : 'none';
+                
+                if (isAuth) {
+                    document.getElementById('user-greeting').innerText = `Hello, ${this.currentUser.name}`;
+                }
+            },
+
+            showAuth: function(mode, role = null) {
+                const title = mode === 'login' ? 'Welcome Back' : 'Create Account';
+                document.getElementById('auth-title').innerText = title;
+                this.showView('auth');
+            },
+
+            // Authentication Logic (Simulated)
+            login: function(role) {
+                if (role === 'restaurant') {
+                    this.currentUser = { name: "Tasty Bites Restaurant", role: "restaurant" };
+                    this.renderRestaurantDashboard();
+                    this.showView('restaurant');
+                } else {
+                    this.currentUser = { name: "Sunshine Orphanage", role: "orphanage" };
+                    this.renderOrphanageFeed();
+                    this.showView('orphanage');
+                }
+                this.showToast('Logged In Successfully', `Welcome back, ${this.currentUser.name}`);
+            },
+
+            logout: function() {
+                this.currentUser = null;
+                this.showView('landing');
+                this.showToast('Logged Out', 'See you soon!');
+            },
+
+            // Restaurant Logic
+            handlePostFood: function(e) {
+                e.preventDefault();
+                const name = document.getElementById('food-name').value;
+                const qty = document.getElementById('food-qty').value;
+                const time = document.getElementById('food-time').value;
+                const type = document.querySelector('input[name="food-type"]:checked').value;
+                
+                // Random food image for demo
+                const images = [
+                    "https://images.unsplash.com/photo-1626804475297-411dbe6312a0?w=500",
+                    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500",
+                    "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=500"
+                ];
+                const randomImg = images[Math.floor(Math.random() * images.length)];
+
+                // Add to array (Simulating Firebase Push)
+                const newPost = {
+                    id: Date.now(),
+                    restaurant: this.currentUser.name,
+                    item: name,
+                    quantity: qty,
+                    time: time,
+                    type: type,
+                    status: "Available",
+                    image: randomImg
+                };
+
+                this.donations.unshift(newPost); // Add to top
+                
+                // Reset form and close modal
+                e.target.reset();
+                document.getElementById('post-food-modal').classList.add('hidden');
+                
+                // Re-render
+                this.renderRestaurantDashboard();
+                this.showToast('Food Posted!', 'Orphanages have been notified.');
+            },
+
+            renderRestaurantDashboard: function() {
+                const container = document.getElementById('restaurant-posts-container');
+                container.innerHTML = '';
+                
+                // Filter only my posts (for demo showing all to see logic)
+                this.donations.forEach(post => {
+                    // Badge color
+                    const statusColor = post.status === 'Available' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600';
+                    
+                    const html = `
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition border border-gray-100">
+                            <img src="${post.image}" class="food-card-img" alt="Food">
+                            <div class="p-5">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-bold text-lg text-gray-800">${post.item}</h4>
+                                    <span class="text-xs font-bold px-2 py-1 rounded-full ${statusColor}">${post.status}</span>
+                                </div>
+                                <div class="text-sm text-gray-500 mb-4 space-y-1">
+                                    <p><i class="fa-solid fa-layer-group mr-2 text-brand-orange"></i>Qty: ${post.quantity}</p>
+                                    <p><i class="fa-regular fa-clock mr-2 text-brand-orange"></i>Prepared: ${post.time}</p>
+                                    <p><i class="fa-solid fa-leaf mr-2 ${post.type === 'Veg' ? 'text-green-500' : 'text-red-500'}"></i>${post.type}</p>
+                                </div>
+                                <div class="border-t pt-3 flex justify-between items-center text-sm text-gray-400">
+                                    <span>Posted just now</span>
+                                    <button class="text-red-500 hover:text-red-700 font-medium">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+            },
+
+            // Orphanage Logic
+            renderOrphanageFeed: function() {
+                const container = document.getElementById('orphanage-feed-container');
+                container.innerHTML = '';
+
+                this.donations.forEach(post => {
+                    if (post.status !== 'Available') return; // Hide claimed items from feed
+
+                    const html = `
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition transform hover:-translate-y-1 border border-gray-100">
+                            <div class="relative">
+                                <img src="${post.image}" class="food-card-img" alt="Food">
+                                <span class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                    <i class="fa-solid fa-store mr-1 text-brand-orange"></i> ${post.restaurant}
+                                </span>
+                            </div>
+                            <div class="p-5">
+                                <h4 class="font-bold text-xl text-gray-800 mb-2">${post.item}</h4>
+                                <div class="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
+                                    <div class="bg-gray-50 p-2 rounded"><i class="fa-solid fa-weight-scale text-brand-orange"></i> ${post.quantity}</div>
+                                    <div class="bg-gray-50 p-2 rounded"><i class="fa-regular fa-clock text-brand-orange"></i> ${post.time}</div>
+                                </div>
+                                <button onclick="app.claimDonation(${post.id})" class="w-full bg-brand-green hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow-md transition flex justify-center items-center">
+                                    <i class="fa-solid fa-check mr-2"></i> Accept Donation
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+                
+                if (container.innerHTML === '') {
+                    container.innerHTML = `<div class="col-span-3 text-center py-10 text-gray-500">No food available right now. Check back later!</div>`;
+                }
+            },
+
+            claimDonation: function(id) {
+                const post = this.donations.find(p => p.id === id);
+                if (post) {
+                    post.status = "Claimed";
+                    this.renderOrphanageFeed(); // Refresh to remove from list
+                    this.showToast('Donation Accepted!', `You claimed ${post.item}. Email sent to restaurant.`);
+                }
+            },
+
+            // Utilities
+            showToast: function(title, message) {
+                const toast = document.getElementById('toast');
+                document.getElementById('toast-title').innerText = title;
+                document.getElementById('toast-message').innerText = message;
+                
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 3000);
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check for simple persistent login (optional for demo)
+            app.showView('landing');
+        });
+
+    </script>
+</body>
+</html>
