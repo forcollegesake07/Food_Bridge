@@ -451,8 +451,13 @@
                 userData.phone = phone; 
                 userData.address = address;
                 
-                document.getElementById('nav-username').innerText = name;
-                document.getElementById('sidebar-name').innerText = name;
+                // Safe updates (Checks if element exists before updating)
+                const navUser = document.getElementById('nav-username');
+                if (navUser) navUser.innerText = name;
+                
+                const sideName = document.getElementById('sidebar-name');
+                if (sideName) sideName.innerText = name;
+
                 showToast("Profile Updated!");
             } catch (err) {
                 alert("Error updating profile: " + err.message);
