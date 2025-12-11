@@ -246,9 +246,18 @@
 
                 if (doc.exists) {
                     const userData = doc.data();
+                    
+                    // CHECK IF DISABLED
+                    if (userData.isDisabled === true) {
+                        showMessage("Your account has been disabled by Admin.", "error");
+                        await firebase.auth().signOut();
+                        return;
+                    }
+
                     showMessage(`Welcome back, ${userData.name}!`, "success");
                     performRedirect(userData.role);
                 } else {
+                    // NEW USER
                     pendingGoogleUser = user;
                     document.getElementById('google-role-modal').classList.remove('hidden');
                 }
@@ -274,6 +283,7 @@
                     email: pendingGoogleUser.email,
                     role: role,
                     googleDisplayName: pendingGoogleUser.displayName,
+                    isDisabled: false, // Explicitly set to false on creation
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
@@ -287,7 +297,7 @@
             }
         }
 
-        // --- EMAIL/PASSWORD LOGIC ---
+        // --- EMAIL/PASSWORD SIGNUP ---
 
         async function handleSignup(e) {
             e.preventDefault();
@@ -307,6 +317,7 @@
                     name: name,
                     email: email,
                     role: role,
+                    isDisabled: false, // Default active
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
@@ -319,6 +330,8 @@
                 btn.innerText = "Create Account"; btn.disabled = false;
             }
         }
+
+        // --- EMAIL/PASSWORD LOGIN (WITH DISABLE CHECK) ---
 
         async function handleLogin(e) {
             e.preventDefault();
@@ -336,6 +349,15 @@
                 
                 if (doc.exists) {
                     const userData = doc.data();
+
+                    // CHECK IF DISABLED
+                    if (userData.isDisabled === true) {
+                        showMessage("Your account has been disabled by Admin.", "error");
+                        await firebase.auth().signOut(); // Force logout
+                        btn.innerText = "Sign In"; btn.disabled = false;
+                        return; // Stop execution
+                    }
+
                     showMessage(`Welcome back, ${userData.name}!`, "success");
                     performRedirect(userData.role);
                 } else {
