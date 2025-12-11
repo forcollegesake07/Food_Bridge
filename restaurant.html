@@ -32,6 +32,7 @@
     </script>
     <style>
         .fixed-bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; }
+        .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 h-screen flex overflow-hidden">
@@ -57,7 +58,7 @@
                 <i class="fa-solid fa-clock-rotate-left w-5 mr-3"></i> History
             </button>
             <button onclick="switchTab('details')" id="btn-details" class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 hover:text-brand-orange transition-all">
-                <i class="fa-solid fa-store w-5 mr-3"></i> Restaurant Details
+                <i class="fa-solid fa-store w-5 mr-3"></i> Details
             </button>
         </nav>
         <div class="p-4 border-t border-gray-100">
@@ -273,14 +274,19 @@
                 if (doc.exists) {
                     userData = doc.data();
                     
-                    // Populate UI
-                    document.getElementById('nav-username').innerText = userData.name || "Restaurant";
-                    document.getElementById('sidebar-name').innerText = userData.name || "Restaurant";
-                    document.getElementById('sidebar-id').innerText = "ID: " + user.uid.slice(0, 6);
+                    // SAFE DOM UPDATE: Checks if element exists before setting text
+                    const navUser = document.getElementById('nav-username');
+                    if (navUser) navUser.innerText = userData.name || "Restaurant";
                     
-                    document.getElementById('detail-name').value = userData.name || "";
-                    document.getElementById('detail-phone').value = userData.phone || "";
-                    document.getElementById('detail-address').value = userData.address || "";
+                    const sbName = document.getElementById('sidebar-name');
+                    if (sbName) sbName.innerText = userData.name || "Restaurant";
+                    
+                    const sbId = document.getElementById('sidebar-id');
+                    if (sbId) sbId.innerText = "ID: " + user.uid.slice(0, 6);
+                    
+                    if(document.getElementById('detail-name')) document.getElementById('detail-name').value = userData.name || "";
+                    if(document.getElementById('detail-phone')) document.getElementById('detail-phone').value = userData.phone || "";
+                    if(document.getElementById('detail-address')) document.getElementById('detail-address').value = userData.address || "";
 
                     document.getElementById('tab-overview').classList.remove('hidden');
                     loadData();
@@ -316,15 +322,15 @@
                   const recentList = document.getElementById('recent-list');
                   const historyBody = document.getElementById('history-table-body');
                   
-                  recentList.innerHTML = "";
-                  historyBody.innerHTML = "";
+                  if (recentList) recentList.innerHTML = "";
+                  if (historyBody) historyBody.innerHTML = "";
                   
                   totalMeals = 0;
                   let docCount = 0;
 
                   if (snapshot.empty) {
-                      recentList.innerHTML = "<p class='text-center text-gray-400'>No donations yet.</p>";
-                      historyBody.innerHTML = "<tr><td colspan='5' class='text-center p-4 text-gray-400'>No history found.</td></tr>";
+                      if (recentList) recentList.innerHTML = "<p class='text-center text-gray-400'>No donations yet.</p>";
+                      if (historyBody) historyBody.innerHTML = "<tr><td colspan='5' class='text-center p-4 text-gray-400'>No history found.</td></tr>";
                   }
 
                   snapshot.forEach(doc => {
@@ -339,7 +345,7 @@
                       const recipient = data.orphanageName || '-';
 
                       // Recent Activity (Limit 5)
-                      if (docCount <= 5) {
+                      if (docCount <= 5 && recentList) {
                           recentList.innerHTML += `
                             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                                 <div class="flex items-center gap-3">
@@ -359,21 +365,28 @@
                       }
 
                       // History Table
-                      historyBody.innerHTML += `
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 text-gray-500 text-sm">${date}</td>
-                            <td class="px-6 py-4 font-bold text-gray-800 text-sm">${data.foodName}</td>
-                            <td class="px-6 py-4 text-gray-600 text-sm">${data.servings}</td>
-                            <td class="px-6 py-4"><span class="${statusColor} px-2 py-1 rounded text-xs font-bold">${data.status}</span></td>
-                            <td class="px-6 py-4 text-gray-500 text-sm">${recipient}</td>
-                        </tr>
-                      `;
+                      if (historyBody) {
+                          historyBody.innerHTML += `
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 text-gray-500 text-sm">${date}</td>
+                                <td class="px-6 py-4 font-bold text-gray-800 text-sm">${data.foodName}</td>
+                                <td class="px-6 py-4 text-gray-600 text-sm">${data.servings}</td>
+                                <td class="px-6 py-4"><span class="${statusColor} px-2 py-1 rounded text-xs font-bold">${data.status}</span></td>
+                                <td class="px-6 py-4 text-gray-500 text-sm">${recipient}</td>
+                            </tr>
+                          `;
+                      }
                   });
 
-                  // Update Stats
-                  document.getElementById('stat-meals').innerText = totalMeals;
-                  document.getElementById('stat-waste').innerText = (totalMeals * 0.5).toFixed(1);
-                  document.getElementById('history-count').innerText = docCount;
+                  // SAFE UPDATE STATS
+                  const elMeals = document.getElementById('stat-meals');
+                  if (elMeals) elMeals.innerText = totalMeals;
+                  
+                  const elWaste = document.getElementById('stat-waste');
+                  if (elWaste) elWaste.innerText = (totalMeals * 0.5).toFixed(1);
+                  
+                  const elCount = document.getElementById('history-count');
+                  if (elCount) elCount.innerText = docCount;
                   
                   updateChart(totalMeals);
               });
@@ -462,9 +475,11 @@
 
         function showToast(msg) {
             const t = document.getElementById('toast');
-            document.getElementById('toast-message').innerText = msg;
-            t.classList.remove('translate-y-32', 'opacity-0');
-            setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3000);
+            if (t) {
+                document.getElementById('toast-message').innerText = msg;
+                t.classList.remove('translate-y-32', 'opacity-0');
+                setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3000);
+            }
         }
 
         function logout() {
@@ -476,7 +491,10 @@
         // CHART CONFIG
         let myChart;
         function updateChart(userTotal) {
-            const ctx = document.getElementById('motivationChart').getContext('2d');
+            const ctxElem = document.getElementById('motivationChart');
+            if (!ctxElem) return; // Guard clause
+            
+            const ctx = ctxElem.getContext('2d');
             const avg = 500; // Benchmark
 
             if(myChart) myChart.destroy();
