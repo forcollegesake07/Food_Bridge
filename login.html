@@ -170,7 +170,7 @@
 
     <script>
         // ==========================================
-        // PASTE YOUR FIREBASE CONFIGURATION HERE
+        // FIREBASE CONFIGURATION
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0",
@@ -190,7 +190,7 @@
 
         const auth = firebase.auth();
         const db = firebase.firestore();
-        let pendingGoogleUser = null; // Temp storage for role selection
+        let pendingGoogleUser = null; 
 
         function toggleView(view) {
             const loginForm = document.getElementById('login-form');
@@ -224,12 +224,11 @@
         }
 
         function performRedirect(role) {
+            const base = "https://forcollegesake07.github.io/Food_Bridge/";
             setTimeout(() => {
-                if (role === 'restaurant') {
-                    window.location.href = "https://forcollegesake07.github.io/Food_Bridge/restaurant.html";
-                } else {
-                    window.location.href = "https://forcollegesake07.github.io/Food_Bridge/orphanages.html";
-                }
+                if (role === 'restaurant') window.location.href = base + "restaurant.html";
+                else if (role === 'orphanage') window.location.href = base + "orphanages.html";
+                else if (role === 'admin') window.location.href = base + "admin.html";
             }, 1000);
         }
 
@@ -246,13 +245,10 @@
                 const doc = await db.collection('users').doc(user.uid).get();
 
                 if (doc.exists) {
-                    // OLD USER: Just redirect based on stored role
                     const userData = doc.data();
                     showMessage(`Welcome back, ${userData.name}!`, "success");
                     performRedirect(userData.role);
                 } else {
-                    // NEW USER: We don't know the role yet!
-                    // Show modal to ask user
                     pendingGoogleUser = user;
                     document.getElementById('google-role-modal').classList.remove('hidden');
                 }
@@ -273,12 +269,11 @@
             }
 
             try {
-                // Save the new Google user with their selected role AND entered name
                 await db.collection('users').doc(pendingGoogleUser.uid).set({
-                    name: orgName, // Use the entered organization name
+                    name: orgName,
                     email: pendingGoogleUser.email,
                     role: role,
-                    googleDisplayName: pendingGoogleUser.displayName, // Keep original name just in case
+                    googleDisplayName: pendingGoogleUser.displayName,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
