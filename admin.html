@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | FoodBridge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            orange: '#F97316', 
+                            green: '#10B981',
+                            dark: '#1F2937',
+                            light: '#F3F4F6',
+                            sidebar: '#111827'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 z-50 bg-white flex items-center justify-center">
+        <div class="text-center">
+            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-brand-orange"></i>
+            <p class="mt-4 text-gray-500 font-medium">Verifying Admin Access...</p>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD (Hidden until verification) -->
+    <div id="dashboard-layout" class="hidden flex h-screen overflow-hidden">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-brand-sidebar text-white flex flex-col flex-shrink-0 transition-all duration-300">
+            <div class="p-6 flex items-center border-b border-gray-700">
+                <i class="fa-solid fa-hand-holding-heart text-brand-orange text-xl mr-3"></i>
+                <span class="font-bold text-lg tracking-wide">FoodBridge <span class="text-xs bg-gray-700 px-1 rounded text-gray-300">ADMIN</span></span>
+            </div>
+
+            <nav class="flex-grow p-4 space-y-2">
+                <button onclick="switchTab('overview')" id="nav-overview" class="nav-item w-full flex items-center p-3 rounded-lg bg-gray-800 text-brand-orange transition">
+                    <i class="fa-solid fa-chart-pie w-6"></i> Overview
+                </button>
+                <button onclick="switchTab('restaurants')" id="nav-restaurants" class="nav-item w-full flex items-center p-3 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition">
+                    <i class="fa-solid fa-utensils w-6"></i> Restaurants
+                </button>
+                <button onclick="switchTab('orphanages')" id="nav-orphanages" class="nav-item w-full flex items-center p-3 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition">
+                    <i class="fa-solid fa-child-reaching w-6"></i> Orphanages
+                </button>
+                <button onclick="switchTab('history')" id="nav-history" class="nav-item w-full flex items-center p-3 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition">
+                    <i class="fa-solid fa-clock-rotate-left w-6"></i> History
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-gray-700">
+                <button onclick="logout()" class="flex items-center text-gray-400 hover:text-white transition w-full">
+                    <i class="fa-solid fa-right-from-bracket w-6"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-grow overflow-y-auto bg-gray-100 p-8">
+            
+            <!-- HEADER -->
+            <header class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800" id="page-title">Dashboard Overview</h1>
+                <div class="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-sm font-medium text-gray-600">System Online</span>
+                </div>
+            </header>
+
+            <!-- TAB: OVERVIEW -->
+            <div id="tab-overview" class="space-y-8 animate-fade-in">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-orange-100 text-brand-orange flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-box-open"></i></div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Donations</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="stat-total-donations">...</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-store"></i></div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Active Restaurants</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="stat-restaurants">...</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-green-100 text-brand-green flex items-center justify-center text-xl mr-4"><i class="fa-solid fa-hands-holding-child"></i></div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Orphanages Helped</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="stat-orphanages">...</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts & Recent Activity -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Chart -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-1 flex flex-col justify-center">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Activity Ratio</h3>
+                        <div class="relative h-64 w-full">
+                            <canvas id="impactChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Table -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Recent Transactions</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3">Restaurant</th>
+                                        <th class="px-4 py-3">Food Item</th>
+                                        <th class="px-4 py-3">Status</th>
+                                        <th class="px-4 py-3">Orphanage</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-table-body">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: RESTAURANTS -->
+            <div id="tab-restaurants" class="hidden animate-fade-in">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100">
+                        <h3 class="font-bold text-gray-700">Registered Restaurants</h3>
+                    </div>
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-6 py-4">Name</th>
+                                <th class="px-6 py-4">Contact Info</th>
+                                <th class="px-6 py-4">Location</th>
+                                <th class="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="restaurants-table-body">
+                            <!-- JS Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: ORPHANAGES -->
+            <div id="tab-orphanages" class="hidden animate-fade-in">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100">
+                        <h3 class="font-bold text-gray-700">Registered Orphanages</h3>
+                    </div>
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-6 py-4">Name</th>
+                                <th class="px-6 py-4">Contact Info</th>
+                                <th class="px-6 py-4">Location</th>
+                                <th class="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orphanages-table-body">
+                            <!-- JS Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: HISTORY -->
+            <div id="tab-history" class="hidden animate-fade-in">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-700">Full Donation Database</h3>
+                        <button onclick="fetchHistory()" class="text-brand-orange text-xs font-bold hover:underline bg-orange-50 px-3 py-1 rounded-lg"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3">Date</th>
+                                    <th class="px-6 py-3">Restaurant</th>
+                                    <th class="px-6 py-3">Food</th>
+                                    <th class="px-6 py-3">Qty</th>
+                                    <th class="px-6 py-3">Status</th>
+                                    <th class="px-6 py-3">Claimed By</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <!-- JS Injected -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-brand-dark text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-4 z-[60]">
+        <i class="fa-solid fa-info-circle text-brand-orange"></i>
+        <p class="text-sm" id="toast-message">Notification</p>
+    </div>
+
+    <script>
+        // ==========================================
+        // FIREBASE CONFIGURATION (Applied correctly)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0",
+            authDomain: "panel-9e1a6.firebaseapp.com",
+            projectId: "panel-9e1a6",
+            storageBucket: "panel-9e1a6.firebasestorage.app",
+            messagingSenderId: "491001640513",
+            appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- 1. SECURITY & INIT ---
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                // Check if user is actually an admin
+                const doc = await db.collection('users').doc(user.uid).get();
+                if (doc.exists && doc.data().role === 'admin') {
+                    // Success: Show Dashboard
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    document.getElementById('dashboard-layout').classList.remove('hidden');
+                    initDashboard();
+                } else {
+                    // Fail: Not an admin
+                    alert("Access Denied: You are not an administrator.");
+                    window.location.href = 'login.html';
+                }
+            } else {
+                // Fail: Not logged in
+                window.location.href = 'login.html';
+            }
+        });
+
+        // --- 2. DASHBOARD INIT ---
+        function initDashboard() {
+            fetchStats();
+            fetchUsers('restaurant');
+            fetchUsers('orphanage');
+            fetchHistory();
+        }
+
+        // --- 3. STATS & CHART ---
+        function fetchStats() {
+            db.collection('donations').get().then(snap => {
+                const total = snap.size;
+                const claimed = snap.docs.filter(d => d.data().status === 'Claimed').length;
+                const available = total - claimed;
+
+                document.getElementById('stat-total-donations').innerText = total;
+                
+                // Render Chart
+                const ctx = document.getElementById('impactChart').getContext('2d');
+                if(window.myChart) window.myChart.destroy(); // Prevent duplicates
+                window.myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Available', 'Claimed'],
+                        datasets: [{
+                            data: [available, claimed],
+                            backgroundColor: ['#F97316', '#10B981'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+
+                // Recent Activity (Top 10)
+                const sorted = snap.docs.sort((a,b) => b.data().createdAt - a.data().createdAt).slice(0, 10);
+                const table = document.getElementById('recent-table-body');
+                table.innerHTML = '';
+                
+                if (sorted.length === 0) {
+                    table.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">No activity yet.</td></tr>';
+                }
+
+                sorted.forEach(doc => {
+                    const d = doc.data();
+                    const statusClass = d.status === 'Claimed' ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50';
+                    table.innerHTML += `
+                        <tr class="bg-white border-b hover:bg-gray-50 transition">
+                            <td class="px-4 py-3 font-medium text-gray-900">${d.restaurantName || 'Unknown'}</td>
+                            <td class="px-4 py-3">${d.foodName}</td>
+                            <td class="px-4 py-3"><span class="${statusClass} text-xs px-2 py-1 rounded-full font-bold">${d.status}</span></td>
+                            <td class="px-4 py-3 text-gray-500">${d.orphanageName || '-'}</td>
+                        </tr>
+                    `;
+                });
+            });
+
+            // Count Users
+            db.collection('users').where('role', '==', 'restaurant').get().then(s => {
+                document.getElementById('stat-restaurants').innerText = s.size;
+            });
+            db.collection('users').where('role', '==', 'orphanage').get().then(s => {
+                document.getElementById('stat-orphanages').innerText = s.size;
+            });
+        }
+
+        // --- 4. USER MANAGEMENT ---
+        function fetchUsers(role) {
+            db.collection('users').where('role', '==', role).get().then(snap => {
+                const tbody = document.getElementById(role + 's-table-body');
+                tbody.innerHTML = '';
+                
+                if(snap.empty) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">No ${role}s found.</td></tr>`;
+                    return;
+                }
+
+                snap.forEach(doc => {
+                    const u = doc.data();
+                    const isDisabled = u.isDisabled ? 'opacity-50 bg-gray-50' : '';
+                    const disableLabel = u.isDisabled ? 'Enable' : 'Disable';
+                    const iconColor = role === 'restaurant' ? 'text-brand-orange' : 'text-brand-green';
+                    
+                    tbody.innerHTML += `
+                        <tr class="bg-white border-b hover:bg-gray-50 ${isDisabled} transition">
+                            <td class="px-6 py-4 font-medium text-gray-900">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center mr-3 ${iconColor} font-bold uppercase text-xs shadow-sm">
+                                        <i class="fa-solid fa-store"></i>
+                                    </div>
+                                    ${u.name || 'No Name'}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-xs text-gray-500">
+                                    <p class="mb-1"><i class="fa-solid fa-envelope mr-1 w-4"></i> ${u.email}</p>
+                                    <p><i class="fa-solid fa-phone mr-1 w-4"></i> ${u.phone || 'N/A'}</p>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-xs text-gray-500 max-w-xs truncate" title="${u.address || ''}">
+                                ${u.address || 'No Address Provided'}
+                            </td>
+                            <td class="px-6 py-4 text-right relative">
+                                <div class="group inline-block">
+                                    <button class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                    <div class="hidden group-hover:block absolute right-0 top-8 w-40 bg-white shadow-xl rounded-lg border border-gray-100 z-10 text-left overflow-hidden">
+                                        <button onclick="toggleUserStatus('${doc.id}', ${!u.isDisabled}, '${role}')" class="block w-full px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 text-left">${disableLabel} Account</button>
+                                        <button onclick="resetUserPassword('${u.email}')" class="block w-full px-4 py-2 text-xs text-blue-600 hover:bg-blue-50 text-left">Reset Password</button>
+                                        <button onclick="deleteUser('${doc.id}', '${role}')" class="block w-full px-4 py-2 text-xs text-red-600 hover:bg-red-50 text-left">Delete Account</button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        // --- ADMIN ACTIONS ---
+        function toggleUserStatus(uid, status, role) {
+            db.collection('users').doc(uid).update({ isDisabled: status }).then(() => {
+                showToast(`User ${status ? 'Disabled' : 'Enabled'}`);
+                fetchUsers(role);
+            }).catch(e => alert("Error: " + e.message));
+        }
+
+        function resetUserPassword(email) {
+            if(!confirm(`Send password reset email to ${email}?`)) return;
+            auth.sendPasswordResetEmail(email)
+                .then(() => showToast("Reset email sent successfully"))
+                .catch(e => alert("Error: " + e.message));
+        }
+
+        function deleteUser(uid, role) {
+            if(!confirm("Are you sure? This removes their profile data from the database.")) return;
+            db.collection('users').doc(uid).delete().then(() => {
+                showToast("User profile deleted");
+                fetchUsers(role);
+            }).catch(e => alert("Error: " + e.message));
+        }
+
+        // --- 5. DONATION HISTORY ---
+        function fetchHistory() {
+            db.collection('donations').orderBy('createdAt', 'desc').get().then(snap => {
+                const tbody = document.getElementById('history-table-body');
+                tbody.innerHTML = '';
+                
+                if (snap.empty) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">No records found.</td></tr>';
+                    return;
+                }
+
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const date = d.createdAt ? new Date(d.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                    const statusBadge = d.status === 'Claimed' 
+                        ? `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full border border-green-200">Claimed</span>` 
+                        : `<span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full border border-gray-200">Available</span>`;
+
+                    tbody.innerHTML += `
+                        <tr class="bg-white border-b hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-gray-500 text-xs">${date}</td>
+                            <td class="px-6 py-4 font-medium text-gray-900">${d.restaurantName}</td>
+                            <td class="px-6 py-4">${d.foodName}</td>
+                            <td class="px-6 py-4 text-center">${d.servings}</td>
+                            <td class="px-6 py-4">${statusBadge}</td>
+                            <td class="px-6 py-4 text-gray-500 text-xs">${d.orphanageName || '-'}</td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        // --- UTILS ---
+        function switchTab(tabName) {
+            ['overview', 'restaurants', 'orphanages', 'history'].forEach(t => {
+                document.getElementById('tab-' + t).classList.add('hidden');
+                const btn = document.getElementById('nav-' + t);
+                btn.classList.remove('bg-gray-800', 'text-brand-orange');
+                btn.classList.add('text-gray-400', 'hover:text-white');
+            });
+
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+            const activeBtn = document.getElementById('nav-' + tabName);
+            activeBtn.classList.remove('text-gray-400', 'hover:text-white');
+            activeBtn.classList.add('bg-gray-800', 'text-brand-orange');
+
+            const titles = { overview: 'Dashboard Overview', restaurants: 'Manage Restaurants', orphanages: 'Manage Orphanages', history: 'Donation Database' };
+            document.getElementById('page-title').innerText = titles[tabName];
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            t.classList.remove('translate-y-32', 'opacity-0');
+            setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3000);
+        }
+
+        function logout() {
+            auth.signOut().then(() => window.location.href = 'login.html');
+        }
+    </script>
+</body>
+</html>
