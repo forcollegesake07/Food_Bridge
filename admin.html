@@ -67,7 +67,7 @@
                 <button onclick="switchTab('overview')" id="nav-overview" class="w-full flex items-center p-3 rounded-xl bg-gray-800 text-brand-orange transition-all hover:bg-gray-700">
                     <i class="fa-solid fa-chart-pie w-6"></i> Overview
                 </button>
-                <div class="pt-4 pb-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Manage Users</div>
+                <div class="pt-4 pb-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Analytics</div>
                 <button onclick="switchTab('restaurants')" id="nav-restaurants" class="w-full flex items-center p-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-all">
                     <i class="fa-solid fa-utensils w-6"></i> Restaurants
                 </button>
@@ -127,11 +127,11 @@
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-1">
-                            <h3 class="font-bold text-gray-800 mb-4">Activity Ratio</h3>
+                            <h3 class="font-bold text-gray-800 mb-4">Platform Overview</h3>
                             <div class="relative h-64 flex justify-center"><canvas id="impactChart"></canvas></div>
                         </div>
                         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2 overflow-hidden">
-                            <h3 class="font-bold text-gray-800 mb-4">Recent 10 Logs</h3>
+                            <h3 class="font-bold text-gray-800 mb-4">Recent System Logs</h3>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm text-left"><tbody id="recent-table-body"></tbody></table>
                             </div>
@@ -143,24 +143,26 @@
                 <div id="tab-users" class="hidden space-y-6">
                     <div class="flex flex-col md:flex-row justify-between gap-4">
                         <div class="relative w-full md:w-96">
-                            <input type="text" id="user-search" placeholder="Search users..." class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-orange outline-none shadow-sm" onkeyup="filterUsers()">
+                            <input type="text" id="user-search" placeholder="Search..." class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-orange outline-none shadow-sm" onkeyup="filterUsers()">
                             <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-gray-400"></i>
                         </div>
                         <button onclick="refreshUsers()" class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50"><i class="fa-solid fa-rotate mr-2"></i>Refresh</button>
                     </div>
 
                     <!-- Table -->
-                    <table class="w-full text-sm text-left mobile-card-view">
-                        <thead class="text-xs text-gray-500 uppercase bg-gray-100 hidden md:table-header-group">
-                            <tr>
-                                <th class="px-6 py-4 rounded-tl-xl">Profile</th>
-                                <th class="px-6 py-4">Contact</th>
-                                <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4 rounded-tr-xl text-right">Manage</th>
-                            </tr>
-                        </thead>
-                        <tbody id="users-table-body" class="bg-transparent md:bg-white divide-y divide-gray-100"></tbody>
-                    </table>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <table class="w-full text-sm text-left mobile-card-view">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-50 hidden md:table-header-group">
+                                <tr>
+                                    <th class="px-6 py-4">Profile</th>
+                                    <th class="px-6 py-4">Contact</th>
+                                    <th class="px-6 py-4">Address</th>
+                                    <th class="px-6 py-4 text-right">Analytics</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="bg-transparent md:bg-white divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- TAB: HISTORY -->
@@ -185,30 +187,66 @@
         </div>
     </div>
 
-    <!-- ACTION MODAL -->
-    <div id="action-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl transform scale-100 transition-all">
-            <div class="text-center mb-6">
-                <div id="modal-icon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl bg-gray-100"></div>
-                <h3 id="modal-title" class="text-xl font-bold text-gray-800">Confirm Action</h3>
-                <p id="modal-desc" class="text-sm text-gray-500 mt-2">Are you sure?</p>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="closeModal()" class="flex-1 py-3 rounded-xl border border-gray-200 font-medium text-gray-600 hover:bg-gray-50 transition">Cancel</button>
-                <button id="modal-confirm-btn" class="flex-1 py-3 rounded-xl font-bold text-white shadow-lg transition transform active:scale-95">Confirm</button>
+    <!-- ENTITY DETAIL MODAL (ANALYTICS) -->
+    <div id="detail-modal" class="fixed inset-0 z-[60] hidden bg-black/50 backdrop-blur-sm overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl relative overflow-hidden animate-fade-in">
+                <!-- Header -->
+                <div class="bg-brand-dark p-6 text-white flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold" id="detail-name">User Name</h2>
+                        <div class="flex gap-4 mt-2 text-sm text-gray-400">
+                            <p id="detail-email"><i class="fa-solid fa-envelope mr-1"></i> email@test.com</p>
+                            <p id="detail-phone"><i class="fa-solid fa-phone mr-1"></i> +91 0000000</p>
+                        </div>
+                    </div>
+                    <button onclick="closeDetailModal()" class="text-gray-400 hover:text-white bg-white/10 p-2 rounded-full"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+
+                <div class="p-6 md:p-8 space-y-8 bg-gray-50">
+                    <!-- 3 Pie Charts -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
+                            <h4 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">All Time</h4>
+                            <div class="relative w-32 h-32"><canvas id="chart-total"></canvas></div>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
+                            <h4 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">This Month</h4>
+                            <div class="relative w-32 h-32"><canvas id="chart-month"></canvas></div>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
+                            <h4 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">This Week</h4>
+                            <div class="relative w-32 h-32"><canvas id="chart-week"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Specific History Table -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 bg-gray-50/50">
+                            <h3 class="font-bold text-gray-800">Transaction History</h3>
+                        </div>
+                        <div class="max-h-64 overflow-y-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="px-6 py-3">Date</th>
+                                        <th class="px-6 py-3">Item</th>
+                                        <th class="px-6 py-3">Status</th>
+                                        <th class="px-6 py-3">Counterparty</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-history-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Toast -->
-    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-32 opacity-0 transition-all duration-500 bg-brand-dark text-white px-6 py-3 rounded-xl shadow-xl flex items-center gap-3">
-        <i class="fa-solid fa-circle-check text-brand-green"></i>
-        <span id="toast-msg" class="text-sm font-medium">Notification</span>
-    </div>
-
     <script>
         // ==========================================
-        // FIREBASE CONFIGURATION (PASTE KEYS HERE)
+        // FIREBASE CONFIGURATION
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0",
@@ -225,6 +263,9 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
         let currentTabRole = '';
+        
+        // Chart instances storage
+        let detailCharts = { total: null, month: null, week: null };
 
         // AUTH CHECK
         auth.onAuthStateChanged(async (user) => {
@@ -291,24 +332,18 @@
 
                 snap.forEach(doc => {
                     const u = doc.data();
-                    const isDis = u.isDisabled === true; // Strict check
-                    const statusBadge = isDis
-                        ? `<span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-200">Disabled</span>`
-                        : `<span class="bg-green-100 text-green-600 px-3 py-1 rounded-full text-xs font-bold border border-green-200">Active</span>`;
+                    // Store user data in button for easy access
+                    const userDataStr = encodeURIComponent(JSON.stringify({...u, id: doc.id}));
                     
-                    const btnLabel = isDis ? 'Enable' : 'Disable';
-                    const btnIcon = isDis ? 'fa-unlock' : 'fa-ban';
-                    const btnColor = isDis ? 'text-green-500 bg-green-50' : 'text-orange-500 bg-orange-50';
-
                     tbody.innerHTML += `
-                        <tr class="group hover:bg-gray-50 transition-colors">
+                        <tr class="group hover:bg-gray-50 transition-colors cursor-pointer" onclick="openDetailModal('${userDataStr}', '${role}')">
                             <td class="px-6 py-4" data-label="Profile">
                                 <div class="flex items-center">
-                                    <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold mr-3 border border-gray-200">
-                                        ${u.name ? u.name[0].toUpperCase() : '?'}
+                                    <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold mr-3 border border-gray-200 uppercase">
+                                        ${u.name ? u.name[0] : '?'}
                                     </div>
                                     <div>
-                                        <div class="font-bold text-gray-900">${u.name}</div>
+                                        <div class="font-bold text-gray-900 group-hover:text-brand-orange transition-colors">${u.name}</div>
                                         <div class="text-xs text-gray-400">ID: ...${doc.id.slice(-4)}</div>
                                     </div>
                                 </div>
@@ -319,16 +354,11 @@
                                     <p><i class="fa-solid fa-phone w-5 text-gray-400"></i> ${u.phone || 'N/A'}</p>
                                 </div>
                             </td>
-                            <td class="px-6 py-4" data-label="Status">${statusBadge}</td>
-                            <td class="px-6 py-4" data-label="Actions">
-                                <div class="flex justify-end gap-2">
-                                    <button onclick="openModal('status', '${doc.id}', ${!isDis})" class="px-3 py-2 ${btnColor} rounded-lg text-xs font-bold transition hover:opacity-80" title="${btnLabel}">
-                                        <i class="fa-solid ${btnIcon} mr-1"></i> ${btnLabel}
-                                    </button>
-                                    <button onclick="openModal('delete', '${doc.id}')" class="px-3 py-2 bg-red-50 text-red-500 rounded-lg text-xs font-bold transition hover:bg-red-100 hover:text-red-600" title="Delete">
-                                        <i class="fa-solid fa-trash mr-1"></i> Delete
-                                    </button>
-                                </div>
+                            <td class="px-6 py-4 text-sm text-gray-500" data-label="Address">${u.address || 'N/A'}</td>
+                            <td class="px-6 py-4 text-right" data-label="Analytics">
+                                <button class="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold transition hover:bg-blue-100">
+                                    View Report <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </button>
                             </td>
                         </tr>
                     `;
@@ -336,54 +366,120 @@
             });
         }
 
-        // --- ACTION LOGIC ---
-        function openModal(type, id, newState) {
-            const modal = document.getElementById('action-modal');
-            const title = document.getElementById('modal-title');
-            const desc = document.getElementById('modal-desc');
-            const icon = document.getElementById('modal-icon');
-            const btn = document.getElementById('modal-confirm-btn');
-
-            modal.classList.remove('hidden');
-
-            if (type === 'status') {
-                const action = newState ? 'Disable' : 'Enable';
-                title.innerText = `${action} Account`;
-                desc.innerText = `Are you sure you want to ${action.toLowerCase()} this user? They will ${newState ? 'lose' : 'regain'} access.`;
-                icon.innerHTML = `<i class="fa-solid fa-user-lock text-orange-500"></i>`;
-                btn.innerText = action;
-                btn.className = "flex-1 py-3 rounded-xl font-bold text-white shadow-lg bg-orange-500 hover:bg-orange-600";
+        // --- DETAIL MODAL LOGIC (ANALYTICS) ---
+        function openDetailModal(userStr, role) {
+            const user = JSON.parse(decodeURIComponent(userStr));
+            
+            // Set Header Info
+            document.getElementById('detail-name').innerText = user.name;
+            document.getElementById('detail-email').innerHTML = `<i class="fa-solid fa-envelope mr-1"></i> ${user.email}`;
+            document.getElementById('detail-phone').innerHTML = `<i class="fa-solid fa-phone mr-1"></i> ${user.phone || 'N/A'}`;
+            
+            document.getElementById('detail-modal').classList.remove('hidden');
+            
+            // Determine Query Field based on role
+            const queryField = role === 'restaurant' ? 'restaurantId' : 'claimedBy';
+            
+            // Fetch Specific History
+            db.collection('donations').where(queryField, '==', user.id).orderBy('createdAt', 'desc').get().then(snap => {
+                const tbody = document.getElementById('detail-history-body');
+                tbody.innerHTML = '';
                 
-                btn.onclick = async () => {
-                    try {
-                        await db.collection('users').doc(id).update({ isDisabled: newState });
-                        showToast(`User ${action}d successfully`);
-                        fetchUsers(currentTabRole);
-                        closeModal();
-                    } catch (e) { alert("Error: " + e.message); }
-                };
-
-            } else if (type === 'delete') {
-                title.innerText = "Delete Account";
-                desc.innerText = "This action removes their profile data permanently. This cannot be undone.";
-                icon.innerHTML = `<i class="fa-solid fa-trash-can text-red-500"></i>`;
-                btn.innerText = "Delete Forever";
-                btn.className = "flex-1 py-3 rounded-xl font-bold text-white shadow-lg bg-red-500 hover:bg-red-600";
+                let total = { available: 0, claimed: 0 };
+                let month = { available: 0, claimed: 0 };
+                let week = { available: 0, claimed: 0 };
                 
-                btn.onclick = async () => {
-                    try {
-                        await db.collection('users').doc(id).delete();
-                        showToast("User deleted successfully");
-                        fetchUsers(currentTabRole);
-                        closeModal();
-                    } catch (e) { alert("Error: " + e.message); }
-                };
-            }
+                const now = new Date();
+                const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+                if(snap.empty) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-400">No records found for this user.</td></tr>'; }
+
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const statusClass = d.status === 'Claimed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+                    const counterParty = role === 'restaurant' ? (d.orphanageName || 'Waiting...') : d.restaurantName;
+                    const date = d.createdAt ? new Date(d.createdAt.seconds * 1000) : new Date();
+
+                    // Count Stats
+                    const isClaimed = d.status === 'Claimed';
+                    // For Restaurants: Count Available vs Claimed posts
+                    // For Orphanages: They only have 'Claimed' usually, but data model might evolve. 
+                    // Assuming for Orphanages, if they are 'claimedBy', status is Claimed.
+                    
+                    if (role === 'restaurant') {
+                        if (isClaimed) total.claimed++; else total.available++;
+                        if (date >= oneMonthAgo) { if(isClaimed) month.claimed++; else month.available++; }
+                        if (date >= oneWeekAgo) { if(isClaimed) week.claimed++; else week.available++; }
+                    } else {
+                        // For Orphanages, "Available" doesn't make sense as they only interact when claiming
+                        // So charts might just be 100% "Claimed" vs 0% "Pending" or maybe break down by food type later.
+                        // For now, we will just show "Claimed" counts vs 0 for Available to keep chart logic simple
+                        total.claimed++; 
+                        if (date >= oneMonthAgo) month.claimed++;
+                        if (date >= oneWeekAgo) week.claimed++;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr class="border-b border-gray-50 hover:bg-gray-50">
+                            <td class="px-6 py-3 text-gray-500">${date.toLocaleDateString()}</td>
+                            <td class="px-6 py-3 font-medium">${d.foodName} (${d.servings})</td>
+                            <td class="px-6 py-3"><span class="${statusClass} px-2 py-1 rounded text-xs font-bold">${d.status}</span></td>
+                            <td class="px-6 py-3 text-gray-500">${counterParty}</td>
+                        </tr>
+                    `;
+                });
+
+                // Render Charts
+                renderPieChart('chart-total', total);
+                renderPieChart('chart-month', month);
+                renderPieChart('chart-week', week);
+            });
         }
 
-        function closeModal() { document.getElementById('action-modal').classList.add('hidden'); }
+        function renderPieChart(canvasId, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            // Destroy previous chart if exists
+            if (detailCharts[canvasId.split('-')[1]]) {
+                detailCharts[canvasId.split('-')[1]].destroy();
+            }
 
-        // --- FETCH STATS & HISTORY ---
+            // Handle empty data
+            if (data.available === 0 && data.claimed === 0) {
+                // Show empty chart placeholder
+                detailCharts[canvasId.split('-')[1]] = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels: ['No Data'], datasets: [{ data: [1], backgroundColor: ['#E5E7EB'], borderWidth: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' }
+                });
+                return;
+            }
+
+            detailCharts[canvasId.split('-')[1]] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending', 'Claimed'],
+                    datasets: [{
+                        data: [data.available, data.claimed],
+                        backgroundColor: ['#F97316', '#10B981'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '70%',
+                    plugins: { legend: { display: false } } // Hide legend for cleaner look in small cards
+                }
+            });
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        // --- OVERVIEW STATS ---
         function fetchStats() {
             db.collection('donations').get().then(snap => {
                 const total = snap.size;
@@ -440,18 +536,12 @@
         }
 
         // UTILS
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            t.classList.remove('translate-y-32', 'opacity-0');
-            setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3000);
-        }
         function filterUsers() {
             const term = document.getElementById('user-search').value.toLowerCase();
             const rows = document.getElementById('users-table-body').getElementsByTagName('tr');
             Array.from(rows).forEach(row => { row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none'; });
         }
-        function refreshUsers() { fetchUsers(currentTabRole); showToast("List refreshed"); }
+        function refreshUsers() { fetchUsers(currentTabRole); }
         function logout() { auth.signOut().then(() => window.location.href = 'login.html'); }
     </script>
 </body>
