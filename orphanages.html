@@ -27,6 +27,7 @@
                         brand: {
                             orange: '#F97316', 
                             green: '#10B981',
+                            teal: '#14B8A6',
                             dark: '#1F2937',
                             light: '#F0FDFA'
                         }
@@ -65,11 +66,14 @@
             <button onclick="switchTab('overview')" id="btn-overview" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all bg-brand-green text-white shadow-md">
                 <i class="fa-solid fa-chart-pie w-5 mr-3"></i> Overview
             </button>
+            <button onclick="switchTab('my-requests')" id="btn-my-requests" class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 hover:text-brand-green transition-all">
+                <i class="fa-solid fa-bullhorn w-5 mr-3"></i> My Requests
+            </button>
             <button onclick="switchTab('history')" id="btn-history" class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 hover:text-brand-green transition-all">
-                <i class="fa-solid fa-clock-rotate-left w-5 mr-3"></i> History
+                <i class="fa-solid fa-clock-rotate-left w-5 mr-3"></i> Claim History
             </button>
             <button onclick="switchTab('details')" id="btn-details" class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 hover:text-brand-green transition-all">
-                <i class="fa-solid fa-house-chimney w-5 mr-3"></i> Orphanage Details
+                <i class="fa-solid fa-house-chimney w-5 mr-3"></i> Center Details
             </button>
         </nav>
         <div class="p-4 border-t border-gray-100">
@@ -90,7 +94,7 @@
     <main class="flex-grow overflow-y-auto p-4 md:p-8 relative z-10">
         
         <!-- TAB: OVERVIEW -->
-        <div id="tab-overview" class="max-w-6xl mx-auto space-y-8 animate-fade-in hidden">
+        <div id="tab-overview" class="max-w-6xl mx-auto space-y-8 animate-fade-in">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 class="text-3xl font-bold text-white drop-shadow-md">Dashboard Overview</h1>
@@ -102,12 +106,12 @@
                 </div>
             </div>
 
-            <!-- LIVE FEED (Replaces Form) -->
+            <!-- LIVE FEED -->
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden border-t-4 border-brand-green">
                 <div class="p-6 border-b border-gray-100 bg-green-50/50 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-brand-green text-white flex items-center justify-center shadow-md">
-                            <i class="fa-solid fa-bell"></i>
+                            <i class="fa-solid fa-utensils"></i>
                         </div>
                         <h2 class="text-xl font-bold text-gray-800">Live Donation Feed</h2>
                     </div>
@@ -115,7 +119,6 @@
                 </div>
                 
                 <div class="p-6">
-                    <!-- Feed Grid -->
                     <div id="feed-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <p class="text-center text-gray-400 col-span-full py-8">Looking for available donations...</p>
                     </div>
@@ -171,6 +174,50 @@
             </div>
         </div>
 
+        <!-- TAB: MY REQUESTS -->
+        <div id="tab-my-requests" class="max-w-6xl mx-auto space-y-8 animate-fade-in hidden">
+             <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold text-white drop-shadow-md">Urgent Food Requests</h1>
+                <div class="bg-blue-500 px-4 py-2 rounded-lg shadow-md">
+                    <span class="text-white font-bold"><i class="fa-solid fa-bullhorn mr-2"></i> Broadcast Need</span>
+                </div>
+            </div>
+
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                 <!-- CREATE REQUEST -->
+                 <div class="md:col-span-1">
+                     <div class="bg-white rounded-3xl shadow-lg p-8 border-t-4 border-blue-500 sticky top-4">
+                         <div class="flex items-center mb-6">
+                             <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center mr-3 font-bold shadow-sm"><i class="fa-solid fa-plus"></i></div>
+                             <h2 class="text-xl font-bold text-gray-800">Request Food</h2>
+                         </div>
+                         <form onsubmit="createRequest(event)" class="space-y-4">
+                             <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Item Needed</label>
+                                <input type="text" id="req-item" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="e.g. Lunch for Kids">
+                             </div>
+                             <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Quantity</label>
+                                <input type="number" id="req-qty" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="50">
+                             </div>
+                             <button type="submit" id="btn-request" class="w-full py-3 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 shadow-lg shadow-blue-200 transition transform active:scale-95">Post Urgent Request</button>
+                         </form>
+                     </div>
+                 </div>
+                 
+                 <!-- REQUEST LIST -->
+                 <div class="md:col-span-2">
+                     <div class="bg-white rounded-3xl shadow-xl overflow-hidden p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-6">Request History</h2>
+                        <div id="my-requests-list" class="space-y-4">
+                            <!-- Populated by JS -->
+                            <p class="text-center text-gray-400 py-4">Loading requests...</p>
+                        </div>
+                     </div>
+                 </div>
+             </div>
+        </div>
+
         <!-- TAB: HISTORY -->
         <div id="tab-history" class="hidden max-w-5xl mx-auto space-y-6 animate-fade-in">
             <div class="flex items-center justify-between">
@@ -190,6 +237,7 @@
                                 <th class="px-6 py-4">Quantity</th>
                                 <th class="px-6 py-4">Donor Restaurant</th>
                                 <th class="px-6 py-4">Contact</th>
+                                <th class="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="history-table-body" class="divide-y divide-gray-100">
@@ -216,24 +264,24 @@
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Orphanage Name</label>
                         <div class="relative">
                             <i class="fa-solid fa-building absolute left-4 top-3.5 text-gray-400"></i>
-                            <input type="text" id="detail-name" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-green outline-none">
+                            <input type="text" id="detail-name" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-green outline-none">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Phone Number</label>
                         <div class="relative">
                             <i class="fa-solid fa-phone absolute left-4 top-3.5 text-gray-400"></i>
-                            <input type="tel" id="detail-phone" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-green outline-none">
+                            <input type="tel" id="detail-phone" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-green outline-none">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Address</label>
                         <div class="relative">
                             <i class="fa-solid fa-location-dot absolute left-4 top-3.5 text-gray-400"></i>
-                            <textarea id="detail-address" rows="3" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-green outline-none"></textarea>
+                            <textarea id="detail-address" rows="3" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-green outline-none"></textarea>
                         </div>
                     </div>
-                    <button type="submit" class="w-full py-4 bg-brand-green text-white font-bold rounded-xl hover:bg-green-600 transition shadow-lg transform active:scale-95">
+                    <button type="submit" class="w-full py-4 bg-brand-green text-white font-bold rounded-xl hover:bg-green-700 transition shadow-lg transform active:scale-95">
                         Save Changes
                     </button>
                 </form>
@@ -252,7 +300,7 @@
             <p class="text-gray-500 text-sm mb-6">You are about to claim this donation. The restaurant will be notified.</p>
             <div class="flex gap-3">
                 <button onclick="closeModal()" class="flex-1 py-3 rounded-xl border border-gray-200 font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
-                <button id="confirm-btn" class="flex-1 py-3 rounded-xl bg-brand-green text-white font-bold hover:bg-green-600 shadow-lg">Yes, Claim it</button>
+                <button id="confirm-btn" class="flex-1 py-3 rounded-xl bg-brand-green text-white font-bold hover:bg-green-700 shadow-lg">Yes, Claim it</button>
             </div>
         </div>
     </div>
@@ -289,23 +337,23 @@
                 if (doc.exists) {
                     userData = doc.data();
                     
-                    // SAFE DOM UPDATE: Check existence before assignment
                     const navUser = document.getElementById('nav-username');
-                    if (navUser) navUser.innerText = userData.name || "Orphanage";
-
+                    if(navUser) navUser.innerText = userData.name || "Orphanage";
+                    
                     const sideName = document.getElementById('sidebar-name');
-                    if (sideName) sideName.innerText = userData.name || "Orphanage";
+                    if(sideName) sideName.innerText = userData.name || "Orphanage";
                     
                     const sideId = document.getElementById('sidebar-id');
-                    if (sideId) sideId.innerText = "ID: " + user.uid.slice(0, 6);
+                    if(sideId) sideId.innerText = "ID: " + user.uid.slice(0, 6);
                     
-                    // Pre-fill fields if they exist
                     if(document.getElementById('detail-name')) document.getElementById('detail-name').value = userData.name || "";
                     if(document.getElementById('detail-phone')) document.getElementById('detail-phone').value = userData.phone || "";
                     if(document.getElementById('detail-address')) document.getElementById('detail-address').value = userData.address || "";
 
                     document.getElementById('tab-overview').classList.remove('hidden');
-                    loadData();
+                    loadAvailableDonations();
+                    loadMyClaims();
+                    loadMyRequests();
                 }
             } else {
                 window.location.href = 'https://foodbridge.qzz.io/login.html';
@@ -314,130 +362,209 @@
 
         // TAB SWITCHER
         function switchTab(tab) {
-            ['overview', 'history', 'details'].forEach(t => {
-                document.getElementById('tab-' + t).classList.add('hidden');
-                const btn = document.getElementById('btn-' + t);
+            ['overview', 'my-requests', 'history', 'details'].forEach(t => {
+                document.getElementById('tab-'+t).classList.add('hidden');
+                const btn = document.getElementById('btn-'+t);
                 btn.classList.remove('bg-brand-green', 'text-white', 'shadow-md');
                 btn.classList.add('text-gray-600', 'hover:bg-gray-50', 'hover:text-brand-green');
+                
+                // Specific style reset for blue request button if not active
+                if(t === 'my-requests') {
+                   // No special handling needed as we are resetting to default state above,
+                   // but will re-apply special state below if active
+                }
             });
             
-            document.getElementById('tab-' + tab).classList.remove('hidden');
-            const activeBtn = document.getElementById('btn-' + tab);
+            document.getElementById('tab-'+tab).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-'+tab);
+            
             activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-50', 'hover:text-brand-green');
-            activeBtn.classList.add('bg-brand-green', 'text-white', 'shadow-md');
+            
+            if(tab === 'my-requests') {
+                 // Keep green theme for sidebar consistency, or use blue to match content.
+                 // Using Green to keep sidebar uniform.
+                 activeBtn.classList.add('bg-brand-green', 'text-white', 'shadow-md');
+            } else {
+                 activeBtn.classList.add('bg-brand-green', 'text-white', 'shadow-md');
+            }
+            
+            // Also update top nav buttons if they exist (for Overview/MyRequests)
+             if(document.getElementById('nav-overview')) {
+                document.getElementById('nav-overview').className = tab === 'overview' ? "px-6 py-3 rounded-xl font-bold text-white bg-brand-green shadow-md transition whitespace-nowrap" : "px-6 py-3 rounded-xl font-bold text-gray-500 bg-white hover:bg-green-50 transition whitespace-nowrap";
+             }
+             if(document.getElementById('nav-my-requests')) {
+                document.getElementById('nav-my-requests').className = tab === 'my-requests' ? "px-6 py-3 rounded-xl font-bold text-white bg-blue-500 shadow-md transition whitespace-nowrap" : "px-6 py-3 rounded-xl font-bold text-gray-500 bg-white hover:bg-blue-50 hover:text-blue-500 border border-transparent hover:border-blue-100 transition whitespace-nowrap";
+             }
+
         }
 
-        // LOAD DATA
-        function loadData() {
-            // 1. Available Donations (Feed)
-            db.collection('donations')
-              .where("status", "==", "Available")
-              .orderBy("createdAt", "desc")
-              .onSnapshot((snapshot) => {
-                  const feed = document.getElementById('feed-container');
-                  if (!feed) return;
-                  feed.innerHTML = "";
-                  
-                  if (snapshot.empty) {
-                      feed.innerHTML = `<div class="col-span-full text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200"><i class="fa-solid fa-bowl-rice text-4xl text-gray-300 mb-2"></i><p class="text-gray-400 font-medium">No available food right now.</p></div>`;
-                  }
+        // --- NEW: REQUEST LOGIC ---
+        async function createRequest(e) {
+            e.preventDefault();
+            if(!userData.address || !userData.phone) { alert("Complete profile first!"); switchTab('details'); return; }
+            
+            const item = document.getElementById('req-item').value;
+            const qty = document.getElementById('req-qty').value;
+            const btn = document.getElementById('btn-request');
+            btn.innerText = "Posting..."; btn.disabled = true;
 
-                  snapshot.forEach(doc => {
-                      const data = doc.data();
-                      const img = data.imageUrl || 'https://placehold.co/400x300/e2e8f0/94a3b8?text=Food+Image';
-                      
-                      feed.innerHTML += `
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                            <div class="relative h-48">
-                                <img src="${img}" class="w-full h-full object-cover">
-                                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-brand-dark shadow-sm">
-                                    <i class="fa-solid fa-clock mr-1 text-brand-green"></i> Available
+            try {
+                await db.collection('requests').add({
+                    orphanageId: currentUser.uid,
+                    orphanageName: userData.name,
+                    orphanageAddress: userData.address,
+                    orphanagePhone: userData.phone,
+                    itemNeeded: item,
+                    quantity: qty,
+                    status: 'Pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast("Request Broadcasted!");
+                e.target.reset();
+            } catch(e) { alert("Error: " + e.message); }
+            finally { btn.innerText = "Post Urgent Request"; btn.disabled = false; }
+        }
+
+        function loadMyRequests() {
+            db.collection('requests').where('orphanageId', '==', currentUser.uid).orderBy('createdAt', 'desc').onSnapshot(snap => {
+                const container = document.getElementById('my-requests-list');
+                container.innerHTML = '';
+                if(snap.empty) { container.innerHTML = "<p class='text-gray-400 text-center py-4'>No active requests.</p>"; return; }
+                
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const isDone = d.status === 'Fulfilled';
+                    const statusBadge = isDone 
+                        ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200">Fulfilled by ${d.restaurantName || 'Restaurant'}</span>`
+                        : `<span class="bg-red-100 text-red-500 px-3 py-1 rounded-full text-xs font-bold animate-pulse border border-red-200">Broadcasting...</span>`;
+                    
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center font-bold">
+                                    <i class="fa-solid fa-bullhorn"></i>
                                 </div>
-                            </div>
-                            <div class="p-5 flex-grow flex flex-col justify-between">
                                 <div>
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="text-xs font-bold bg-green-50 text-brand-green px-2 py-1 rounded-md uppercase tracking-wide">
-                                            <i class="fa-solid fa-utensils mr-1"></i> ${data.restaurantName}
-                                        </span>
-                                    </div>
-                                    <h3 class="font-bold text-xl text-brand-dark mb-1">${data.foodName}</h3>
-                                    <p class="text-sm text-gray-500 mb-4 font-medium">Serves: <span class="text-brand-dark">${data.servings} People</span></p>
-                                    
-                                    <div class="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 space-y-1.5 border border-gray-100">
-                                        <p class="flex items-start gap-2"><i class="fa-solid fa-location-dot text-brand-green mt-0.5"></i> <span>${data.restaurantAddress || 'No Address'}</span></p>
-                                        <p class="flex items-center gap-2"><i class="fa-solid fa-phone text-brand-green"></i> ${data.restaurantPhone || 'No Phone'}</p>
-                                    </div>
+                                    <h4 class="font-bold text-gray-800">${d.itemNeeded}</h4>
+                                    <p class="text-sm text-gray-500">Qty: ${d.quantity} • ${new Date(d.createdAt?.seconds*1000).toLocaleDateString()}</p>
                                 </div>
-                                <button onclick="openConfirmModal('${doc.id}')" class="w-full mt-5 py-3 bg-brand-green text-white font-bold rounded-xl hover:bg-green-700 shadow-md transition-colors flex items-center justify-center gap-2">
-                                    <span>Claim Donation</span> <i class="fa-solid fa-arrow-right"></i>
-                                </button>
                             </div>
+                            ${statusBadge}
                         </div>
-                      `;
-                  });
-              });
+                    `;
+                });
+            });
+        }
+        // --------------------------
 
-            // 2. My Claims (History)
-            db.collection('donations')
-              .where("claimedBy", "==", currentUser.uid)
-              .orderBy("claimedAt", "desc")
-              .onSnapshot((snapshot) => {
+        // UPDATE PROFILE
+        async function saveProfile(e) { 
+            e.preventDefault(); 
+            const name = document.getElementById('detail-name').value; 
+            const phone = document.getElementById('detail-phone').value; 
+            const address = document.getElementById('detail-address').value; 
+            try { 
+                await db.collection('users').doc(currentUser.uid).update({ name, phone, address }); 
+                userData.name = name; userData.phone = phone; userData.address = address; 
+                
+                const navUser = document.getElementById('nav-username');
+                if(navUser) navUser.innerText = name;
+                
+                const sideName = document.getElementById('sidebar-name');
+                if(sideName) sideName.innerText = name;
+
+                showToast("Profile Updated!"); 
+            } catch(err) { console.error(err); } 
+        }
+
+        // LOAD AVAILABLE DONATIONS
+        function loadAvailableDonations() { 
+            db.collection('donations').where("status", "==", "Available").orderBy("createdAt", "desc").onSnapshot(snapshot => { 
+                const container = document.getElementById('feed-container'); 
+                if(!container) return;
+                container.innerHTML = ""; 
+                if (snapshot.empty) { container.innerHTML = "<div class='col-span-full text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200'><i class='fa-solid fa-bowl-rice text-4xl text-gray-300 mb-2'></i><p class='text-gray-400 font-medium'>No available food right now.</p></div>"; return; } 
+                snapshot.forEach(doc => { 
+                    const data = doc.data(); 
+                    const img = data.imageUrl || 'https://placehold.co/400x300/e2e8f0/94a3b8?text=Food+Image'; 
+                    const restDetails = `<div class="mt-3 text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg border border-gray-100 space-y-1"><p class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-brand-green"></i> ${data.restaurantAddress || 'Address unavailable'}</p><p class="flex items-center gap-2"><i class="fa-solid fa-phone text-brand-green"></i> ${data.restaurantPhone || 'Phone unavailable'}</p></div>`; 
+                    container.innerHTML += `<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"><div class="relative h-48"><img src="${img}" class="w-full h-full object-cover"><div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-brand-dark shadow-sm"><i class="fa-solid fa-clock mr-1 text-brand-green"></i> Available</div></div><div class="p-5 flex-grow flex flex-col justify-between"><div><div class="flex items-center gap-2 mb-2"><span class="text-xs font-bold bg-green-50 text-brand-green px-2 py-1 rounded-md uppercase tracking-wide"><i class="fa-solid fa-utensils mr-1"></i> ${data.restaurantName}</span></div><h3 class="font-bold text-xl text-brand-dark mb-1">${data.foodName}</h3><p class="text-sm text-gray-500 mb-4 font-medium">Serves: <span class="text-brand-dark">${data.servings} People</span></p>${restDetails}</div><button onclick="openConfirmModal('${doc.id}')" class="w-full mt-5 py-3 bg-brand-green text-white font-bold rounded-xl hover:bg-green-700 shadow-md transition-colors flex items-center justify-center gap-2"><span>Claim Donation</span> <i class="fa-solid fa-arrow-right"></i></button></div></div>`; 
+                }); 
+            }); 
+        }
+
+        // CLAIM LOGIC
+        function openConfirmModal(id) { selectedDonationId = id; document.getElementById('confirm-modal').classList.remove('hidden'); document.getElementById('confirm-btn').onclick = () => processClaim(id); }
+        function closeModal() { document.getElementById('confirm-modal').classList.add('hidden'); }
+        async function processClaim(docId) { 
+            if(!userData.address || !userData.phone) { alert("Please add your Address/Phone in 'Details' tab first!"); closeModal(); switchTab('details'); return; } 
+            try { 
+                const btn = document.getElementById('confirm-btn');
+                btn.innerText = "Processing...";
+                await db.collection('donations').doc(docId).update({ status: "Claimed", claimedBy: currentUser.uid, orphanageName: userData.name, orphanageEmail: currentUser.email, orphanagePhone: userData.phone, orphanageAddress: userData.address, claimedAt: firebase.firestore.FieldValue.serverTimestamp() }); 
+                closeModal(); 
+                showToast("Claimed successfully!"); 
+            } catch(err) { alert("Error claiming."); } 
+            finally { document.getElementById('confirm-btn').innerText = "Yes, Claim it"; }
+        }
+        
+        // DELETE HISTORY LOGIC
+        async function deleteClaim(id) { 
+            if(confirm("Remove this from your history? (This deletes the record permanently)")) { 
+                try { 
+                    await db.collection('donations').doc(id).delete(); 
+                    showToast("Record removed.");
+                } catch(e) { alert("Error deleting."); } 
+            } 
+        }
+        
+        function loadMyClaims() { 
+             db.collection('donations').where("claimedBy", "==", currentUser.uid).orderBy("claimedAt", "desc").onSnapshot(snapshot => { 
                   const recentList = document.getElementById('recent-list');
                   const historyBody = document.getElementById('history-table-body');
                   
-                  if (recentList) recentList.innerHTML = "";
-                  if (historyBody) historyBody.innerHTML = "";
+                  if(recentList) recentList.innerHTML = "";
+                  if(historyBody) historyBody.innerHTML = "";
                   
                   let docCount = 0;
                   let uniqueDonors = new Set();
                   totalReceived = 0;
 
-                  if (snapshot.empty) {
-                      if (recentList) recentList.innerHTML = "<p class='text-center text-gray-400 py-4'>No claims yet.</p>";
-                      if (historyBody) historyBody.innerHTML = "<tr><td colspan='5' class='text-center p-4 text-gray-400'>No history found.</td></tr>";
+                  if(snapshot.empty) { 
+                      if(recentList) recentList.innerHTML = "<p class='text-center text-gray-400 py-4'>No claims yet.</p>"; 
+                      if(historyBody) historyBody.innerHTML = "<tr><td colspan='6' class='text-center p-4 text-gray-400'>No history found.</td></tr>";
                   }
-
-                  snapshot.forEach(doc => {
-                      const data = doc.data();
+                  
+                  snapshot.forEach(doc => { 
+                      const d = doc.data(); 
                       docCount++;
-                      totalReceived += parseInt(data.servings || 0);
-                      uniqueDonors.add(data.restaurantName);
+                      totalReceived += parseInt(d.servings || 0);
+                      if(d.restaurantName) uniqueDonors.add(d.restaurantName);
+                      
+                      const date = d.claimedAt ? new Date(d.claimedAt.seconds*1000).toLocaleDateString() : 'Just now';
 
-                      const date = data.claimedAt ? new Date(data.claimedAt.seconds * 1000).toLocaleDateString() : 'Just now';
-
-                      // Recent Activity (Limit 5)
-                      if (docCount <= 5 && recentList) {
-                          recentList.innerHTML += `
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:bg-white hover:shadow-sm transition">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-brand-green shadow-sm border border-gray-100 text-lg">
-                                        <i class="fa-solid fa-check"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-bold text-gray-800 text-sm">${data.foodName}</h4>
-                                        <p class="text-xs text-gray-500">From: ${data.restaurantName}</p>
-                                    </div>
-                                </div>
-                                <span class="text-gray-400 text-xs font-medium">${date}</span>
-                            </div>
-                          `;
+                      // Recent List
+                      if(docCount <= 5 && recentList) {
+                           recentList.innerHTML += `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:bg-white hover:shadow-sm transition"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-brand-green shadow-sm border border-gray-100 text-lg"><i class="fa-solid fa-check"></i></div><div><h4 class="font-bold text-gray-800 text-sm">${d.foodName}</h4><p class="text-xs text-gray-500">From: ${d.restaurantName}</p></div></div><span class="text-gray-400 text-xs font-medium">${date}</span></div>`; 
                       }
-
-                      // Full History Table
-                      if (historyBody) {
+                      
+                      // History Table
+                      if(historyBody) {
                           historyBody.innerHTML += `
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4 text-gray-500 text-sm font-medium">${date}</td>
-                                <td class="px-6 py-4 font-bold text-gray-800 text-sm">${data.foodName}</td>
-                                <td class="px-6 py-4 text-gray-600 text-sm">${data.servings} Servings</td>
-                                <td class="px-6 py-4 text-brand-dark text-sm font-medium">${data.restaurantName}</td>
-                                <td class="px-6 py-4 text-gray-500 text-xs">${data.restaurantPhone || '-'}</td>
+                                <td class="px-6 py-4 font-bold text-gray-800 text-sm">${d.foodName}</td>
+                                <td class="px-6 py-4 text-gray-600 text-sm">${d.servings} Servings</td>
+                                <td class="px-6 py-4 text-brand-dark text-sm font-medium">${d.restaurantName}</td>
+                                <td class="px-6 py-4 text-gray-500 text-xs">${d.restaurantPhone || '-'}</td>
+                                <td class="px-6 py-4 text-right">
+                                    <button onclick="deleteClaim('${doc.id}')" class="text-red-400 hover:text-red-600 transition p-2 hover:bg-red-50 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
+                                </td>
                             </tr>
                           `;
                       }
-                  });
-
+                  }); 
+                  
                   // Update Stats safely
                   const elReceived = document.getElementById('stat-received');
                   if (elReceived) elReceived.innerText = totalReceived;
@@ -449,98 +576,19 @@
                   if (elCount) elCount.innerText = docCount;
                   
                   updateChart(totalReceived);
-              });
-        }
-
-        // CLAIM LOGIC
-        function openConfirmModal(id) { 
-            selectedDonationId = id; 
-            document.getElementById('confirm-modal').classList.remove('hidden'); 
-            document.getElementById('confirm-btn').onclick = () => processClaim(id); 
+              }); 
         }
         
-        function closeModal() { 
-            document.getElementById('confirm-modal').classList.add('hidden'); 
-        }
+        function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toast-message').innerText = msg; t.classList.remove('translate-y-32', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3000); }
+        function logout() { auth.signOut().then(() => window.location.href = 'https://foodbridge.qzz.io/index.html'); }
         
-        async function processClaim(docId) {
-            // Check if profile is complete
-            if(!userData.address || !userData.phone) {
-                alert("Please complete your profile (Address & Phone) in the 'Details' tab before claiming!");
-                closeModal();
-                switchTab('details');
-                return;
-            }
-
-            try {
-                const btn = document.getElementById('confirm-btn');
-                btn.innerText = "Processing...";
-                
-                await db.collection('donations').doc(docId).update({
-                    status: "Claimed",
-                    claimedBy: currentUser.uid,
-                    orphanageName: userData.name,
-                    orphanageEmail: currentUser.email,
-                    orphanagePhone: userData.phone,
-                    orphanageAddress: userData.address,
-                    claimedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                closeModal();
-                showToast("Successfully claimed! Restaurant notified.");
-            } catch(err) {
-                console.error(err);
-                alert("Error claiming donation.");
-                closeModal();
-            } finally {
-                document.getElementById('confirm-btn').innerText = "Yes, Claim it";
-            }
-        }
-
-        // UPDATE PROFILE
-        async function saveProfile(e) {
-            e.preventDefault();
-            const name = document.getElementById('detail-name').value;
-            const phone = document.getElementById('detail-phone').value;
-            const address = document.getElementById('detail-address').value;
-            try {
-                await db.collection('users').doc(currentUser.uid).update({ name, phone, address });
-                userData.name = name; userData.phone = phone; userData.address = address;
-                
-                // Safe DOM updates
-                const navUser = document.getElementById('nav-username');
-                if (navUser) navUser.innerText = name;
-                
-                const sideName = document.getElementById('sidebar-name');
-                if (sideName) sideName.innerText = name;
-
-                showToast("Profile Updated!");
-            } catch(err) { 
-                console.error(err);
-                showToast("Error updating profile");
-            }
-        }
-
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            if(t) {
-                document.getElementById('toast-message').innerText = msg;
-                t.classList.remove('translate-y-32', 'opacity-0');
-                setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3000);
-            }
-        }
-
-        function logout() {
-            auth.signOut().then(() => window.location.href = 'https://foodbridge.qzz.io/index.html');
-        }
-
-        // CHART CONFIG
+        // CHART
         let myChart;
         function updateChart(total) {
             const ctxElem = document.getElementById('motivationChart');
             if(!ctxElem) return;
             const ctx = ctxElem.getContext('2d');
-            const avg = 200; // Benchmark
+            const avg = 200; 
 
             if(myChart) myChart.destroy();
 
