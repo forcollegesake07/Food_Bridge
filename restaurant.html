@@ -22,7 +22,12 @@
                 extend: {
                     fontFamily: { sans: ['Poppins', 'sans-serif'] },
                     colors: {
-                        brand: { orange: '#F97316', green: '#10B981', dark: '#1F2937', light: '#FFF7ED' }
+                        brand: {
+                            orange: '#F97316', 
+                            green: '#10B981',
+                            dark: '#1F2937',
+                            light: '#FFF7ED'
+                        }
                     },
                     animation: { 'fade-in': 'fadeIn 0.3s ease-out' },
                     keyframes: { fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } } }
@@ -31,7 +36,11 @@
         }
     </script>
     <style>
-        .fixed-bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; }
+        .fixed-bg-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover; background-position: center;
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
@@ -39,8 +48,9 @@
 
     <div class="fixed-bg-layer"></div>
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR NAVIGATION -->
     <aside class="w-64 bg-white/95 backdrop-blur-md border-r border-gray-200 flex flex-col z-20 shadow-xl h-full flex-shrink-0">
+        <!-- Sidebar Header -->
         <div class="p-6 flex items-center border-b border-gray-100">
             <div class="bg-brand-orange/10 p-2 rounded-lg mr-3">
                 <i class="fa-solid fa-hand-holding-heart text-brand-orange text-2xl"></i>
@@ -50,17 +60,24 @@
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Partner</span>
             </div>
         </div>
+
+        <!-- Navigation Links -->
         <nav class="flex-grow p-4 space-y-2">
             <button onclick="switchTab('overview')" id="btn-overview" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all bg-brand-orange text-white shadow-md">
                 <i class="fa-solid fa-chart-pie w-5 mr-3"></i> Overview
+            </button>
+            <button onclick="switchTab('alerts')" id="btn-alerts" class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all">
+                <i class="fa-solid fa-bell w-5 mr-3"></i> Urgent Alerts
             </button>
             <button onclick="switchTab('history')" id="btn-history" class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 hover:text-brand-orange transition-all">
                 <i class="fa-solid fa-clock-rotate-left w-5 mr-3"></i> History
             </button>
             <button onclick="switchTab('details')" id="btn-details" class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 hover:text-brand-orange transition-all">
-                <i class="fa-solid fa-store w-5 mr-3"></i> Details
+                <i class="fa-solid fa-store w-5 mr-3"></i> Restaurant Details
             </button>
         </nav>
+
+        <!-- Sidebar Footer -->
         <div class="p-4 border-t border-gray-100">
             <div class="flex items-center gap-3 mb-4 px-2">
                 <div class="w-8 h-8 rounded-full bg-brand-dark text-white flex items-center justify-center font-bold">R</div>
@@ -165,6 +182,20 @@
                     <p class="text-center text-gray-400 py-4">Loading activities...</p>
                 </div>
                 <button onclick="switchTab('history')" class="w-full mt-4 text-center text-sm text-brand-orange font-bold hover:underline">View Full History</button>
+            </div>
+        </div>
+
+        <!-- TAB: URGENT ALERTS -->
+        <div id="tab-alerts" class="max-w-6xl mx-auto space-y-6 animate-fade-in hidden">
+             <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold text-white drop-shadow-md">Urgent Food Requests</h1>
+                <div class="bg-red-500 px-4 py-2 rounded-lg shadow-md animate-pulse">
+                    <span class="text-white font-bold"><i class="fa-solid fa-bell mr-2"></i> Live Feed</span>
+                </div>
+            </div>
+
+            <div id="requests-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Request Cards -->
             </div>
         </div>
 
@@ -274,7 +305,6 @@
                 if (doc.exists) {
                     userData = doc.data();
                     
-                    // SAFE DOM UPDATE: Checks if element exists before setting text
                     const navUser = document.getElementById('nav-username');
                     if (navUser) navUser.innerText = userData.name || "Restaurant";
                     
@@ -290,6 +320,7 @@
 
                     document.getElementById('tab-overview').classList.remove('hidden');
                     loadData();
+                    loadUrgentRequests(); // Listener for urgent alerts
                 }
             } else {
                 window.location.href = 'https://foodbridge.qzz.io/login.html';
@@ -298,18 +329,120 @@
 
         // TAB SWITCHER
         function switchTab(tab) {
-            ['overview', 'history', 'details'].forEach(t => {
+            ['overview', 'history', 'details', 'alerts'].forEach(t => {
                 document.getElementById('tab-' + t).classList.add('hidden');
                 const btn = document.getElementById('btn-' + t);
                 btn.classList.remove('bg-brand-orange', 'text-white', 'shadow-md');
                 btn.classList.add('text-gray-600', 'hover:bg-gray-50', 'hover:text-brand-orange');
+                if(t === 'alerts') btn.classList.remove('bg-red-500', 'text-white'); // Reset alert btn style
             });
             
             document.getElementById('tab-' + tab).classList.remove('hidden');
             const activeBtn = document.getElementById('btn-' + tab);
-            activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-50', 'hover:text-brand-orange');
-            activeBtn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
+            
+            if(tab === 'alerts') {
+                activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-50', 'hover:text-brand-orange');
+                activeBtn.classList.add('bg-red-500', 'text-white', 'shadow-md');
+            } else {
+                activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-50', 'hover:text-brand-orange');
+                activeBtn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
+            }
         }
+
+        // --- URGENT REQUESTS ---
+        function loadUrgentRequests() {
+            db.collection('requests')
+              .where('status', '==', 'Pending')
+              .onSnapshot(snap => {
+                  const container = document.getElementById('requests-container');
+                  container.innerHTML = '';
+                  
+                  if (snap.empty) {
+                      container.innerHTML = `
+                        <div class="col-span-full bg-white rounded-2xl p-10 text-center shadow-lg">
+                            <i class="fa-solid fa-check-circle text-4xl text-green-400 mb-3"></i>
+                            <h3 class="text-xl font-bold text-gray-800">All Clear!</h3>
+                            <p class="text-gray-500">No urgent requests at the moment.</p>
+                        </div>`;
+                      return;
+                  }
+
+                  snap.forEach(doc => {
+                      const d = doc.data();
+                      container.innerHTML += `
+                        <div class="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-red-500 relative overflow-hidden">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center font-bold">
+                                        <i class="fa-solid fa-bullhorn"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-gray-800 text-lg">${d.itemNeeded}</h4>
+                                        <p class="text-xs text-red-500 font-bold uppercase tracking-wide">Qty: ${d.quantity}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-6 text-sm text-gray-600 space-y-2 bg-gray-50 p-3 rounded-lg">
+                                <p class="font-bold text-gray-800"><i class="fa-solid fa-house-chimney mr-2 text-brand-orange"></i> ${d.orphanageName}</p>
+                                <p><i class="fa-solid fa-location-dot mr-2 text-gray-400"></i> ${d.orphanageAddress || 'Address not listed'}</p>
+                                <p><i class="fa-solid fa-phone mr-2 text-gray-400"></i> ${d.orphanagePhone || 'Phone not listed'}</p>
+                            </div>
+
+                            <button onclick="fulfillRequest('${doc.id}', '${d.itemNeeded}', '${d.quantity}', '${d.orphanageId}', '${d.orphanageName}')" class="w-full py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition shadow-md flex items-center justify-center gap-2">
+                                <span>Donate Now</span> <i class="fa-solid fa-hand-holding-heart"></i>
+                            </button>
+                        </div>
+                      `;
+                  });
+              });
+        }
+
+        async function fulfillRequest(reqId, item, qty, orphId, orphName) {
+            // Check Profile First
+            if(!userData.address || !userData.phone) {
+                alert("Please update your restaurant details (Address & Phone) before donating!");
+                switchTab('details');
+                return;
+            }
+
+            if(!confirm(`Confirm donation of ${qty} ${item} to ${orphName}?`)) return;
+
+            try {
+                // 1. Update Request Status
+                await db.collection('requests').doc(reqId).update({
+                    status: 'Fulfilled',
+                    fulfilledBy: currentUser.uid,
+                    restaurantName: userData.name,
+                    fulfilledAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 2. Create Donation Record (So it appears in history & stats)
+                await db.collection('donations').add({
+                    restaurantId: currentUser.uid,
+                    restaurantName: userData.name,
+                    restaurantEmail: currentUser.email,
+                    restaurantAddress: userData.address,
+                    restaurantPhone: userData.phone,
+                    foodName: item,
+                    servings: parseInt(qty),
+                    imageUrl: null, // No image for quick fulfillment
+                    status: "Claimed", // Immediate claim
+                    claimedBy: orphId,
+                    orphanageName: orphName,
+                    // Use server timestamps for consistency
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showToast("Thank you! Donation confirmed.");
+                switchTab('history'); // Redirect to see it in history
+            } catch(e) {
+                console.error(e);
+                alert("Error fulfilling request: " + e.message);
+            }
+        }
+        // -----------------------
 
         // DATA LOADER
         function loadData() {
@@ -451,7 +584,7 @@
                 userData.phone = phone; 
                 userData.address = address;
                 
-                // Safe updates (Checks if element exists before updating)
+                // Safe updates
                 const navUser = document.getElementById('nav-username');
                 if (navUser) navUser.innerText = name;
                 
