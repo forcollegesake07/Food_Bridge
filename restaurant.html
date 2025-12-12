@@ -513,7 +513,10 @@
                       const recipient = data.orphanageName || '-';
                       let contactInfo = '-';
                       if(data.status === 'Claimed' || data.status === 'Completed') { 
-                          contactInfo = `<div class="text-xs text-gray-500 space-y-0.5"><p><i class="fa-solid fa-phone text-brand-orange mr-1"></i> ${data.orphanagePhone || 'N/A'}</p></div>`; 
+                          contactInfo = `<div class="text-xs text-gray-500 space-y-0.5">
+                            <p><i class="fa-solid fa-phone text-brand-orange mr-1"></i> ${data.orphanagePhone || 'N/A'}</p>
+                            <p><i class="fa-solid fa-location-dot text-brand-orange mr-1"></i> ${data.orphanageAddress || 'N/A'}</p>
+                          </div>`; 
                       }
 
                       if (docCount <= 5 && recentList) { 
