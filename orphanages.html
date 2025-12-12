@@ -39,6 +39,7 @@
     <style>
         .fixed-bg-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            /* Softer background for Orphanage View */
             background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2070&auto=format&fit=crop');
             background-size: cover; background-position: center;
         }
@@ -117,7 +118,7 @@
                     <h1 class="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md">Overview</h1>
                     <p class="text-gray-100 text-sm md:text-base font-medium mt-1">Track incoming orders and community impact.</p>
                 </div>
-                <button onclick="switchTab('requests')" class="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition transform hover:scale-105 animate-pulse">
+                <button onclick="openRequestModal()" class="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition transform hover:scale-105 animate-pulse">
                     <i class="fa-solid fa-bullhorn"></i>
                     <span class="font-bold text-sm">Post Urgent Need</span>
                 </button>
@@ -129,7 +130,7 @@
                     <div class="bg-blue-500 p-2 rounded-lg text-white shadow-lg animate-bounce">
                         <i class="fa-solid fa-truck-fast"></i>
                     </div>
-                    <h2 class="text-xl font-bold text-white drop-shadow-md">Incoming Orders</h2>
+                    <h2 class="text-xl font-bold text-white drop-shadow-md">Incoming Orders (Active)</h2>
                 </div>
                 
                 <!-- Container for both sources -->
@@ -265,6 +266,7 @@
             <form onsubmit="submitUrgentRequest(event)" class="p-6 space-y-4">
                 <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Item Needed</label><input type="text" id="req-item" required placeholder="e.g. 50 Rice Meals" class="w-full p-3 border rounded-lg focus:border-orange-500 outline-none"></div>
                 <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Quantity</label><input type="number" id="req-qty" required placeholder="e.g. 50" class="w-full p-3 border rounded-lg focus:border-orange-500 outline-none"></div>
+                <!-- Removed Notes Field as requested -->
                 <button type="submit" class="w-full py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 shadow-md">Post Request</button>
             </form>
         </div>
@@ -389,8 +391,6 @@
             });
 
             // 2. Incoming Orders (Both Claimed Donations & Fulfilled Requests) - TOP SECTION
-            // We use two listeners and manage the visibility of the parent section
-            
             // Sub-container 1: Claimed Donations
             db.collection('donations').where('orphanageId', '==', currentUser.uid).where('status', '==', 'Claimed').onSnapshot(snap => {
                 renderIncomingItems(snap, 'donation');
@@ -443,7 +443,7 @@
                 }
             });
 
-            // 4. History & Stats & Graph - MERGED & FIXED
+            // 4. History & Stats & Graph - MERGED
             const historyDonations = db.collection('donations').where('orphanageId', '==', currentUser.uid).orderBy('updatedAt', 'desc');
             const historyRequests = db.collection('requests').where('orphanageId', '==', currentUser.uid).orderBy('updatedAt', 'desc');
 
@@ -464,7 +464,10 @@
                     if (item.type === 'donation' && item.data.status === 'Completed') totalReceived += parseInt(item.data.servings || 0);
                     if (item.type === 'request' && item.data.status === 'Completed') totalReceived += parseInt(item.data.quantity || 0);
 
-                    // Don't show active items in history
+                    // Show everything that is NOT active/pending
+                    // 'Claimed' means active incoming donation
+                    // 'Fulfilled' means active incoming request
+                    // 'Pending' means active outgoing request
                     if(item.data.status !== 'Claimed' && item.data.status !== 'Fulfilled' && item.data.status !== 'Pending') {
                         historyCount++;
                         
@@ -500,7 +503,7 @@
                 updateChart(totalReceived);
             }
 
-            // Listener 1: Donations
+            // Listener 1: Donations History
             db.collection('donations').where('orphanageId', '==', currentUser.uid).onSnapshot(async snap => {
                 const newItems = await Promise.all(snap.docs.map(async doc => {
                     const d = doc.data();
@@ -540,7 +543,7 @@
                 updateUnifiedHistory();
             });
 
-            // Listener 2: Requests
+            // Listener 2: Requests History
             db.collection('requests').where('orphanageId', '==', currentUser.uid).onSnapshot(async snap => {
                 const newItems = await Promise.all(snap.docs.map(async doc => {
                     const d = doc.data();
