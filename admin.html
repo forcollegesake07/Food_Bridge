@@ -46,6 +46,7 @@
             background-size: cover; background-position: center;
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        body { overscroll-behavior-y: none; }
         /* Toggle Switch */
         .toggle-checkbox:checked {
             right: 0;
@@ -56,23 +57,26 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 font-sans text-gray-800 h-screen flex overflow-hidden">
+<body class="bg-gray-50 font-sans text-gray-800 h-screen flex flex-col md:flex-row overflow-hidden">
 
     <div class="fixed-bg-layer"></div>
 
+    <!-- MOBILE SIDEBAR BACKDROP -->
+    <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
     <!-- SIDEBAR -->
-    <aside class="w-72 bg-white/95 backdrop-blur-md border-r border-gray-200 flex flex-col z-20 shadow-xl h-full flex-shrink-0 transition-transform duration-300 transform md:translate-x-0 -translate-x-full absolute md:relative" id="sidebar">
-        <div class="p-8 flex items-center border-b border-gray-100">
+    <aside class="fixed md:relative w-72 bg-white/95 backdrop-blur-md border-r border-gray-200 flex flex-col z-40 shadow-2xl h-full flex-shrink-0 transition-transform duration-300 transform -translate-x-full md:translate-x-0" id="sidebar">
+        <div class="p-6 md:p-8 flex items-center border-b border-gray-100">
             <div class="bg-brand-dark p-2.5 rounded-xl mr-3 shadow-sm text-white">
-                <i class="fa-solid fa-shield-halved text-2xl"></i>
+                <i class="fa-solid fa-shield-halved text-xl md:text-2xl"></i>
             </div>
             <div>
-                <span class="font-bold text-xl text-brand-dark block leading-none tracking-tight">Food<span class="text-brand-green">Bridge</span></span>
+                <span class="font-bold text-lg md:text-xl text-brand-dark block leading-none tracking-tight">Food<span class="text-brand-green">Bridge</span></span>
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Administrator</span>
             </div>
         </div>
 
-        <nav class="flex-grow p-6 space-y-3 overflow-y-auto">
+        <nav class="flex-grow p-4 md:p-6 space-y-2 md:space-y-3 overflow-y-auto">
             <button onclick="switchTab('overview')" id="btn-overview" class="w-full flex items-center px-5 py-3.5 text-sm font-semibold rounded-xl transition-all duration-200 bg-brand-dark text-white shadow-md">
                 <i class="fa-solid fa-chart-line w-6 text-lg mr-3"></i> Overview
             </button>
@@ -95,53 +99,56 @@
     </aside>
 
     <!-- MOBILE HEADER -->
-    <div class="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/95 backdrop-blur shadow-md z-30 flex items-center justify-between px-4">
-        <span class="font-bold text-xl text-brand-dark">Admin Panel</span>
-        <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')" class="p-2 text-gray-600">
+    <div class="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/95 backdrop-blur shadow-md z-30 flex items-center justify-between px-4 transition-all">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-brand-dark text-xl"></i>
+            <span class="font-bold text-lg text-brand-dark">Admin Panel</span>
+        </div>
+        <button onclick="toggleSidebar()" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
             <i class="fa-solid fa-bars text-xl"></i>
         </button>
     </div>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-grow overflow-y-auto p-6 md:p-10 relative z-10 mt-16 md:mt-0 w-full">
+    <main class="flex-grow overflow-y-auto p-4 pt-20 md:p-10 relative z-10 w-full">
 
         <!-- OVERVIEW TAB -->
-        <div id="tab-overview" class="max-w-7xl mx-auto space-y-8 animate-fade-in hidden">
-            <h1 class="text-3xl font-extrabold text-white drop-shadow-md">System Overview</h1>
+        <div id="tab-overview" class="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in hidden">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md">System Overview</h1>
             
             <!-- Key Metrics -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-brand-orange">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-lg border-l-4 border-brand-orange">
                     <p class="text-xs text-gray-500 font-bold uppercase">Restaurants</p>
-                    <h3 class="text-3xl font-extrabold text-brand-dark" id="count-rest">0</h3>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-brand-dark" id="count-rest">0</h3>
                 </div>
-                <div class="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-brand-green">
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-lg border-l-4 border-brand-green">
                     <p class="text-xs text-gray-500 font-bold uppercase">Orphanages</p>
-                    <h3 class="text-3xl font-extrabold text-brand-dark" id="count-orph">0</h3>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-brand-dark" id="count-orph">0</h3>
                 </div>
-                <div class="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-brand-blue">
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-lg border-l-4 border-brand-blue">
                     <p class="text-xs text-gray-500 font-bold uppercase">Today's Meals</p>
-                    <h3 class="text-3xl font-extrabold text-brand-dark" id="count-today">0</h3>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-brand-dark" id="count-today">0</h3>
                 </div>
-                <div class="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-brand-dark">
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-lg border-l-4 border-brand-dark">
                     <p class="text-xs text-gray-500 font-bold uppercase">Total Lifetime Meals</p>
-                    <h3 class="text-3xl font-extrabold text-brand-dark" id="count-total">0</h3>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-brand-dark" id="count-total">0</h3>
                 </div>
             </div>
 
             <!-- Charts Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Pie Chart: Users -->
-                <div class="bg-white rounded-2xl p-6 shadow-lg lg:col-span-1">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Partner Distribution</h3>
-                    <div class="relative h-64">
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-lg lg:col-span-1">
+                    <h3 class="text-base md:text-lg font-bold text-gray-800 mb-4">Partner Distribution</h3>
+                    <div class="relative h-48 md:h-64">
                         <canvas id="userChart"></canvas>
                     </div>
                 </div>
                 <!-- Bar Chart: Donations -->
-                <div class="bg-white rounded-2xl p-6 shadow-lg lg:col-span-2">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Donation Trends (Monthly)</h3>
-                    <div class="relative h-64">
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-lg lg:col-span-2">
+                    <h3 class="text-base md:text-lg font-bold text-gray-800 mb-4">Donation Trends (Monthly)</h3>
+                    <div class="relative h-48 md:h-64">
                         <canvas id="donationChart"></canvas>
                     </div>
                 </div>
@@ -149,24 +156,24 @@
         </div>
 
         <!-- HISTORY TAB -->
-        <div id="tab-history" class="max-w-7xl mx-auto space-y-8 animate-fade-in hidden">
-            <div class="flex justify-between items-center">
+        <div id="tab-history" class="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h1 class="text-3xl font-extrabold text-white drop-shadow-md">Global History</h1>
-                <div class="bg-white/10 backdrop-blur rounded-xl p-1 flex">
-                    <button onclick="toggleHistory('donations')" id="filter-donations" class="px-6 py-2 rounded-lg bg-white text-brand-dark font-bold text-sm shadow-sm transition-all">Donations</button>
-                    <button onclick="toggleHistory('requests')" id="filter-requests" class="px-6 py-2 rounded-lg text-white font-bold text-sm hover:bg-white/20 transition-all">Requests</button>
+                <div class="bg-white/10 backdrop-blur rounded-xl p-1 flex w-full md:w-auto">
+                    <button onclick="toggleHistory('donations')" id="filter-donations" class="flex-1 md:flex-none px-6 py-2 rounded-lg bg-white text-brand-dark font-bold text-sm shadow-sm transition-all">Donations</button>
+                    <button onclick="toggleHistory('requests')" id="filter-requests" class="flex-1 md:flex-none px-6 py-2 rounded-lg text-white font-bold text-sm hover:bg-white/20 transition-all">Requests</button>
                 </div>
             </div>
 
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
+                    <table class="w-full text-sm text-left whitespace-nowrap">
                         <thead class="bg-gray-50 text-xs text-gray-500 uppercase font-bold border-b border-gray-200">
                             <tr>
-                                <th class="px-6 py-4" id="hist-col-1">Date</th>
-                                <th class="px-6 py-4" id="hist-col-2">Item</th>
-                                <th class="px-6 py-4" id="hist-col-3">Sender/Requester</th>
-                                <th class="px-6 py-4" id="hist-col-4">Status</th>
+                                <th class="px-4 py-3 md:px-6 md:py-4" id="hist-col-1">Date</th>
+                                <th class="px-4 py-3 md:px-6 md:py-4" id="hist-col-2">Item</th>
+                                <th class="px-4 py-3 md:px-6 md:py-4" id="hist-col-3">Sender/Requester</th>
+                                <th class="px-4 py-3 md:px-6 md:py-4" id="hist-col-4">Status</th>
                             </tr>
                         </thead>
                         <tbody id="history-table-body" class="divide-y divide-gray-100">
@@ -178,31 +185,31 @@
         </div>
 
         <!-- REPORTS TAB -->
-        <div id="tab-reports" class="max-w-7xl mx-auto space-y-8 animate-fade-in hidden">
+        <div id="tab-reports" class="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in hidden">
             <h1 class="text-3xl font-extrabold text-white drop-shadow-md">Issue Reports</h1>
-            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-red-100 p-6 min-h-[400px]">
-                <div id="reports-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-red-100 p-5 md:p-6 min-h-[400px]">
+                <div id="reports-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     <!-- Populated by JS -->
                 </div>
             </div>
         </div>
 
         <!-- USERS TAB -->
-        <div id="tab-users" class="max-w-7xl mx-auto space-y-8 animate-fade-in hidden">
+        <div id="tab-users" class="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in hidden">
             <h1 class="text-3xl font-extrabold text-white drop-shadow-md">User Management</h1>
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                 <div class="p-4 border-b border-gray-100 flex gap-4">
                     <input type="text" id="user-search" placeholder="Search users..." class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:border-brand-dark" onkeyup="filterUsers()">
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
+                    <table class="w-full text-sm text-left whitespace-nowrap">
                         <thead class="bg-gray-50 text-xs text-gray-500 uppercase font-bold">
                             <tr>
-                                <th class="px-6 py-4">Name</th>
-                                <th class="px-6 py-4">Role</th>
-                                <th class="px-6 py-4">Email</th>
-                                <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4">Action</th>
+                                <th class="px-4 py-3 md:px-6 md:py-4">Name</th>
+                                <th class="px-4 py-3 md:px-6 md:py-4">Role</th>
+                                <th class="px-4 py-3 md:px-6 md:py-4">Email</th>
+                                <th class="px-4 py-3 md:px-6 md:py-4">Status</th>
+                                <th class="px-4 py-3 md:px-6 md:py-4">Action</th>
                             </tr>
                         </thead>
                         <tbody id="users-table-body" class="divide-y divide-gray-100">
@@ -228,7 +235,7 @@
             <div class="p-6 space-y-4">
                 <div>
                     <label class="text-xs font-bold text-gray-500 uppercase">Email</label>
-                    <p class="text-gray-800 font-medium" id="modal-user-email">-</p>
+                    <p class="text-gray-800 font-medium break-all" id="modal-user-email">-</p>
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-500 uppercase">Phone</label>
@@ -249,13 +256,13 @@
                 <p class="text-xs text-gray-400 mt-2">*Toggling red means the account is disabled (blocked).</p>
             </div>
             <div class="p-4 bg-gray-50 text-right">
-                <button onclick="saveUserStatus()" class="bg-brand-dark text-white px-6 py-2 rounded-lg font-bold hover:bg-black transition shadow-lg">Save Changes</button>
+                <button onclick="saveUserStatus()" class="w-full md:w-auto bg-brand-dark text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition shadow-lg text-sm">Save Changes</button>
             </div>
         </div>
     </div>
 
     <!-- TOAST -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-brand-dark text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-4 z-50"><i class="fa-solid fa-circle-check text-green-400 text-lg"></i><p class="text-sm" id="toast-message">Success</p></div>
+    <div id="toast" class="fixed bottom-6 right-6 left-6 md:left-auto bg-brand-dark text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-4 z-50"><i class="fa-solid fa-circle-check text-green-400 text-lg"></i><p class="text-sm" id="toast-message">Success</p></div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0", authDomain: "panel-9e1a6.firebaseapp.com", projectId: "panel-9e1a6", storageBucket: "panel-9e1a6.firebasestorage.app", messagingSenderId: "491001640513", appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0" };
@@ -281,6 +288,20 @@
             }
         });
 
+        // Toggle Sidebar for Mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        }
+
         // Navigation
         function switchTab(tab) {
             ['overview', 'history', 'reports', 'users'].forEach(t => {
@@ -294,7 +315,8 @@
             const activeBtn = document.getElementById('btn-' + tab);
             activeBtn.className = "w-full flex items-center px-5 py-3.5 text-sm font-semibold rounded-xl transition-all duration-200 bg-brand-dark text-white shadow-md";
             
-            if(window.innerWidth < 768) { document.getElementById('sidebar').classList.add('-translate-x-full'); }
+            // Auto close sidebar on mobile
+            if(window.innerWidth < 768) { toggleSidebar(); }
         }
 
         // --- OVERVIEW LOGIC ---
@@ -368,12 +390,12 @@
             const btnDon = document.getElementById('filter-donations');
             const btnReq = document.getElementById('filter-requests');
             if(type === 'donations') {
-                btnDon.className = "px-6 py-2 rounded-lg bg-white text-brand-dark font-bold text-sm shadow-sm transition-all";
-                btnReq.className = "px-6 py-2 rounded-lg text-white font-bold text-sm hover:bg-white/20 transition-all";
+                btnDon.className = "flex-1 md:flex-none px-6 py-2 rounded-lg bg-white text-brand-dark font-bold text-sm shadow-sm transition-all";
+                btnReq.className = "flex-1 md:flex-none px-6 py-2 rounded-lg text-white font-bold text-sm hover:bg-white/20 transition-all";
                 loadHistory('donations');
             } else {
-                btnReq.className = "px-6 py-2 rounded-lg bg-white text-brand-dark font-bold text-sm shadow-sm transition-all";
-                btnDon.className = "px-6 py-2 rounded-lg text-white font-bold text-sm hover:bg-white/20 transition-all";
+                btnReq.className = "flex-1 md:flex-none px-6 py-2 rounded-lg bg-white text-brand-dark font-bold text-sm shadow-sm transition-all";
+                btnDon.className = "flex-1 md:flex-none px-6 py-2 rounded-lg text-white font-bold text-sm hover:bg-white/20 transition-all";
                 loadHistory('requests');
             }
         }
@@ -390,7 +412,7 @@
                 db.collection('donations').orderBy('createdAt', 'desc').get().then(snap => {
                     snap.forEach(doc => {
                         const d = doc.data();
-                        tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b border-gray-100"><td class="px-6 py-4">${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'N/A'}</td><td class="px-6 py-4 font-bold">${d.foodName} (${d.servings})</td><td class="px-6 py-4">${d.restaurantName}</td><td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs font-bold ${getStatusColor(d.status)}">${d.status}</span></td></tr>`;
+                        tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b border-gray-100"><td class="px-4 py-3 md:px-6 md:py-4">${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'N/A'}</td><td class="px-4 py-3 md:px-6 md:py-4 font-bold">${d.foodName} (${d.servings})</td><td class="px-4 py-3 md:px-6 md:py-4">${d.restaurantName}</td><td class="px-4 py-3 md:px-6 md:py-4"><span class="px-2 py-1 rounded text-xs font-bold ${getStatusColor(d.status)}">${d.status}</span></td></tr>`;
                     });
                 });
             } else {
@@ -398,7 +420,7 @@
                 db.collection('requests').orderBy('createdAt', 'desc').get().then(snap => {
                     snap.forEach(doc => {
                         const d = doc.data();
-                        tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b border-gray-100"><td class="px-6 py-4">${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'N/A'}</td><td class="px-6 py-4 font-bold">${d.itemNeeded} (${d.quantity})</td><td class="px-6 py-4">${d.orphanageName}</td><td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs font-bold ${getStatusColor(d.status)}">${d.status}</span></td></tr>`;
+                        tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b border-gray-100"><td class="px-4 py-3 md:px-6 md:py-4">${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'N/A'}</td><td class="px-4 py-3 md:px-6 md:py-4 font-bold">${d.itemNeeded} (${d.quantity})</td><td class="px-4 py-3 md:px-6 md:py-4">${d.orphanageName}</td><td class="px-4 py-3 md:px-6 md:py-4"><span class="px-2 py-1 rounded text-xs font-bold ${getStatusColor(d.status)}">${d.status}</span></td></tr>`;
                     });
                 });
             }
@@ -414,7 +436,7 @@
                 snap.forEach(doc => {
                     const d = doc.data();
                     container.innerHTML += `
-                        <div class="bg-red-50 p-6 rounded-xl border border-red-100 relative">
+                        <div class="bg-red-50 p-5 md:p-6 rounded-xl border border-red-100 relative">
                             <h4 class="font-bold text-red-700 flex items-center mb-2"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Issue Reported</h4>
                             <p class="text-sm text-gray-700 mb-1"><strong>Item:</strong> ${d.foodName} (${d.servings})</p>
                             <p class="text-sm text-gray-700 mb-1"><strong>Donor:</strong> ${d.restaurantName}</p>
@@ -436,11 +458,11 @@
                     const status = u.isDisabled ? '<span class="text-red-500 font-bold">Disabled</span>' : '<span class="text-green-500 font-bold">Active</span>';
                     tbody.innerHTML += `
                         <tr class="hover:bg-gray-50 border-b border-gray-100 cursor-pointer" onclick="openUserModal('${doc.id}')">
-                            <td class="px-6 py-4 font-bold text-gray-800">${u.name}</td>
-                            <td class="px-6 py-4 text-xs uppercase text-gray-500 font-bold">${u.role}</td>
-                            <td class="px-6 py-4 text-gray-600">${u.email}</td>
-                            <td class="px-6 py-4 text-xs">${status}</td>
-                            <td class="px-6 py-4"><button class="text-brand-dark hover:text-brand-orange"><i class="fa-solid fa-gear"></i> Manage</button></td>
+                            <td class="px-4 py-3 md:px-6 md:py-4 font-bold text-gray-800">${u.name}</td>
+                            <td class="px-4 py-3 md:px-6 md:py-4 text-xs uppercase text-gray-500 font-bold">${u.role}</td>
+                            <td class="px-4 py-3 md:px-6 md:py-4 text-gray-600">${u.email}</td>
+                            <td class="px-4 py-3 md:px-6 md:py-4 text-xs">${status}</td>
+                            <td class="px-4 py-3 md:px-6 md:py-4"><button class="text-brand-dark hover:text-brand-orange"><i class="fa-solid fa-gear"></i> Manage</button></td>
                         </tr>
                     `;
                 });
