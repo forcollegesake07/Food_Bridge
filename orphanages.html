@@ -245,6 +245,7 @@
                         <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Date</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Time</th>
                                 <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Type</th>
                                 <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Item/Qty</th>
                                 <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Status</th>
@@ -439,7 +440,12 @@
                         <div class="bg-white/90 rounded-xl p-3 shadow-sm border border-white/20">
                             <div class="flex justify-between items-center mb-1">
                                 <h5 class="font-bold text-gray-800">${d.itemNeeded}</h5>
-                                <span class="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>
+                                    <button onclick="confirmDeleteRequest('${doc.id}')" class="text-red-400 hover:text-red-600 transition-colors" title="Delete Request">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
                             </div>
                             <p class="text-xs text-gray-600">Qty: ${d.quantity} • Waiting for restaurant...</p>
                         </div>
@@ -530,14 +536,16 @@
 
                     if (allItems.length === 0) {
                          if (recentList) recentList.innerHTML = "<p class='text-center text-gray-400 py-4'>No history yet.</p>"; 
-                         if (historyBody) historyBody.innerHTML = "<tr><td colspan='5' class='text-center p-4 text-gray-400'>No history found.</td></tr>";
+                         if (historyBody) historyBody.innerHTML = "<tr><td colspan='6' class='text-center p-4 text-gray-400'>No history found.</td></tr>";
                          return;
                     }
 
                     allItems.forEach(item => {
                         const data = item.data;
                         const isDonation = item.type === 'Donation';
-                        const date = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : 'Just now';
+                        const dateObj = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
+                        const dateStr = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                        const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                         
                         // Calc stats only for completed donations
                         if(isDonation && (data.status === 'Completed' || data.status === 'Claimed')) {
@@ -564,7 +572,7 @@
                                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-gray-400 shadow-sm border border-gray-100"><i class="fa-solid ${icon}"></i></div>
-                                        <div><h4 class="font-bold text-gray-800 text-sm">${name}</h4><p class="text-xs text-gray-500">${qty} Qty • ${date}</p></div>
+                                        <div><h4 class="font-bold text-gray-800 text-sm">${name}</h4><p class="text-xs text-gray-500">${qty} Qty • ${dateStr}</p></div>
                                     </div>
                                     ${statusBadge}
                                 </div>`;
@@ -574,7 +582,8 @@
                         if (historyBody) {
                              historyBody.innerHTML += `
                                 <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-4 py-3 text-gray-500 text-sm">${date}</td>
+                                    <td class="px-4 py-3 text-gray-500 text-sm">${dateStr}</td>
+                                    <td class="px-4 py-3 text-gray-500 text-sm">${timeStr}</td>
                                     <td class="px-4 py-3 font-bold text-xs uppercase text-gray-400">${item.type}</td>
                                     <td class="px-4 py-3 font-bold text-gray-800 text-sm">${name} <span class="text-gray-400 font-normal">(${qty})</span></td>
                                     <td class="px-4 py-3">${statusBadge}</td>
@@ -623,6 +632,11 @@
         function confirmReceipt(donationId, foodName) {
             pendingAction = { type: 'receive', data: { donationId, foodName } };
             showConfirmModal("Confirm Receipt", `Have you received the ${foodName}? This will mark the order as complete.`, 'receive');
+        }
+
+        function confirmDeleteRequest(reqId) {
+            pendingAction = { type: 'deleteRequest', data: { reqId } };
+            showConfirmModal("Delete Request", "Are you sure you want to delete this request?", 'deleteRequest');
         }
 
         // Report Logic
@@ -701,6 +715,10 @@
                         completedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     showToast("Order Completed. Bon Appétit!");
+                } else if (pendingAction.type === 'deleteRequest') {
+                    const { reqId } = pendingAction.data;
+                    await db.collection('requests').doc(reqId).delete();
+                    showToast("Request deleted successfully.");
                 }
             } catch (err) {
                 console.error(err);
@@ -725,6 +743,10 @@
                 btn.className = "flex-1 py-3.5 bg-brand-orange text-white font-bold rounded-xl hover:bg-orange-600 shadow-lg transition-all transform active:scale-95 text-sm md:text-base";
                 icon.className = "fa-solid fa-hand-holding-heart";
                 iconContainer.className = "w-14 h-14 md:w-16 md:h-16 bg-brand-orange/10 text-brand-orange rounded-full flex items-center justify-center mx-auto mb-4 md:mb-5 text-xl md:text-2xl shadow-sm";
+            } else if (type === 'deleteRequest') {
+                btn.className = "flex-1 py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg transition-all transform active:scale-95 text-sm md:text-base";
+                icon.className = "fa-solid fa-trash";
+                iconContainer.className = "w-14 h-14 md:w-16 md:h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-5 text-xl md:text-2xl shadow-sm";
             } else {
                 btn.className = "flex-1 py-3.5 bg-brand-green text-white font-bold rounded-xl hover:bg-green-600 shadow-lg transition-all transform active:scale-95 text-sm md:text-base";
                 icon.className = "fa-solid fa-bullhorn";
