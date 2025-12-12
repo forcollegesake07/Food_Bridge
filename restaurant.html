@@ -120,7 +120,7 @@
                     </div>
                 </div>
                 <div class="p-8">
-                    <form onsubmit="submitDonation(event)" class="space-y-6">
+                    <form onsubmit="initiateDonation(event)" class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Dish Name</label>
@@ -261,6 +261,23 @@
         </div>
     </main>
 
+    <!-- CONFIRMATION MODAL -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full transform scale-95 transition-all duration-300" id="confirm-modal-content">
+            <div class="text-center">
+                <div id="confirm-icon-container" class="w-16 h-16 bg-brand-orange/10 text-brand-orange rounded-full flex items-center justify-center mx-auto mb-5 text-2xl shadow-sm">
+                    <i id="confirm-icon" class="fa-solid fa-hand-holding-heart"></i>
+                </div>
+                <h3 id="confirm-title" class="text-xl font-bold text-gray-900 mb-2">Confirm Action</h3>
+                <p class="text-gray-500 mb-8 px-2" id="confirm-message">Are you sure you want to proceed?</p>
+                <div class="flex gap-4">
+                    <button onclick="closeConfirmModal()" class="flex-1 py-3.5 text-gray-600 font-bold hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors">Cancel</button>
+                    <button onclick="executeAction()" class="flex-1 py-3.5 bg-brand-orange text-white font-bold rounded-xl hover:bg-orange-600 shadow-lg hover:shadow-orange-500/30 transition-all transform active:scale-95" id="confirm-yes-btn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="fixed bottom-6 right-6 bg-brand-dark text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-4 z-50"><i class="fa-solid fa-circle-check text-green-400 text-lg"></i><p class="text-sm" id="toast-message">Success</p></div>
 
     <script>
@@ -268,6 +285,7 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
         let currentUser = null; let userData = {}; let base64Image = ""; let totalMeals = 0;
+        let pendingAction = null; // Store pending action data
 
         auth.onAuthStateChanged(async (user) => {
             if (user) {
@@ -312,30 +330,135 @@
                 
                 snap.forEach(doc => {
                     const d = doc.data();
-                    container.innerHTML += `<div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-red-500 relative overflow-hidden transform hover:-translate-y-1 transition duration-300"><div class="flex justify-between items-start mb-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-bullhorn"></i></div><div><h4 class="font-bold text-gray-800 text-lg">${d.itemNeeded}</h4><p class="text-xs text-red-500 font-bold uppercase tracking-wide">Qty: ${d.quantity}</p></div></div></div><div class="mb-6 text-sm text-gray-600 space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p class="font-bold text-gray-800"><i class="fa-solid fa-house-chimney mr-2 text-brand-orange"></i> ${d.orphanageName}</p><p><i class="fa-solid fa-location-dot mr-2 text-gray-400"></i> ${d.orphanageAddress || 'Address not listed'}</p><p><i class="fa-solid fa-phone mr-2 text-gray-400"></i> ${d.orphanagePhone || 'Phone not listed'}</p></div><button onclick="fulfillRequest('${doc.id}', '${d.itemNeeded}', '${d.quantity}', '${d.orphanageId}', '${d.orphanageName}')" class="w-full py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"><span>Donate Now</span> <i class="fa-solid fa-hand-holding-heart"></i></button></div>`;
+                    container.innerHTML += `<div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-red-500 relative overflow-hidden transform hover:-translate-y-1 transition duration-300"><div class="flex justify-between items-start mb-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-bullhorn"></i></div><div><h4 class="font-bold text-gray-800 text-lg">${d.itemNeeded}</h4><p class="text-xs text-red-500 font-bold uppercase tracking-wide">Qty: ${d.quantity}</p></div></div></div><div class="mb-6 text-sm text-gray-600 space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p class="font-bold text-gray-800"><i class="fa-solid fa-house-chimney mr-2 text-brand-orange"></i> ${d.orphanageName}</p><p><i class="fa-solid fa-location-dot mr-2 text-gray-400"></i> ${d.orphanageAddress || 'Address not listed'}</p><p><i class="fa-solid fa-phone mr-2 text-gray-400"></i> ${d.orphanagePhone || 'Phone not listed'}</p></div><button onclick="initiateFulfillment('${doc.id}', '${d.itemNeeded}', '${d.quantity}', '${d.orphanageId}', '${d.orphanageName}')" class="w-full py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"><span>Donate Now</span> <i class="fa-solid fa-hand-holding-heart"></i></button></div>`;
                 });
             });
         }
 
-        async function fulfillRequest(reqId, item, qty, orphId, orphName) {
-            if(!userData.address || !userData.phone) { alert("Please update your restaurant details (Address & Phone) first!"); switchTab('details'); return; }
-            if(!confirm(`Confirm donation of ${qty} ${item} to ${orphName}?`)) return;
-            try {
-                // Get Req Data for contact info
-                const reqDoc = await db.collection('requests').doc(reqId).get();
-                const reqData = reqDoc.data();
+        // --- NEW CONFIRMATION LOGIC ---
 
-                await db.collection('requests').doc(reqId).update({ status: 'Fulfilled', fulfilledBy: currentUser.uid, restaurantName: userData.name, fulfilledAt: firebase.firestore.FieldValue.serverTimestamp() });
-                await db.collection('donations').add({
-                    restaurantId: currentUser.uid, restaurantName: userData.name, restaurantEmail: currentUser.email, restaurantAddress: userData.address, restaurantPhone: userData.phone,
-                    foodName: item, servings: parseInt(qty), imageUrl: null, status: "Claimed", claimedBy: orphId, 
-                    orphanageName: orphName, 
-                    orphanageEmail: reqData.orphanageEmail, orphanagePhone: reqData.orphanagePhone,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(), claimedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                showToast("Request Fulfilled!"); switchTab('history');
-            } catch(e) { console.error(e); alert("Error: " + e.message); }
+        function showConfirmModal(title, message, type) {
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
+            const titleEl = document.getElementById('confirm-title');
+            const msgEl = document.getElementById('confirm-message');
+            const btn = document.getElementById('confirm-yes-btn');
+            const iconContainer = document.getElementById('confirm-icon-container');
+            const icon = document.getElementById('confirm-icon');
+
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+
+            if (type === 'fulfill') {
+                btn.className = "flex-1 py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg transition-all transform active:scale-95";
+                iconContainer.className = "w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl shadow-sm";
+                icon.className = "fa-solid fa-truck-fast";
+            } else {
+                btn.className = "flex-1 py-3.5 bg-brand-orange text-white font-bold rounded-xl hover:bg-orange-600 shadow-lg transition-all transform active:scale-95";
+                iconContainer.className = "w-16 h-16 bg-brand-orange/10 text-brand-orange rounded-full flex items-center justify-center mx-auto mb-5 text-2xl shadow-sm";
+                icon.className = "fa-solid fa-hand-holding-heart";
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
         }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                pendingAction = null;
+            }, 300);
+        }
+
+        function initiateDonation(e) {
+            e.preventDefault();
+            const name = document.getElementById('food-name').value;
+            const qty = document.getElementById('food-qty').value;
+
+            if(!userData.address || !userData.phone) {
+                 alert("Please update details first!");
+                 switchTab('details');
+                 return;
+            }
+            if (!name || !qty) return;
+
+            pendingAction = { type: 'donate', data: { name, qty, form: e.target } };
+            showConfirmModal("Confirm Donation", `Donate ${qty} servings of ${name}?`, 'donate');
+        }
+
+        function initiateFulfillment(reqId, item, qty, orphId, orphName) {
+            if(!userData.address || !userData.phone) { 
+                alert("Please update your restaurant details (Address & Phone) first!"); 
+                switchTab('details'); 
+                return; 
+            }
+            pendingAction = { type: 'fulfill', data: { reqId, item, qty, orphId, orphName } };
+            showConfirmModal("Confirm Fulfillment", `Fulfill request for ${qty} ${item} from ${orphName}?`, 'fulfill');
+        }
+
+        async function executeAction() {
+            if (!pendingAction) return;
+            closeConfirmModal();
+
+            if (pendingAction.type === 'donate') {
+                const { name, qty, form } = pendingAction.data;
+                const btn = document.getElementById('btn-submit');
+                const originalText = btn.innerHTML;
+                
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Posting...';
+                btn.disabled = true;
+
+                try {
+                    await db.collection('donations').add({
+                        restaurantId: currentUser.uid, restaurantName: userData.name, restaurantEmail: currentUser.email, restaurantAddress: userData.address, restaurantPhone: userData.phone,
+                        foodName: name, servings: parseInt(qty), imageUrl: base64Image || null, status: "Available", createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showToast("Donation posted successfully!");
+                    form.reset();
+                    base64Image = "";
+                    document.getElementById('image-preview').classList.add('hidden');
+                    document.getElementById('upload-placeholder').classList.remove('hidden');
+                } catch (err) {
+                    console.error(err);
+                    alert("Error posting: " + err.message);
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+
+            } else if (pendingAction.type === 'fulfill') {
+                const { reqId, item, qty, orphId, orphName } = pendingAction.data;
+                try {
+                    const reqDoc = await db.collection('requests').doc(reqId).get();
+                    const reqData = reqDoc.data();
+
+                    await db.collection('requests').doc(reqId).update({ status: 'Fulfilled', fulfilledBy: currentUser.uid, restaurantName: userData.name, fulfilledAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    await db.collection('donations').add({
+                        restaurantId: currentUser.uid, restaurantName: userData.name, restaurantEmail: currentUser.email, restaurantAddress: userData.address, restaurantPhone: userData.phone,
+                        foodName: item, servings: parseInt(qty), imageUrl: null, status: "Claimed", claimedBy: orphId, 
+                        orphanageName: orphName, 
+                        orphanageEmail: reqData.orphanageEmail, orphanagePhone: reqData.orphanagePhone,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(), claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showToast("Request Fulfilled!");
+                    switchTab('history');
+                } catch(e) {
+                    console.error(e);
+                    alert("Error: " + e.message);
+                }
+            }
+        }
+
+        // --- END CONFIRMATION LOGIC ---
 
         function loadData() {
             db.collection('donations').where("restaurantId", "==", currentUser.uid).orderBy("createdAt", "desc").onSnapshot((snapshot) => {
@@ -361,19 +484,6 @@
                   const elCount = document.getElementById('history-count'); if (elCount) elCount.innerText = docCount;
                   updateChart(totalMeals);
               });
-        }
-
-        async function submitDonation(e) {
-            e.preventDefault(); const btn = document.getElementById('btn-submit'); btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Posting...'; btn.disabled = true;
-            const name = document.getElementById('food-name').value; const qty = document.getElementById('food-qty').value;
-            if(!userData.address || !userData.phone) { alert("Please update details first!"); btn.innerHTML = "Post Donation"; btn.disabled = false; switchTab('details'); return; }
-            try {
-                await db.collection('donations').add({
-                    restaurantId: currentUser.uid, restaurantName: userData.name, restaurantEmail: currentUser.email, restaurantAddress: userData.address, restaurantPhone: userData.phone,
-                    foodName: name, servings: parseInt(qty), imageUrl: base64Image || null, status: "Available", createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                showToast("Donation posted successfully!"); e.target.reset(); base64Image = ""; document.getElementById('image-preview').classList.add('hidden'); document.getElementById('upload-placeholder').classList.remove('hidden');
-            } catch (err) { console.error(err); alert("Error posting: " + err.message); } finally { btn.innerHTML = '<span>Post Donation</span><i class="fa-solid fa-paper-plane text-brand-orange"></i>'; btn.disabled = false; }
         }
 
         async function saveProfile(e) { e.preventDefault(); const name = document.getElementById('detail-name').value; const phone = document.getElementById('detail-phone').value; const address = document.getElementById('detail-address').value; try { await db.collection('users').doc(currentUser.uid).update({ name, phone, address }); userData.name = name; userData.phone = phone; userData.address = address; const navUser = document.getElementById('nav-username'); if (navUser) navUser.innerText = name; const sideName = document.getElementById('sidebar-name'); if (sideName) sideName.innerText = name; showToast("Profile Updated!"); } catch (err) { alert("Error: " + err.message); } }
