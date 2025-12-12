@@ -42,25 +42,29 @@
             background-size: cover; background-position: center;
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        body { overscroll-behavior-y: none; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800 h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="bg-gray-50 font-sans text-gray-800 h-screen flex flex-col md:flex-row overflow-hidden">
 
     <div class="fixed-bg-layer"></div>
 
+    <!-- MOBILE SIDEBAR BACKDROP -->
+    <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
     <!-- SIDEBAR -->
-    <aside class="fixed md:relative w-72 bg-white/95 backdrop-blur-md border-r border-gray-200 flex flex-col z-40 shadow-2xl h-full flex-shrink-0" id="sidebar">
+    <aside class="fixed md:relative w-72 bg-white/95 backdrop-blur-md border-r border-gray-200 flex flex-col z-40 shadow-2xl h-full flex-shrink-0 transition-transform duration-300 transform -translate-x-full md:translate-x-0" id="sidebar">
         <div class="p-6 md:p-8 flex items-center border-b border-gray-100">
             <div class="bg-brand-blue/10 p-2.5 rounded-xl mr-3 shadow-sm">
                 <i class="fa-solid fa-shield-halved text-brand-blue text-2xl"></i>
             </div>
             <div>
                 <span class="font-bold text-xl text-brand-dark block leading-none tracking-tight">Food<span class="text-blue-500">Bridge</span></span>
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Admin</span>
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Admin Panel</span>
             </div>
         </div>
 
-        <nav class="flex-grow p-4 md:p-6 space-y-2 overflow-y-auto">
+        <nav class="flex-grow p-4 md:p-6 space-y-2 md:space-y-3 overflow-y-auto">
             <button onclick="switchTab('overview')" id="btn-overview" class="w-full flex items-center px-5 py-3.5 text-sm font-semibold rounded-xl bg-brand-blue text-white shadow-md transition-all">
                 <i class="fa-solid fa-chart-line w-6 text-lg mr-3"></i> Overview
             </button>
@@ -72,72 +76,90 @@
             </button>
         </nav>
 
-        <div class="p-6 border-t border-gray-100">
-            <button onclick="logout()" class="w-full flex items-center justify-center px-4 py-3 text-sm font-bold text-red-500 bg-white border border-red-100 rounded-xl hover:bg-red-50 transition-all shadow-sm">
+        <div class="p-6 border-t border-gray-100 bg-gray-50/50">
+            <div class="flex items-center gap-3 mb-5 px-1">
+                <div class="w-10 h-10 rounded-full bg-brand-dark text-white flex items-center justify-center font-bold shadow-md">A</div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-bold text-gray-800 truncate">Administrator</p>
+                    <p class="text-xs text-gray-500 truncate">System Control</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="w-full flex items-center justify-center px-4 py-3 text-sm font-bold text-red-500 bg-white border border-red-100 rounded-xl hover:bg-red-50 hover:border-red-200 transition-all shadow-sm">
                 <i class="fa-solid fa-right-from-bracket mr-2"></i> Log Out
             </button>
         </div>
     </aside>
 
+    <!-- MOBILE HEADER -->
+    <div class="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/95 backdrop-blur shadow-md z-30 flex items-center justify-between px-4 transition-all">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-brand-blue text-xl"></i>
+            <span class="font-bold text-lg text-brand-dark">Food<span class="text-blue-500">Bridge</span></span>
+        </div>
+        <button onclick="toggleSidebar()" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+    </div>
+
     <!-- MAIN CONTENT -->
     <main class="flex-grow overflow-y-auto p-4 pt-20 md:p-10 relative z-10 w-full">
         
         <!-- TAB: OVERVIEW -->
-        <div id="tab-overview" class="max-w-7xl mx-auto space-y-8 animate-fade-in hidden">
-            <h1 class="text-3xl font-extrabold text-white drop-shadow-md">Dashboard Overview</h1>
+        <div id="tab-overview" class="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in hidden">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md">Dashboard Overview</h1>
             
             <!-- Quick Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-blue-500">
-                    <p class="text-gray-500 text-xs font-bold uppercase">Total Users</p>
-                    <h3 class="text-3xl font-extrabold text-gray-800" id="stat-users">0</h3>
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md border-l-4 border-blue-500">
+                    <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Users</p>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-brand-dark" id="stat-users">0</h3>
                 </div>
-                <div class="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-green-500">
-                    <p class="text-gray-500 text-xs font-bold uppercase">Total Meals Saved</p>
-                    <h3 class="text-3xl font-extrabold text-gray-800" id="stat-meals">0</h3>
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md border-l-4 border-green-500">
+                    <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Meals Saved</p>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-brand-dark" id="stat-meals">0</h3>
                 </div>
-                <div class="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-orange-500">
-                    <p class="text-gray-500 text-xs font-bold uppercase">Pending Reports</p>
-                    <h3 class="text-3xl font-extrabold text-gray-800" id="stat-reports">0</h3>
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md border-l-4 border-orange-500">
+                    <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Pending Reports</p>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-brand-dark" id="stat-reports">0</h3>
                 </div>
             </div>
 
             <!-- Graphs Container -->
             <div class="space-y-6">
                 <!-- Daily -->
-                <div class="bg-white rounded-2xl p-6 shadow-lg">
-                    <h3 class="font-bold text-gray-800 mb-4">Daily Activity (Last 7 Days)</h3>
-                    <div class="h-64"><canvas id="dailyChart"></canvas></div>
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md">
+                    <h3 class="font-bold text-gray-800 text-lg mb-4">Daily Activity (Last 7 Days)</h3>
+                    <div class="h-64 w-full relative"><canvas id="dailyChart"></canvas></div>
                 </div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Monthly -->
-                    <div class="bg-white rounded-2xl p-6 shadow-lg">
-                        <h3 class="font-bold text-gray-800 mb-4">Monthly Trends (Last 12 Months)</h3>
-                        <div class="h-64"><canvas id="monthlyChart"></canvas></div>
+                    <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md">
+                        <h3 class="font-bold text-gray-800 text-lg mb-4">Monthly Trends (Last 12 Months)</h3>
+                        <div class="h-64 w-full relative"><canvas id="monthlyChart"></canvas></div>
                     </div>
                     <!-- Lifetime -->
-                    <div class="bg-white rounded-2xl p-6 shadow-lg">
-                        <h3 class="font-bold text-gray-800 mb-4">Lifetime Growth (Yearly)</h3>
-                        <div class="h-64"><canvas id="lifetimeChart"></canvas></div>
+                    <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md">
+                        <h3 class="font-bold text-gray-800 text-lg mb-4">Lifetime Growth (Yearly)</h3>
+                        <div class="h-64 w-full relative"><canvas id="lifetimeChart"></canvas></div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- TAB: HISTORY LOG -->
-        <div id="tab-history" class="hidden max-w-7xl mx-auto space-y-8 animate-fade-in">
-            <h1 class="text-3xl font-extrabold text-white drop-shadow-md">Donation History</h1>
+        <div id="tab-history" class="hidden max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md">Donation History</h1>
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left">
                         <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th class="px-6 py-4 font-bold tracking-wider">Date</th>
-                                <th class="px-6 py-4 font-bold tracking-wider">Restaurant</th>
-                                <th class="px-6 py-4 font-bold tracking-wider">Receiver (Orphanage)</th>
-                                <th class="px-6 py-4 font-bold tracking-wider">Food Item</th>
-                                <th class="px-6 py-4 font-bold tracking-wider">Status</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Date</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Restaurant</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Receiver (Orphanage)</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Food Item</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Status</th>
                             </tr>
                         </thead>
                         <tbody id="history-table-body" class="divide-y divide-gray-100"></tbody>
@@ -147,18 +169,18 @@
         </div>
 
         <!-- TAB: REPORTS -->
-        <div id="tab-reports" class="hidden max-w-7xl mx-auto space-y-8 animate-fade-in">
-            <h1 class="text-3xl font-extrabold text-white drop-shadow-md">Issue Reports</h1>
+        <div id="tab-reports" class="hidden max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md">Issue Reports</h1>
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left">
                         <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th class="px-6 py-4 font-bold tracking-wider">Date</th>
-                                <th class="px-6 py-4 font-bold tracking-wider">Reporter (Orphanage)</th>
-                                <th class="px-6 py-4 font-bold tracking-wider">Against (Restaurant)</th>
-                                <th class="px-6 py-4 font-bold tracking-wider">Reason</th>
-                                <th class="px-6 py-4 font-bold tracking-wider">Action</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Date</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Reporter (Orphanage)</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Against (Restaurant)</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Reason</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Action</th>
                             </tr>
                         </thead>
                         <tbody id="reports-table-body" class="divide-y divide-gray-100"></tbody>
@@ -171,34 +193,34 @@
 
     <!-- USER DETAILS MODAL -->
     <div id="user-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
-        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full transform scale-95 transition-all duration-300 relative" id="user-modal-content">
-            <button onclick="closeUserModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full transform scale-95 transition-all duration-300 relative" id="user-modal-content">
+            <button onclick="closeUserModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             
             <div class="text-center mb-6">
-                <div class="w-20 h-20 bg-gray-100 rounded-full mx-auto flex items-center justify-center text-3xl text-gray-500 mb-3 shadow-inner">
+                <div class="w-20 h-20 bg-brand-light rounded-full mx-auto flex items-center justify-center text-3xl text-brand-blue mb-3 shadow-inner">
                     <i class="fa-solid fa-user" id="modal-user-icon"></i>
                 </div>
                 <h3 class="text-2xl font-bold text-gray-900" id="modal-user-name">Loading...</h3>
-                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mt-2" id="modal-user-role">Role</span>
+                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mt-2 bg-gray-100 text-gray-600" id="modal-user-role">User</span>
             </div>
 
-            <div class="space-y-4 mb-8 bg-gray-50 p-4 rounded-xl border border-gray-100 text-sm">
+            <div class="space-y-4 mb-8 bg-gray-50 p-5 rounded-xl border border-gray-100 text-sm">
                 <div class="flex justify-between border-b border-gray-200 pb-2">
-                    <span class="text-gray-500">Email</span>
-                    <span class="font-medium text-gray-800" id="modal-user-email">...</span>
+                    <span class="text-gray-500 font-medium">Email</span>
+                    <span class="font-bold text-gray-800" id="modal-user-email">...</span>
                 </div>
                 <div class="flex justify-between border-b border-gray-200 pb-2">
-                    <span class="text-gray-500">Phone</span>
-                    <span class="font-medium text-gray-800" id="modal-user-phone">...</span>
+                    <span class="text-gray-500 font-medium">Phone</span>
+                    <span class="font-bold text-gray-800" id="modal-user-phone">...</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-500">Address</span>
-                    <span class="font-medium text-gray-800 text-right w-1/2 truncate" id="modal-user-address">...</span>
+                    <span class="text-gray-500 font-medium">Address</span>
+                    <span class="font-bold text-gray-800 text-right w-1/2 truncate" id="modal-user-address">...</span>
                 </div>
-                <div class="flex justify-between items-center pt-2">
-                    <span class="text-gray-500">Status</span>
+                <div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-200">
+                    <span class="text-gray-500 font-medium">Status</span>
                     <span class="font-bold" id="modal-user-status">Active</span>
                 </div>
             </div>
@@ -233,6 +255,19 @@
             });
         });
 
+        // Mobile Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        }
+
         function switchTab(tab) {
             ['overview', 'history', 'reports'].forEach(t => {
                 document.getElementById('tab-' + t).classList.add('hidden');
@@ -242,6 +277,8 @@
             document.getElementById('tab-' + tab).classList.remove('hidden');
             const activeBtn = document.getElementById('btn-' + tab);
             activeBtn.className = "w-full flex items-center px-5 py-3.5 text-sm font-semibold rounded-xl bg-brand-blue text-white shadow-md transition-all";
+            
+            if (window.innerWidth < 768) toggleSidebar();
         }
 
         // --- OVERVIEW & GRAPHS ---
@@ -253,14 +290,14 @@
             let totalMeals = 0;
             const dailyData = Array(7).fill(0);
             const monthlyData = Array(12).fill(0);
-            const yearlyData = {}; // { 2023: 100, 2024: 500 }
+            const yearlyData = {}; 
 
             const today = new Date();
             
             donationsSnap.forEach(doc => {
                 const data = doc.data();
                 const meals = parseInt(data.servings || 0);
-                if(data.status !== 'Completed' && data.status !== 'Claimed') return; // Only count successful ones
+                if(data.status !== 'Completed' && data.status !== 'Claimed') return; 
 
                 totalMeals += meals;
                 
@@ -274,8 +311,7 @@
                         dailyData[7 - diffDays] += meals;
                     }
 
-                    // Monthly (Last 12 months) - simplified logic matching month index
-                    // In production, match exact month/year. Here we map 0-11 to Jan-Dec relative to current year for demo simplicity
+                    // Monthly (Last 12 months)
                     if (date.getFullYear() === today.getFullYear()) {
                         monthlyData[date.getMonth()] += meals;
                     }
@@ -303,7 +339,7 @@
             });
             dailyChart = new Chart(document.getElementById('dailyChart'), {
                 type: 'bar',
-                data: { labels: last7Days, datasets: [{ label: 'Meals', data: daily, backgroundColor: '#3B82F6', borderRadius: 4 }] },
+                data: { labels: last7Days, datasets: [{ label: 'Meals', data: daily, backgroundColor: '#3B82F6', borderRadius: 6 }] },
                 options: commonOptions
             });
 
@@ -324,7 +360,7 @@
             const yearData = years.map(y => yearlyObj[y]);
             lifetimeChart = new Chart(document.getElementById('lifetimeChart'), {
                 type: 'bar',
-                data: { labels: years, datasets: [{ label: 'Total Meals', data: yearData, backgroundColor: '#F97316', borderRadius: 4, barThickness: 40 }] },
+                data: { labels: years, datasets: [{ label: 'Total Meals', data: yearData, backgroundColor: '#F97316', borderRadius: 6, barThickness: 40 }] },
                 options: commonOptions
             });
         }
@@ -339,9 +375,9 @@
                     const date = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : '-';
                     
                     let statusColor = 'text-gray-500 bg-gray-100';
-                    if(data.status === 'Completed') statusColor = 'text-green-600 bg-green-50';
-                    if(data.status === 'Issue') statusColor = 'text-red-600 bg-red-50';
-                    if(data.status === 'Claimed') statusColor = 'text-blue-600 bg-blue-50';
+                    if(data.status === 'Completed') statusColor = 'text-green-600 bg-green-50 border border-green-200';
+                    if(data.status === 'Issue') statusColor = 'text-red-600 bg-red-50 border border-red-200';
+                    if(data.status === 'Claimed') statusColor = 'text-blue-600 bg-blue-50 border border-blue-200';
 
                     // Receiver is claimedBy user
                     const receiverId = data.claimedBy;
@@ -352,12 +388,12 @@
                     const recvHtml = receiverId ? `<span onclick="openUserModal('${receiverId}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${receiverName}</span>` : `<span class="text-gray-400 italic">Not claimed</span>`;
 
                     tbody.innerHTML += `
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 text-gray-500">${date}</td>
-                            <td class="px-6 py-4">${restHtml}</td>
-                            <td class="px-6 py-4">${recvHtml}</td>
-                            <td class="px-6 py-4 font-medium text-gray-700">${data.foodName} (${data.servings})</td>
-                            <td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs font-bold ${statusColor}">${data.status}</span></td>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-gray-500 text-sm">${date}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-sm">${restHtml}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-sm">${recvHtml}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 font-medium text-gray-700 text-sm">${data.foodName} <span class="text-gray-400 font-normal">(${data.servings})</span></td>
+                            <td class="px-4 py-4 md:px-6 md:py-5"><span class="px-2 py-1 rounded-lg text-xs font-bold ${statusColor}">${data.status}</span></td>
                         </tr>
                     `;
                 });
@@ -375,17 +411,17 @@
                     const data = doc.data();
                     const date = data.reportedAt ? new Date(data.reportedAt.seconds * 1000).toLocaleDateString() : '-';
                     
-                    const reporterHtml = `<span onclick="openUserModal('${data.claimedBy}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer">${data.orphanageName}</span>`;
-                    const againstHtml = `<span onclick="openUserModal('${data.restaurantId}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer">${data.restaurantName}</span>`;
+                    const reporterHtml = `<span onclick="openUserModal('${data.claimedBy}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${data.orphanageName}</span>`;
+                    const againstHtml = `<span onclick="openUserModal('${data.restaurantId}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${data.restaurantName}</span>`;
 
                     tbody.innerHTML += `
-                        <tr class="hover:bg-red-50/30">
-                            <td class="px-6 py-4 text-gray-500">${date}</td>
-                            <td class="px-6 py-4">${reporterHtml}</td>
-                            <td class="px-6 py-4">${againstHtml}</td>
-                            <td class="px-6 py-4 text-red-600 font-medium text-xs max-w-xs break-words">${data.reportReason || 'No reason provided'}</td>
-                            <td class="px-6 py-4">
-                                <button class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded border border-red-200 hover:bg-red-200">Investigate</button>
+                        <tr class="hover:bg-red-50/30 transition-colors">
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-gray-500 text-sm">${date}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-sm">${reporterHtml}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-sm">${againstHtml}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-red-600 font-medium text-xs max-w-xs break-words">${data.reportReason || 'No reason provided'}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5">
+                                <button class="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-200 transition font-bold">Investigate</button>
                             </td>
                         </tr>
                     `;
@@ -404,7 +440,7 @@
             
             // Reset content
             document.getElementById('modal-user-name').innerText = 'Loading...';
-            document.getElementById('btn-disable-user').className = 'hidden'; // Hide btn initially
+            document.getElementById('btn-disable-user').className = 'hidden'; 
 
             modal.classList.remove('hidden');
             setTimeout(() => { 
@@ -420,14 +456,10 @@
 
                     // Populate Data
                     document.getElementById('modal-user-name').innerText = data.name || 'Unknown User';
-                    document.getElementById('modal-user-email').innerText = data.email || 'No Email'; // Note: Email might not be in 'users' doc depending on setup, falling back to basic display
+                    document.getElementById('modal-user-email').innerText = data.email || 'No Email'; 
                     document.getElementById('modal-user-phone').innerText = data.phone || 'N/A';
                     document.getElementById('modal-user-address').innerText = data.address || 'N/A';
                     
-                    // Determine Role roughly (optional logic)
-                    document.getElementById('modal-user-role').innerText = "User"; // Generic role, could deduce from context if stored
-                    document.getElementById('modal-user-role').className = "inline-block px-3 py-1 rounded-full text-xs font-bold mt-2 bg-gray-100 text-gray-600";
-
                     const statusEl = document.getElementById('modal-user-status');
                     statusEl.innerText = isDisabled ? 'Disabled' : 'Active';
                     statusEl.className = isDisabled ? 'font-bold text-red-500' : 'font-bold text-green-500';
