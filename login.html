@@ -35,6 +35,8 @@
         }
         /* Prevent elastic scrolling on mobile */
         body { overscroll-behavior-y: none; }
+        /* Fix mobile input zoom */
+        input, select, textarea { font-size: 16px; }
     </style>
 </head>
 <body class="text-gray-800 font-sans min-h-screen flex flex-col relative">
@@ -72,17 +74,17 @@
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Email Address</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fa-solid fa-envelope"></i></span>
-                            <input type="email" id="login-email" required class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition placeholder-gray-400 text-sm md:text-base" placeholder="name@example.com">
+                            <input type="email" id="login-email" required class="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition placeholder-gray-400 text-base" placeholder="name@example.com">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Password</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fa-solid fa-lock"></i></span>
-                            <input type="password" id="login-password" required class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition placeholder-gray-400 text-sm md:text-base" placeholder="••••••••">
+                            <input type="password" id="login-password" required class="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition placeholder-gray-400 text-base" placeholder="••••••••">
                         </div>
                     </div>
-                    <button type="submit" id="btn-login" class="w-full bg-brand-dark hover:bg-gray-800 text-white font-bold py-3.5 rounded-xl transition shadow-lg mt-2 transform hover:scale-[1.01] active:scale-[0.99] text-sm md:text-base">Sign In</button>
+                    <button type="submit" id="btn-login" class="w-full bg-brand-dark hover:bg-gray-800 text-white font-bold py-4 rounded-xl transition shadow-lg mt-2 transform hover:scale-[1.01] active:scale-[0.99] text-base">Sign In</button>
                 </form>
                 
                 <!-- Signup Form -->
@@ -105,17 +107,17 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Organization Name</label>
-                        <input type="text" id="signup-name" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition text-sm md:text-base" placeholder="e.g. Tasty Bites">
+                        <input type="text" id="signup-name" required class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition text-base" placeholder="e.g. Tasty Bites">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Email Address</label>
-                        <input type="email" id="signup-email" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition text-sm md:text-base" placeholder="name@example.com">
+                        <input type="email" id="signup-email" required class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition text-base" placeholder="name@example.com">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Password</label>
-                        <input type="password" id="signup-password" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition text-sm md:text-base" placeholder="Create password">
+                        <input type="password" id="signup-password" required class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:border-transparent outline-none transition text-base" placeholder="Create password">
                     </div>
-                    <button type="submit" id="btn-signup" class="w-full bg-brand-orange hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition shadow-lg mt-2 transform hover:scale-[1.01] active:scale-[0.99] text-sm md:text-base">Create Account</button>
+                    <button type="submit" id="btn-signup" class="w-full bg-brand-orange hover:bg-orange-600 text-white font-bold py-4 rounded-xl transition shadow-lg mt-2 transform hover:scale-[1.01] active:scale-[0.99] text-base">Create Account</button>
                 </form>
                 
                 <div class="mt-6">
@@ -123,7 +125,7 @@
                         <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
                         <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-3 text-gray-400 font-bold tracking-wider">Or continue with</span></div>
                     </div>
-                    <button onclick="handleGoogleLogin()" class="w-full mt-5 flex items-center justify-center gap-3 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold py-3.5 rounded-xl transition shadow-sm hover:shadow-md transform hover:-translate-y-0.5 active:scale-[0.98]">
+                    <button onclick="handleGoogleLogin()" class="w-full mt-5 flex items-center justify-center gap-3 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold py-4 rounded-xl transition shadow-sm hover:shadow-md transform hover:-translate-y-0.5 active:scale-[0.98]">
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
                         <span class="text-sm">Sign in with Google</span>
                     </button>
@@ -140,7 +142,7 @@
             <p class="text-sm text-gray-500 mb-6">Enter your organization details to continue.</p>
             <div class="mb-5 text-left">
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Organization Name</label>
-                <input type="text" id="google-org-name" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 focus:bg-white text-sm" placeholder="e.g. Tasty Bites or Sunshine Home">
+                <input type="text" id="google-org-name" class="w-full px-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 focus:bg-white text-base" placeholder="e.g. Tasty Bites or Sunshine Home">
             </div>
             <p class="text-xs text-gray-400 mb-3 font-bold uppercase tracking-wider text-left ml-1">Select Account Type</p>
             <div class="grid grid-cols-2 gap-4">
@@ -198,6 +200,12 @@
         
         async function handleGoogleLogin() { 
             const provider = new firebase.auth.GoogleAuthProvider(); 
+            const originalBtn = document.querySelector('button[onclick="handleGoogleLogin()"]');
+            const originalBtnHtml = originalBtn.innerHTML;
+            
+            originalBtn.disabled = true;
+            originalBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin w-5 h-5"></i> <span class="text-sm">Signing in...</span>';
+
             try { 
                 const result = await auth.signInWithPopup(provider); 
                 const user = result.user; 
@@ -205,12 +213,14 @@
                 
                 if (doc.exists) { 
                     const userData = doc.data(); 
-                    // Check isDisable field instead of isDisabled
+                    
+                    // CRITICAL CHECK: Using 'isDisable'
                     if (userData.isDisable === true) { 
                         showMessage("Your account has been disabled by Admin.", "error"); 
                         await firebase.auth().signOut(); 
                         return; 
                     } 
+                    
                     showMessage(`Welcome back, ${userData.name}!`, "success"); 
                     performRedirect(userData.role); 
                 } else { 
@@ -219,8 +229,15 @@
                 } 
             } catch (error) { 
                 console.error(error); 
-                showMessage(error.message, "error"); 
-            } 
+                let message = error.message;
+                if (error.code === 'auth/popup-closed-by-user') {
+                    message = "Sign-in window closed. Please try again.";
+                }
+                showMessage(message, "error"); 
+            } finally {
+                originalBtn.disabled = false;
+                originalBtn.innerHTML = originalBtnHtml;
+            }
         }
 
         async function finalizeGoogleRole(role) { 
@@ -248,6 +265,7 @@
         async function handleSignup(e) { 
             e.preventDefault(); 
             const btn = document.getElementById('btn-signup'); 
+            const originalText = btn.innerText;
             btn.innerText = "Creating Account..."; 
             btn.disabled = true; 
             const name = document.getElementById('signup-name').value; 
@@ -269,7 +287,7 @@
             } catch (error) { 
                 console.error(error); 
                 showMessage(error.message, "error"); 
-                btn.innerText = "Create Account"; 
+                btn.innerText = originalText;
                 btn.disabled = false; 
             } 
         }
@@ -290,7 +308,7 @@
                 if (doc.exists) { 
                     const userData = doc.data(); 
                     
-                    // CRITICAL CHECK: Using 'isDisable' now (matches Admin panel)
+                    // CRITICAL CHECK: Using 'isDisable' now
                     if (userData.isDisable === true) { 
                         showMessage("Your account has been disabled by Admin.", "error"); 
                         await firebase.auth().signOut(); 
