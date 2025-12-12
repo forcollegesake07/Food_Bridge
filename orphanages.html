@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Orphanage Dashboard | FoodBridge</title>
     
-    <!-- Browser Tab Icon (Using SVG equivalent of the FontAwesome icon) -->
+    <!-- Browser Tab Icon -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath fill='%2310B981' d='M163.9 136.9c-29.4-29.8-29.4-78.2 0-108s77-29.8 106.4 0l17.7 18 17.7-18c29.4-29.8 77-29.8 106.4 0s29.4 78.2 0 108L310.5 240.1c-6.2 6.3-14.3 9.4-22.5 9.4s-16.3-3.1-22.5-9.4L163.9 136.9zm341.6-47.8c-11.4-18-31.5-28.2-52.6-26.6 9.4 16.5 14.2 35.4 13.6 54.8-1.1 41.5-35.3 75.2-76.9 75.3-25.7 0-48.4-13-61.9-33.1L288 200.5l-39.7-41c-13.5 20.1-36.2 33.1-61.9 33.1-41.5-.1-75.7-33.8-76.9-75.3-.6-19.4 4.1-38.3 13.6-54.8-21.1-1.6-41.2 8.6-52.6 26.6-13.7 21.6-14 49.3-1.6 71.5l143.6 257c6.1 10.9 17.6 17.7 30 17.7 12.5 0 24-6.8 30-17.7l143.6-257c12.4-22.2 12.1-49.9-1.6-71.5zM565.4 97c-9.2-24.8-28.7-44.5-53.5-53.7-27.4-10.2-56.5-1.5-76.6 20.6 6.1 7.2 11.2 15.2 15 24 16-7.3 34.6-6.4 49.8 2.3 8.1 4.7 14.8 11.4 19.5 19.5 14.3 24.8 8.1 55.4-13.4 73.5l-42.6 35.9c7.8 7.3 16.3 13.8 25.5 19.2l39-32.9c32.9-27.8 45-73.4 37.3-108.4zM49.2 63.9C24.4 73.1 4.9 92.8-4.3 117.6c-7.7 35 4.3 80.6 37.3 108.4l39 32.9c9.2-5.4 17.7-11.9 25.5-19.2L55.1 203.8c-21.5-18.1-27.7-48.7-13.4-73.5 4.7-8.1 11.4-14.8 19.5-19.5 15.2-8.7 33.8-9.6 49.8-2.3 3.8-8.8 8.9-16.8 15-24-20.2-22.1-49.3-30.8-76.8-20.6z'/%3E%3C/svg%3E">
 
-    <!-- Tailwind & FontAwesome -->
+    <!-- Styles & Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDKs -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -65,7 +65,7 @@
                 <i class="fa-solid fa-chart-pie text-lg"></i> Dashboard
             </button>
             <button onclick="switchTab('requests')" id="nav-requests" class="nav-item w-full flex items-center gap-4 px-6 py-4 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
-                <i class="fa-solid fa-hands-praying text-lg"></i> Urgent Needs
+                <i class="fa-solid fa-bullhorn text-lg"></i> Urgent Needs
             </button>
             <button onclick="switchTab('history')" id="nav-history" class="nav-item w-full flex items-center gap-4 px-6 py-4 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fa-solid fa-clock-rotate-left text-lg"></i> History
@@ -104,11 +104,10 @@
             <!-- DASHBOARD TAB -->
             <div id="view-dashboard" class="max-w-6xl mx-auto space-y-8 animate-fade-in">
                 
-                <!-- Welcome & Stats -->
+                <!-- Overview Stats -->
                 <div>
                     <h2 class="text-2xl font-bold text-white drop-shadow-md mb-6">Overview</h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Stat 1 -->
                         <div class="bg-white/90 backdrop-blur rounded-2xl p-6 shadow-lg border-b-4 border-brand-green">
                             <div class="flex justify-between items-start">
                                 <div>
@@ -121,26 +120,24 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Stat 2 -->
                         <div class="bg-white/90 backdrop-blur rounded-2xl p-6 shadow-lg border-b-4 border-blue-500">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Incoming</p>
+                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Active Orders</p>
                                     <h3 class="text-3xl font-extrabold text-gray-800 mt-1" id="stat-incoming">0</h3>
-                                    <p class="text-xs text-blue-600 mt-1 font-medium">Orders on the way</p>
+                                    <p class="text-xs text-blue-600 mt-1 font-medium">Claimed & Incoming</p>
                                 </div>
                                 <div class="bg-blue-50 p-3 rounded-xl text-blue-500">
                                     <i class="fa-solid fa-truck-fast text-xl"></i>
                                 </div>
                             </div>
                         </div>
-                        <!-- Stat 3 -->
                         <div class="bg-white/90 backdrop-blur rounded-2xl p-6 shadow-lg border-b-4 border-brand-orange">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Active Requests</p>
+                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Urgent Needs</p>
                                     <h3 class="text-3xl font-extrabold text-gray-800 mt-1" id="stat-requests">0</h3>
-                                    <p class="text-xs text-orange-600 mt-1 font-medium">Urgent needs posted</p>
+                                    <p class="text-xs text-orange-600 mt-1 font-medium">Active postings</p>
                                 </div>
                                 <div class="bg-orange-50 p-3 rounded-xl text-brand-orange">
                                     <i class="fa-solid fa-bullhorn text-xl"></i>
@@ -150,37 +147,36 @@
                     </div>
                 </div>
 
-                <!-- Section: Incoming Deliveries (Live Orders) -->
-                <div id="section-incoming" class="hidden">
+                <!-- Active Orders Section (With Contact Info & Buttons) -->
+                <div id="section-active-orders" class="hidden">
                     <h3 class="text-xl font-bold text-white drop-shadow-md mb-4 flex items-center">
-                        <i class="fa-solid fa-truck-clock mr-2"></i> Incoming Deliveries
+                        <i class="fa-solid fa-truck-clock mr-2"></i> Active Orders (Incoming)
                     </h3>
-                    <div id="incoming-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div id="active-orders-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <!-- Populated by JS -->
                     </div>
                 </div>
 
-                <!-- Section: Available Donations Feed -->
+                <!-- Available Food Feed -->
                 <div>
                     <div class="flex justify-between items-end mb-4">
                         <h3 class="text-xl font-bold text-white drop-shadow-md flex items-center">
                             <i class="fa-solid fa-store mr-2"></i> Available Food
                         </h3>
-                        <span class="bg-white/20 backdrop-blur text-white text-xs px-2 py-1 rounded">Live Feed from Restaurants</span>
+                        <span class="bg-white/20 backdrop-blur text-white text-xs px-2 py-1 rounded">Live Feed</span>
                     </div>
                     
                     <div id="donations-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Loader -->
                         <div class="col-span-full py-12 text-center text-white/80">
                             <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
-                            <p>Searching for nearby donations...</p>
+                            <p>Loading nearby donations...</p>
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            <!-- REQUESTS TAB (Urgent Need) -->
+            <!-- URGENT NEEDS TAB -->
             <div id="view-requests" class="max-w-4xl mx-auto space-y-6 animate-fade-in hidden">
                 <div class="flex justify-between items-center">
                     <h2 class="text-2xl font-bold text-white drop-shadow-md">Urgent Needs</h2>
@@ -192,10 +188,9 @@
                 <!-- My Requests List -->
                 <div class="bg-white/95 backdrop-blur rounded-3xl shadow-xl overflow-hidden min-h-[400px]">
                     <div id="my-requests-container" class="divide-y divide-gray-100">
-                        <!-- JS populated -->
                         <div class="p-10 text-center text-gray-400">
                             <i class="fa-regular fa-folder-open text-4xl mb-3"></i>
-                            <p>You haven't posted any urgent needs yet.</p>
+                            <p>No active requests found.</p>
                         </div>
                     </div>
                 </div>
@@ -210,9 +205,8 @@
                             <thead class="bg-gray-50 text-gray-500 font-bold uppercase text-xs border-b border-gray-100">
                                 <tr>
                                     <th class="px-6 py-4">Date</th>
-                                    <th class="px-6 py-4">Activity</th>
-                                    <th class="px-6 py-4">Details</th>
-                                    <th class="px-6 py-4">From/To</th>
+                                    <th class="px-6 py-4">Restaurant & Contact</th>
+                                    <th class="px-6 py-4">Food Details</th>
                                     <th class="px-6 py-4">Status</th>
                                 </tr>
                             </thead>
@@ -237,18 +231,38 @@
             <form onsubmit="submitUrgentRequest(event)" class="p-6 space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">What do you need?</label>
-                    <input type="text" id="req-item" required placeholder="e.g. Rice Meals, Milk, Bread" class="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 focus:border-brand-orange focus:outline-none transition">
+                    <input type="text" id="req-item" required placeholder="e.g. Rice Meals, Milk" class="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 focus:border-brand-orange focus:outline-none transition">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Quantity</label>
                     <input type="number" id="req-qty" required placeholder="e.g. 50" class="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 focus:border-brand-orange focus:outline-none transition">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Additional Note</label>
-                    <textarea id="req-note" rows="3" placeholder="Any specific dietary requirements..." class="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 focus:border-brand-orange focus:outline-none transition"></textarea>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Note</label>
+                    <textarea id="req-note" rows="3" placeholder="Additional details..." class="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 focus:border-brand-orange focus:outline-none transition"></textarea>
                 </div>
                 <button type="submit" class="w-full py-3 bg-brand-orange text-white rounded-xl font-bold hover:bg-orange-600 shadow-lg transition transform hover:-translate-y-0.5">Post Request</button>
             </form>
+        </div>
+    </div>
+
+    <!-- REPORT MODAL -->
+    <div id="report-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden transform transition-all scale-100">
+            <div class="bg-red-50 p-6 border-b border-red-100">
+                <h3 class="text-lg font-bold text-red-600 flex items-center">
+                    <i class="fa-solid fa-triangle-exclamation mr-2"></i> Report Issue
+                </h3>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-4">Please specify the issue (e.g., Not Received, Food Spoiled):</p>
+                <input type="hidden" id="report-order-id">
+                <textarea id="report-reason" class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:border-red-500 outline-none mb-4" rows="3"></textarea>
+                <div class="flex gap-3">
+                    <button onclick="closeReportModal()" class="flex-1 py-2 text-gray-500 font-bold hover:bg-gray-50 rounded-lg transition">Cancel</button>
+                    <button onclick="submitReport()" class="flex-1 py-2 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition shadow">Submit</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -302,7 +316,6 @@
             if(window.innerWidth < 768) toggleSidebar();
         }
 
-        // --- Logic ---
         function loadUserProfile() {
             document.getElementById('user-email').innerText = currentUser.email;
             db.collection('users').doc(currentUser.uid).get().then(doc => {
@@ -310,8 +323,9 @@
             });
         }
 
+        // --- Realtime Data Logic ---
         function initRealtimeListeners() {
-            // 1. STATS: Donations Completed
+            // 1. STATS: Total Received
             db.collection('donations').where('orphanageId', '==', currentUser.uid).where('status', '==', 'Completed')
                 .onSnapshot(snap => {
                     let total = 0;
@@ -319,36 +333,88 @@
                     document.getElementById('stat-received').innerText = total;
                 });
 
-            // 2. STATS & REQUESTS: My Urgent Requests
-            db.collection('requests').where('orphanageId', '==', currentUser.uid)
-                .onSnapshot(snap => {
-                    document.getElementById('stat-requests').innerText = snap.size; // Only counts active ones if we filtered by status
-                    renderMyRequests(snap);
-                });
-
-            // 3. STATS & LIVE ORDERS: Incoming Deliveries
+            // 2. STATS: Active Orders (Claimed)
             db.collection('donations').where('orphanageId', '==', currentUser.uid).where('status', '==', 'Claimed')
                 .onSnapshot(snap => {
                     document.getElementById('stat-incoming').innerText = snap.size;
-                    renderIncoming(snap);
+                    renderActiveOrders(snap);
+                });
+
+            // 3. URGENT NEEDS: My Requests
+            db.collection('requests').where('orphanageId', '==', currentUser.uid)
+                .onSnapshot(snap => {
+                    document.getElementById('stat-requests').innerText = snap.size;
+                    renderMyRequests(snap);
                 });
 
             // 4. FEED: Available Donations
             db.collection('donations').where('status', '==', 'Available')
                 .onSnapshot(snap => renderAvailableDonations(snap));
 
-            // 5. HISTORY: Combined (Simple approach: just donations for now, could merge requests)
+            // 5. HISTORY
             db.collection('donations').where('orphanageId', '==', currentUser.uid)
                 .orderBy('updatedAt', 'desc').limit(20)
                 .onSnapshot(snap => renderHistory(snap));
         }
 
         // --- Render Functions ---
+
+        async function renderActiveOrders(snap) {
+            const section = document.getElementById('section-active-orders');
+            const container = document.getElementById('active-orders-container');
+            container.innerHTML = '';
+            
+            if(snap.empty) {
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
+
+            for (const doc of snap.docs) {
+                const d = doc.data();
+                // Fetch restaurant contact info on the fly
+                let contactInfo = "Loading contact...";
+                try {
+                    const resDoc = await db.collection('users').doc(d.restaurantId).get();
+                    if(resDoc.exists) {
+                        const rd = resDoc.data();
+                        contactInfo = `${rd.phone || 'No phone'} | ${rd.address || 'No address'}`;
+                    } else {
+                        contactInfo = "Contact unavailable";
+                    }
+                } catch(e) { contactInfo = "Error fetching contact"; }
+
+                container.innerHTML += `
+                    <div class="bg-blue-50/95 backdrop-blur rounded-2xl p-6 border border-blue-100 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-lg text-gray-800">${d.foodName}</h4>
+                                <span class="bg-blue-200 text-blue-800 text-xs font-bold px-2 py-1 rounded">On the way</span>
+                            </div>
+                            <p class="text-sm font-semibold text-gray-700"><i class="fa-solid fa-store mr-1"></i> ${d.restaurantName}</p>
+                            <p class="text-xs text-gray-500 mt-1 mb-3"><i class="fa-solid fa-address-book mr-1"></i> ${contactInfo}</p>
+                            <div class="text-xs bg-white p-2 rounded border border-blue-100 text-gray-600 mb-4">
+                                <strong>Qty:</strong> ${d.servings} Servings &bull; <strong>Type:</strong> ${d.foodType}
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="markOrderReceived('${doc.id}')" class="flex-1 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-sm shadow transition">
+                                <i class="fa-solid fa-check mr-1"></i> Received
+                            </button>
+                            <button onclick="openReportModal('${doc.id}')" class="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 rounded-xl font-bold text-sm transition">
+                                <i class="fa-solid fa-flag"></i> Report
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
         function renderAvailableDonations(snap) {
             const container = document.getElementById('donations-container');
             container.innerHTML = '';
             if(snap.empty) {
-                container.innerHTML = `<div class="col-span-full py-12 text-center text-white/80"><i class="fa-solid fa-utensils text-4xl mb-2 opacity-50"></i><p>No donations available right now.</p></div>`;
+                container.innerHTML = `<div class="col-span-full py-12 text-center text-white/80"><i class="fa-solid fa-utensils text-4xl mb-2 opacity-50"></i><p>No donations available.</p></div>`;
                 return;
             }
             snap.forEach(doc => {
@@ -360,47 +426,14 @@
                                 <h3 class="font-bold text-lg text-gray-800 leading-tight">${d.foodName}</h3>
                                 <p class="text-xs text-gray-500 font-medium mt-1"><i class="fa-solid fa-store mr-1"></i> ${d.restaurantName}</p>
                             </div>
-                            <span class="bg-green-100 text-brand-green text-[10px] font-bold px-2 py-1 rounded-full uppercase">${d.foodType}</span>
+                            <span class="bg-brand-green/10 text-brand-green text-[10px] font-bold px-2 py-1 rounded-full uppercase">${d.foodType}</span>
                         </div>
                         <div class="flex items-center gap-4 text-sm text-gray-600 mb-4 bg-gray-50 p-3 rounded-xl">
                             <span class="font-bold"><i class="fa-solid fa-users text-brand-green mr-1"></i> ${d.servings} Servings</span>
                             <span><i class="fa-solid fa-clock text-orange-400 mr-1"></i> ${d.expiryTime || '2h'} Left</span>
                         </div>
-                        <button onclick="claimDonation('${doc.id}')" class="w-full py-3 bg-brand-dark hover:bg-black text-white rounded-xl font-bold shadow-md transition-colors">
+                        <button onclick="claimDonation('${doc.id}', '${d.restaurantId}')" class="w-full py-3 bg-brand-dark hover:bg-black text-white rounded-xl font-bold shadow-md transition-colors">
                             Claim Food
-                        </button>
-                    </div>
-                `;
-            });
-        }
-
-        function renderIncoming(snap) {
-            const section = document.getElementById('section-incoming');
-            const container = document.getElementById('incoming-container');
-            container.innerHTML = '';
-            
-            if(snap.empty) {
-                section.classList.add('hidden');
-                return;
-            }
-            section.classList.remove('hidden');
-
-            snap.forEach(doc => {
-                const d = doc.data();
-                container.innerHTML += `
-                    <div class="bg-blue-50/90 backdrop-blur rounded-2xl p-5 border border-blue-100 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
-                                <i class="fa-solid fa-truck"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800">${d.foodName}</h4>
-                                <p class="text-xs text-gray-500">From: ${d.restaurantName}</p>
-                                <p class="text-xs font-bold text-blue-600 mt-1">Status: On the way</p>
-                            </div>
-                        </div>
-                        <button onclick="markReceived('${doc.id}')" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm shadow transition">
-                            Received
                         </button>
                     </div>
                 `;
@@ -416,64 +449,77 @@
             }
             snap.forEach(doc => {
                 const d = doc.data();
-                const statusColor = d.status === 'Fulfilled' ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50';
                 container.innerHTML += `
-                    <div class="p-5 flex justify-between items-center hover:bg-gray-50 transition">
+                    <div class="p-5 flex justify-between items-center hover:bg-gray-50 transition group">
                         <div>
                             <h4 class="font-bold text-gray-800 text-lg">${d.itemNeeded}</h4>
-                            <p class="text-sm text-gray-500">Qty: ${d.quantity}</p>
-                            <p class="text-xs text-gray-400 mt-1"><i class="fa-regular fa-clock mr-1"></i> Posted: ${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'Just now'}</p>
+                            <p class="text-sm text-gray-500">Qty: ${d.quantity} &bull; ${d.note || ''}</p>
+                            <p class="text-xs text-gray-400 mt-1">Posted: ${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'Just now'}</p>
                         </div>
-                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase ${statusColor}">${d.status}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase ${d.status === 'Fulfilled' ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50'}">${d.status}</span>
+                            <button onclick="deleteRequest('${doc.id}')" class="p-2 text-gray-300 hover:text-red-500 transition" title="Delete Request">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 `;
             });
         }
 
-        function renderHistory(snap) {
+        async function renderHistory(snap) {
             const tbody = document.getElementById('history-tbody');
             tbody.innerHTML = '';
-            snap.forEach(doc => {
+            
+            for (const doc of snap.docs) {
                 const d = doc.data();
-                // Filter out 'Claimed' because those are 'Live' orders
+                // We only show non-Claimed items (Completed or Issues) in history
                 if(d.status !== 'Claimed') {
+                    // Fetch contact info for history too
+                    let contactInfo = "Loading...";
+                    try {
+                        const resDoc = await db.collection('users').doc(d.restaurantId).get();
+                        contactInfo = resDoc.exists ? (resDoc.data().phone || 'No phone') : "Unavailable";
+                    } catch(e) {}
+
                     let statusClass = 'bg-gray-100 text-gray-600';
                     if(d.status === 'Completed') statusClass = 'bg-green-100 text-green-700';
                     if(d.status === 'Issue') statusClass = 'bg-red-100 text-red-700';
 
                     tbody.innerHTML += `
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50 border-b border-gray-50">
                             <td class="px-6 py-4 text-gray-500">${d.updatedAt ? new Date(d.updatedAt.seconds*1000).toLocaleDateString() : '-'}</td>
-                            <td class="px-6 py-4 font-bold text-gray-700">Donation Received</td>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-gray-700">${d.restaurantName}</div>
+                                <div class="text-xs text-gray-400"><i class="fa-solid fa-phone mr-1"></i>${contactInfo}</div>
+                            </td>
                             <td class="px-6 py-4 text-gray-600">${d.foodName} (${d.servings} servings)</td>
-                            <td class="px-6 py-4 text-gray-500">From: ${d.restaurantName}</td>
                             <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-xs font-bold uppercase ${statusClass}">${d.status}</span></td>
                         </tr>
                     `;
                 }
-            });
+            }
         }
 
         // --- Interaction Logic ---
 
-        async function claimDonation(id) {
-            if(!confirm("Are you sure you want to claim this donation?")) return;
+        async function claimDonation(id, restaurantId) {
+            if(!confirm("Claim this donation?")) return;
             try {
-                // Get fresh user name
                 const uDoc = await db.collection('users').doc(currentUser.uid).get();
-                const uName = uDoc.data().name;
-
                 await db.collection('donations').doc(id).update({
                     status: 'Claimed',
                     orphanageId: currentUser.uid,
-                    orphanageName: uName,
+                    orphanageName: uDoc.data().name,
+                    restaurantId: restaurantId, // Ensure we preserve this if not already there, but usually it is.
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                showToast("Claimed! View in dashboard.");
+                showToast("Claimed successfully!");
             } catch(e) { console.error(e); showToast("Error claiming.", true); }
         }
 
-        async function markReceived(id) {
+        async function markOrderReceived(id) {
+            if(!confirm("Mark this order as received?")) return;
             try {
                 await db.collection('donations').doc(id).update({
                     status: 'Completed',
@@ -483,7 +529,30 @@
             } catch(e) { showToast("Error updating.", true); }
         }
 
-        // Urgent Requests
+        function openReportModal(id) {
+            document.getElementById('report-order-id').value = id;
+            document.getElementById('report-reason').value = '';
+            document.getElementById('report-modal').classList.remove('hidden');
+        }
+        function closeReportModal() { document.getElementById('report-modal').classList.add('hidden'); }
+
+        async function submitReport() {
+            const id = document.getElementById('report-order-id').value;
+            const reason = document.getElementById('report-reason').value;
+            if(!reason) return alert("Please specify a reason.");
+
+            try {
+                await db.collection('donations').doc(id).update({
+                    status: 'Issue',
+                    reportReason: reason,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast("Issue Reported.", true);
+                closeReportModal();
+            } catch(e) { showToast("Error reporting.", true); }
+        }
+
+        // Urgent Requests Logic
         function openRequestModal() { document.getElementById('request-modal').classList.remove('hidden'); }
         function closeRequestModal() { document.getElementById('request-modal').classList.add('hidden'); }
 
@@ -495,7 +564,6 @@
 
             try {
                 const uDoc = await db.collection('users').doc(currentUser.uid).get();
-                
                 await db.collection('requests').add({
                     orphanageId: currentUser.uid,
                     orphanageName: uDoc.data().name,
@@ -509,6 +577,14 @@
                 closeRequestModal();
                 e.target.reset();
             } catch(error) { showToast("Failed to post.", true); }
+        }
+
+        async function deleteRequest(id) {
+            if(!confirm("Delete this request?")) return;
+            try {
+                await db.collection('requests').doc(id).delete();
+                showToast("Request deleted.");
+            } catch(e) { showToast("Error deleting.", true); }
         }
 
         function logout() {
