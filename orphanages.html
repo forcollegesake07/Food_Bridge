@@ -125,8 +125,17 @@
             </div>
 
             <!-- 1. ACTIVE ORDERS (INCOMING) - TOP PRIORITY -->
-            <div id="incoming-orders-container" class="space-y-4">
-                <!-- Dynamically Populated with Active Claims -->
+            <!-- Hidden by default, toggled by JS if data exists -->
+            <div id="incoming-section" class="hidden space-y-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="bg-blue-500 p-2 rounded-lg text-white shadow-lg animate-bounce">
+                        <i class="fa-solid fa-truck-fast"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-white drop-shadow-md">Incoming Orders</h2>
+                </div>
+                <div id="incoming-orders-container" class="space-y-4">
+                    <!-- Dynamically Populated -->
+                </div>
             </div>
 
             <!-- 2. STATS & GRAPH -->
@@ -371,15 +380,19 @@
 
             // 2. Incoming Orders (My Claims) - TOP SECTION
             db.collection('donations').where('orphanageId', '==', currentUser.uid).where('status', '==', 'Claimed').onSnapshot(snap => {
+                const section = document.getElementById('incoming-section');
                 const container = document.getElementById('incoming-orders-container');
                 if(!container) return;
-                container.innerHTML = '';
                 
                 if(snap.empty) { 
-                    // No need to show empty message at the top if there are none, or can show a small hint.
-                    // But let's leave it blank to save space, or show a sleek placeholder if desired.
-                    container.innerHTML = `<div class="bg-blue-50/50 backdrop-blur border border-blue-100 rounded-xl p-4 text-center text-blue-800 text-sm hidden">No incoming orders.</div>`; 
+                    section.classList.add('hidden');
+                    container.innerHTML = '';
+                    return; 
                 }
+
+                // Show section header if we have items
+                section.classList.remove('hidden');
+                container.innerHTML = '';
 
                 snap.forEach(doc => {
                     const d = doc.data();
