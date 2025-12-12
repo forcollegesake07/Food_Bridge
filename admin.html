@@ -160,6 +160,7 @@
                                 <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Receiver (Orphanage)</th>
                                 <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Food Item</th>
                                 <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Status</th>
+                                <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody id="history-table-body" class="divide-y divide-gray-100"></tbody>
@@ -190,6 +191,52 @@
         </div>
 
     </main>
+
+    <!-- INVESTIGATE MODAL -->
+    <div id="investigate-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full transform scale-95 transition-all duration-300" id="investigate-modal-content">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Investigate Report</h3>
+                <p class="text-gray-500 mb-6 text-sm">Review the issue and document your action.</p>
+                
+                <div class="text-left space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Reason of Issue</label>
+                        <input type="text" id="inv-reason" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700" placeholder="Reported reason..." readonly>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Action Taken</label>
+                        <textarea id="inv-action" rows="3" class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="e.g. User warned via email..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button onclick="closeInvestigateModal()" class="flex-1 py-3 text-gray-600 font-bold hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors text-sm">Cancel</button>
+                    <button onclick="submitInvestigation()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg transition-all text-sm">Resolve</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM DELETE MODAL -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-sm w-full transform scale-95 transition-all duration-300" id="confirm-modal-content">
+            <div class="text-center">
+                <div class="w-14 h-14 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Record?</h3>
+                <p class="text-gray-500 mb-6 text-sm">This action cannot be undone.</p>
+                <div class="flex gap-4">
+                    <button onclick="closeConfirmModal()" class="flex-1 py-3 text-gray-600 font-bold hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors text-sm">Cancel</button>
+                    <button onclick="executeDelete()" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg transition-all text-sm">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- USER DETAILS MODAL -->
     <div id="user-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
@@ -237,14 +284,14 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // Chart Instances
         let dailyChart, monthlyChart, lifetimeChart;
+        let currentInvestigateId = null;
+        let currentDeleteId = null;
+        let currentModalUserId = null;
 
-        // Init
         document.addEventListener('DOMContentLoaded', () => {
-            // Check auth then load
             auth.onAuthStateChanged(user => {
-                if(user) { // In real app check admin role
+                if(user) { 
                     switchTab('overview');
                     loadOverview();
                     loadHistory();
@@ -255,7 +302,6 @@
             });
         });
 
-        // Mobile Sidebar Toggle
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
@@ -277,7 +323,6 @@
             document.getElementById('tab-' + tab).classList.remove('hidden');
             const activeBtn = document.getElementById('btn-' + tab);
             activeBtn.className = "w-full flex items-center px-5 py-3.5 text-sm font-semibold rounded-xl bg-brand-blue text-white shadow-md transition-all";
-            
             if (window.innerWidth < 768) toggleSidebar();
         }
 
@@ -303,20 +348,10 @@
                 
                 if (data.createdAt) {
                     const date = new Date(data.createdAt.seconds * 1000);
-                    
-                    // Daily (Last 7 days)
                     const diffTime = Math.abs(today - date);
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays <= 7) {
-                        dailyData[7 - diffDays] += meals;
-                    }
-
-                    // Monthly (Last 12 months)
-                    if (date.getFullYear() === today.getFullYear()) {
-                        monthlyData[date.getMonth()] += meals;
-                    }
-
-                    // Lifetime (Yearly)
+                    if (diffDays <= 7) { dailyData[7 - diffDays] += meals; }
+                    if (date.getFullYear() === today.getFullYear()) { monthlyData[date.getMonth()] += meals; }
                     const year = date.getFullYear();
                     yearlyData[year] = (yearlyData[year] || 0) + meals;
                 }
@@ -332,37 +367,17 @@
         function renderCharts(daily, monthly, yearlyObj) {
             const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } };
 
-            // 1. Daily Chart
             if(dailyChart) dailyChart.destroy();
-            const last7Days = Array.from({length: 7}, (_, i) => {
-                const d = new Date(); d.setDate(d.getDate() - (6-i)); return d.toLocaleDateString('en-US', {weekday:'short'});
-            });
-            dailyChart = new Chart(document.getElementById('dailyChart'), {
-                type: 'bar',
-                data: { labels: last7Days, datasets: [{ label: 'Meals', data: daily, backgroundColor: '#3B82F6', borderRadius: 6 }] },
-                options: commonOptions
-            });
+            const last7Days = Array.from({length: 7}, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (6-i)); return d.toLocaleDateString('en-US', {weekday:'short'}); });
+            dailyChart = new Chart(document.getElementById('dailyChart'), { type: 'bar', data: { labels: last7Days, datasets: [{ label: 'Meals', data: daily, backgroundColor: '#3B82F6', borderRadius: 6 }] }, options: commonOptions });
 
-            // 2. Monthly Chart
             if(monthlyChart) monthlyChart.destroy();
-            monthlyChart = new Chart(document.getElementById('monthlyChart'), {
-                type: 'line',
-                data: { 
-                    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], 
-                    datasets: [{ label: 'Meals', data: monthly, borderColor: '#10B981', tension: 0.4, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' }] 
-                },
-                options: commonOptions
-            });
+            monthlyChart = new Chart(document.getElementById('monthlyChart'), { type: 'line', data: { labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], datasets: [{ label: 'Meals', data: monthly, borderColor: '#10B981', tension: 0.4, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' }] }, options: commonOptions });
 
-            // 3. Lifetime (Yearly) Chart
             if(lifetimeChart) lifetimeChart.destroy();
             const years = Object.keys(yearlyObj).sort();
             const yearData = years.map(y => yearlyObj[y]);
-            lifetimeChart = new Chart(document.getElementById('lifetimeChart'), {
-                type: 'bar',
-                data: { labels: years, datasets: [{ label: 'Total Meals', data: yearData, backgroundColor: '#F97316', borderRadius: 6, barThickness: 40 }] },
-                options: commonOptions
-            });
+            lifetimeChart = new Chart(document.getElementById('lifetimeChart'), { type: 'bar', data: { labels: years, datasets: [{ label: 'Total Meals', data: yearData, backgroundColor: '#F97316', borderRadius: 6, barThickness: 40 }] }, options: commonOptions });
         }
 
         // --- HISTORY ---
@@ -379,11 +394,9 @@
                     if(data.status === 'Issue') statusColor = 'text-red-600 bg-red-50 border border-red-200';
                     if(data.status === 'Claimed') statusColor = 'text-blue-600 bg-blue-50 border border-blue-200';
 
-                    // Receiver is claimedBy user
                     const receiverId = data.claimedBy;
                     const receiverName = data.orphanageName || 'Pending...';
                     
-                    // Clickable Names
                     const restHtml = `<span onclick="openUserModal('${data.restaurantId}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${data.restaurantName || 'Unknown'}</span>`;
                     const recvHtml = receiverId ? `<span onclick="openUserModal('${receiverId}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${receiverName}</span>` : `<span class="text-gray-400 italic">Not claimed</span>`;
 
@@ -394,6 +407,11 @@
                             <td class="px-4 py-4 md:px-6 md:py-5 text-sm">${recvHtml}</td>
                             <td class="px-4 py-4 md:px-6 md:py-5 font-medium text-gray-700 text-sm">${data.foodName} <span class="text-gray-400 font-normal">(${data.servings})</span></td>
                             <td class="px-4 py-4 md:px-6 md:py-5"><span class="px-2 py-1 rounded-lg text-xs font-bold ${statusColor}">${data.status}</span></td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-center">
+                                <button onclick="confirmDeleteHistory('${doc.id}')" class="text-gray-400 hover:text-red-500 transition-colors">
+                                    <i class="fa-solid fa-trash-can text-lg"></i>
+                                </button>
+                            </td>
                         </tr>
                     `;
                 });
@@ -410,7 +428,6 @@
                 snap.forEach(doc => {
                     const data = doc.data();
                     const date = data.reportedAt ? new Date(data.reportedAt.seconds * 1000).toLocaleDateString() : '-';
-                    
                     const reporterHtml = `<span onclick="openUserModal('${data.claimedBy}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${data.orphanageName}</span>`;
                     const againstHtml = `<span onclick="openUserModal('${data.restaurantId}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${data.restaurantName}</span>`;
 
@@ -421,7 +438,7 @@
                             <td class="px-4 py-4 md:px-6 md:py-5 text-sm">${againstHtml}</td>
                             <td class="px-4 py-4 md:px-6 md:py-5 text-red-600 font-medium text-xs max-w-xs break-words">${data.reportReason || 'No reason provided'}</td>
                             <td class="px-4 py-4 md:px-6 md:py-5">
-                                <button class="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-200 transition font-bold">Investigate</button>
+                                <button onclick="openInvestigateModal('${doc.id}', '${data.reportReason}')" class="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-200 transition font-bold">Investigate</button>
                             </td>
                         </tr>
                     `;
@@ -429,32 +446,78 @@
             });
         }
 
-        // --- USER DETAILS POPUP & DISABLE LOGIC ---
-        let currentModalUserId = null;
+        // --- INVESTIGATE POPUP ---
+        function openInvestigateModal(id, reason) {
+            currentInvestigateId = id;
+            document.getElementById('inv-reason').value = reason;
+            document.getElementById('inv-action').value = '';
+            
+            const modal = document.getElementById('investigate-modal');
+            const content = document.getElementById('investigate-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10);
+        }
 
+        function closeInvestigateModal() {
+            const modal = document.getElementById('investigate-modal');
+            const content = document.getElementById('investigate-modal-content');
+            modal.classList.add('opacity-0'); content.classList.remove('scale-100'); content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); currentInvestigateId = null; }, 300);
+        }
+
+        async function submitInvestigation() {
+            const action = document.getElementById('inv-action').value;
+            if(!action) { alert("Please enter the action taken."); return; }
+            try {
+                await db.collection('donations').doc(currentInvestigateId).update({
+                    status: 'Resolved',
+                    adminAction: action,
+                    resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeInvestigateModal();
+            } catch(e) { console.error(e); alert("Error resolving issue."); }
+        }
+
+        // --- DELETE HISTORY ---
+        function confirmDeleteHistory(id) {
+            currentDeleteId = id;
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10);
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
+            modal.classList.add('opacity-0'); content.classList.remove('scale-100'); content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); currentDeleteId = null; }, 300);
+        }
+
+        async function executeDelete() {
+            try {
+                await db.collection('donations').doc(currentDeleteId).delete();
+                closeConfirmModal();
+            } catch(e) { console.error(e); alert("Error deleting record."); }
+        }
+
+        // --- USER DETAILS POPUP ---
         async function openUserModal(userId) {
             if(!userId) return;
             currentModalUserId = userId;
             const modal = document.getElementById('user-modal');
             const content = document.getElementById('user-modal-content');
-            
-            // Reset content
             document.getElementById('modal-user-name').innerText = 'Loading...';
             document.getElementById('btn-disable-user').className = 'hidden'; 
 
             modal.classList.remove('hidden');
-            setTimeout(() => { 
-                modal.classList.remove('opacity-0'); 
-                content.classList.remove('scale-95'); content.classList.add('scale-100'); 
-            }, 10);
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10);
 
             try {
                 const doc = await db.collection('users').doc(userId).get();
                 if(doc.exists) {
                     const data = doc.data();
                     const isDisabled = data.disabled === true;
-
-                    // Populate Data
                     document.getElementById('modal-user-name').innerText = data.name || 'Unknown User';
                     document.getElementById('modal-user-email').innerText = data.email || 'No Email'; 
                     document.getElementById('modal-user-phone').innerText = data.phone || 'N/A';
@@ -464,7 +527,6 @@
                     statusEl.innerText = isDisabled ? 'Disabled' : 'Active';
                     statusEl.className = isDisabled ? 'font-bold text-red-500' : 'font-bold text-green-500';
 
-                    // Configure Button
                     const btn = document.getElementById('btn-disable-user');
                     btn.classList.remove('hidden');
                     if (isDisabled) {
@@ -476,36 +538,22 @@
                         btn.className = 'w-full py-3.5 font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 bg-red-500 text-white hover:bg-red-600';
                         btn.onclick = () => toggleUserStatus(userId, true);
                     }
-                } else {
-                    document.getElementById('modal-user-name').innerText = 'User not found';
-                }
-            } catch(e) {
-                console.error(e);
-                alert("Error fetching user details");
-            }
+                } else { document.getElementById('modal-user-name').innerText = 'User not found'; }
+            } catch(e) { console.error(e); alert("Error fetching user details"); }
         }
 
         async function toggleUserStatus(userId, disable) {
-            try {
-                await db.collection('users').doc(userId).update({ disabled: disable });
-                // Re-fetch to update UI
-                openUserModal(userId);
-            } catch(e) {
-                alert("Error updating status: " + e.message);
-            }
+            try { await db.collection('users').doc(userId).update({ disabled: disable }); openUserModal(userId); } catch(e) { alert("Error updating status: " + e.message); }
         }
 
         function closeUserModal() {
             const modal = document.getElementById('user-modal');
             const content = document.getElementById('user-modal-content');
-            modal.classList.add('opacity-0');
-            content.classList.remove('scale-100'); content.classList.add('scale-95');
+            modal.classList.add('opacity-0'); content.classList.remove('scale-100'); content.classList.add('scale-95');
             setTimeout(() => { modal.classList.add('hidden'); currentModalUserId = null; }, 300);
         }
 
-        function logout() {
-            auth.signOut().then(() => window.location.href = 'https://foodbridge.qzz.io/index.html');
-        }
+        function logout() { auth.signOut().then(() => window.location.href = 'https://foodbridge.qzz.io/index.html'); }
     </script>
 </body>
 </html>
