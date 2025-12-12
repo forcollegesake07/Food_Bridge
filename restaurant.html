@@ -46,6 +46,8 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         /* Prevent bounce on mobile */
         body { overscroll-behavior-y: none; }
+        /* Fix mobile input zoom */
+        input, select, textarea { font-size: 16px; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 h-screen flex flex-col md:flex-row overflow-hidden">
@@ -60,7 +62,7 @@
     <aside class="fixed md:relative w-72 bg-white/95 backdrop-blur-md border-r border-gray-200 flex flex-col z-40 shadow-2xl h-full flex-shrink-0 transition-transform duration-300 transform -translate-x-full md:translate-x-0" id="sidebar">
         <div class="p-6 md:p-8 flex items-center border-b border-gray-100">
             <div class="bg-brand-orange/10 p-2.5 rounded-xl mr-3 shadow-sm">
-                 <!-- Header Icon -->
+                <!-- Header Icon -->
                 <i class="fa-solid fa-hand-holding-heart text-brand-orange text-2xl"></i>
             </div>
             <div>
@@ -146,11 +148,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Dish Name</label>
-                                <input type="text" id="food-name" required class="w-full px-4 py-3 md:px-5 md:py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:bg-white outline-none transition-all placeholder-gray-400 font-medium text-gray-800 text-sm md:text-base" placeholder="e.g. Vegetable Biryani">
+                                <input type="text" id="food-name" required class="w-full px-4 py-3 md:px-5 md:py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:bg-white outline-none transition-all placeholder-gray-400 font-medium text-gray-800 text-base" placeholder="e.g. Vegetable Biryani">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Quantity (People)</label>
-                                <input type="number" id="food-qty" required class="w-full px-4 py-3 md:px-5 md:py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:bg-white outline-none transition-all placeholder-gray-400 font-medium text-gray-800 text-sm md:text-base" placeholder="e.g. 25">
+                                <input type="number" id="food-qty" required class="w-full px-4 py-3 md:px-5 md:py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-orange focus:bg-white outline-none transition-all placeholder-gray-400 font-medium text-gray-800 text-base" placeholder="e.g. 25">
                             </div>
                         </div>
                         
@@ -163,7 +165,7 @@
                             <img id="image-preview" class="hidden w-full h-20 object-cover rounded-lg mx-auto relative z-10">
                         </div>
 
-                        <button type="submit" id="btn-submit" class="w-full py-3.5 md:py-4 bg-brand-orange text-white font-bold text-base md:text-lg rounded-xl shadow-md hover:bg-orange-600 hover:shadow-lg transform active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+                        <button type="submit" id="btn-submit" class="w-full py-4 bg-brand-orange text-white font-bold text-base md:text-lg rounded-xl shadow-md hover:bg-orange-600 hover:shadow-lg transform active:scale-[0.99] transition-all flex items-center justify-center gap-2">
                             <span>Post Donation</span>
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
@@ -274,10 +276,10 @@
                     <p class="text-gray-500 text-xs md:text-sm mt-1">Manage your public information</p>
                 </div>
                 <form onsubmit="saveProfile(event)" class="px-6 md:px-8 pb-8 md:pb-10 space-y-5 md:space-y-6">
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Restaurant Name</label><input type="text" id="detail-name" class="w-full px-4 py-3 md:px-5 md:py-3.5 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-orange focus:bg-white outline-none transition-all font-medium text-gray-800 text-sm md:text-base"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Phone Number</label><input type="tel" id="detail-phone" class="w-full px-4 py-3 md:px-5 md:py-3.5 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-orange focus:bg-white outline-none transition-all font-medium text-gray-800 text-sm md:text-base"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Address</label><textarea id="detail-address" rows="3" class="w-full px-4 py-3 md:px-5 md:py-3.5 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-orange focus:bg-white outline-none transition-all font-medium text-gray-800 text-sm md:text-base"></textarea></div>
-                    <button type="submit" class="w-full py-3.5 md:py-4 bg-brand-green text-white font-bold text-base md:text-lg rounded-xl hover:bg-green-600 transition-all shadow-lg transform active:scale-[0.99]">Save Changes</button>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Restaurant Name</label><input type="text" id="detail-name" class="w-full px-4 py-3 md:px-5 md:py-3.5 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-orange focus:bg-white outline-none transition-all font-medium text-gray-800 text-base md:text-base"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Phone Number</label><input type="tel" id="detail-phone" class="w-full px-4 py-3 md:px-5 md:py-3.5 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-orange focus:bg-white outline-none transition-all font-medium text-gray-800 text-base md:text-base"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Address</label><textarea id="detail-address" rows="3" class="w-full px-4 py-3 md:px-5 md:py-3.5 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-orange focus:bg-white outline-none transition-all font-medium text-gray-800 text-base md:text-base"></textarea></div>
+                    <button type="submit" class="w-full py-4 md:py-4 bg-brand-green text-white font-bold text-base md:text-lg rounded-xl hover:bg-green-600 transition-all shadow-lg transform active:scale-[0.99]">Save Changes</button>
                 </form>
             </div>
         </div>
@@ -293,8 +295,8 @@
                 <h3 id="confirm-title" class="text-lg md:text-xl font-bold text-gray-900 mb-2">Confirm Action</h3>
                 <p class="text-gray-500 mb-6 md:mb-8 px-2 text-sm md:text-base" id="confirm-message">Are you sure you want to proceed?</p>
                 <div class="flex gap-4">
-                    <button onclick="closeConfirmModal()" class="flex-1 py-3 md:py-3.5 text-gray-600 font-bold hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors text-sm md:text-base">Cancel</button>
-                    <button onclick="executeAction()" class="flex-1 py-3 md:py-3.5 bg-brand-orange text-white font-bold rounded-xl hover:bg-orange-600 shadow-lg hover:shadow-orange-500/30 transition-all transform active:scale-95 text-sm md:text-base" id="confirm-yes-btn">Confirm</button>
+                    <button onclick="closeConfirmModal()" class="flex-1 py-3.5 md:py-3.5 text-gray-600 font-bold hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors text-base md:text-base">Cancel</button>
+                    <button onclick="executeAction()" class="flex-1 py-3.5 md:py-3.5 bg-brand-orange text-white font-bold rounded-xl hover:bg-orange-600 shadow-lg hover:shadow-orange-500/30 transition-all transform active:scale-95 text-base md:text-base" id="confirm-yes-btn">Confirm</button>
                 </div>
             </div>
         </div>
@@ -312,9 +314,20 @@
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
+                // NOTE: The security rules require data paths to be within /artifacts/{appId}/users/{userId}/...
+                // This app is using the root 'users' collection for profile data, which requires public/non-user-specific rules.
+                // Assuming this is intended for a controlled environment.
                 const doc = await db.collection('users').doc(user.uid).get();
                 if (doc.exists) {
                     userData = doc.data();
+                    
+                    // Check disable status immediately on entry
+                    if (userData.isDisable === true) {
+                        await auth.signOut();
+                        window.location.href = 'https://foodbridge.qzz.io/login.html';
+                        return;
+                    }
+                    
                     const navUser = document.getElementById('nav-username'); if (navUser) navUser.innerText = userData.name || "Restaurant";
                     const sbName = document.getElementById('sidebar-name'); if (sbName) sbName.innerText = userData.name || "Restaurant";
                     const sbId = document.getElementById('sidebar-id'); if (sbId) sbId.innerText = "ID: " + user.uid.slice(0, 6);
@@ -322,6 +335,18 @@
                     if(document.getElementById('detail-phone')) document.getElementById('detail-phone').value = userData.phone || "";
                     if(document.getElementById('detail-address')) document.getElementById('detail-address').value = userData.address || "";
                     document.getElementById('tab-overview').classList.remove('hidden');
+                    loadData();
+                    loadUrgentRequests();
+                    loadActivePickups();
+                } else {
+                    // Initialize minimal data if user doc doesn't exist (First Login)
+                    userData = { name: "New Restaurant", phone: "", address: "" };
+                    await db.collection('users').doc(user.uid).set(userData);
+                    
+                    const sbName = document.getElementById('sidebar-name'); if (sbName) sbName.innerText = userData.name;
+                    const sbId = document.getElementById('sidebar-id'); if (sbId) sbId.innerText = "ID: " + user.uid.slice(0, 6);
+                    document.getElementById('tab-overview').classList.remove('hidden');
+                    // Call load functions even if initial data is empty
                     loadData();
                     loadUrgentRequests();
                     loadActivePickups();
@@ -350,13 +375,26 @@
                 document.getElementById('tab-' + t).classList.add('hidden');
                 const btn = document.getElementById('btn-' + t);
                 btn.classList.remove('bg-brand-orange', 'text-white', 'shadow-md', 'bg-red-500');
-                btn.classList.add('text-gray-600', 'hover:bg-gray-50', 'hover:text-brand-orange');
+                // Ensure default state or hover states are correctly applied when inactive
+                if (t === 'alerts') {
+                    // Alerts has a special hover/inactive state
+                    btn.classList.remove('hover:bg-gray-50', 'hover:text-gray-900');
+                    btn.classList.add('text-gray-500', 'hover:bg-red-50', 'hover:text-red-500', 'border', 'border-transparent', 'hover:border-red-100');
+                } else {
+                    btn.classList.remove('hover:bg-red-50', 'hover:text-red-500', 'border', 'border-transparent', 'hover:border-red-100');
+                    btn.classList.add('text-gray-500', 'hover:bg-gray-50', 'hover:text-gray-900');
+                }
             });
             document.getElementById('tab-' + tab).classList.remove('hidden');
             const activeBtn = document.getElementById('btn-' + tab);
-            activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-50', 'hover:text-brand-orange');
-            if(tab === 'alerts') activeBtn.classList.add('bg-red-500', 'text-white', 'shadow-md');
-            else activeBtn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
+            
+            // Set active state
+            activeBtn.classList.remove('text-gray-500', 'hover:bg-gray-50', 'hover:text-gray-900', 'hover:bg-red-50', 'hover:text-red-500', 'border', 'hover:border-red-100');
+            if(tab === 'alerts') {
+                 activeBtn.classList.add('bg-red-500', 'text-white', 'shadow-md');
+            } else {
+                activeBtn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
+            }
             
             // Auto close sidebar on mobile when tab clicked
             if (window.innerWidth < 768) {
@@ -366,6 +404,7 @@
 
         // --- URGENT REQUESTS LOGIC ---
         function loadUrgentRequests() {
+            // Note: This fetches requests globally, assuming the 'requests' collection is public data.
             db.collection('requests').where('status', '==', 'Pending').orderBy('createdAt', 'desc').onSnapshot(snap => {
                 const container = document.getElementById('requests-container');
                 if(!container) return;
@@ -374,23 +413,43 @@
                 
                 snap.forEach(doc => {
                     const d = doc.data();
-                    container.innerHTML += `<div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-red-500 relative overflow-hidden transform hover:-translate-y-1 transition duration-300"><div class="flex justify-between items-start mb-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-bullhorn"></i></div><div><h4 class="font-bold text-gray-800 text-lg">${d.itemNeeded}</h4><p class="text-xs text-red-500 font-bold uppercase tracking-wide">Qty: ${d.quantity}</p></div></div></div><div class="mb-6 text-sm text-gray-600 space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p class="font-bold text-gray-800"><i class="fa-solid fa-house-chimney mr-2 text-brand-orange"></i> ${d.orphanageName}</p><p><i class="fa-solid fa-location-dot mr-2 text-gray-400"></i> ${d.orphanageAddress || 'Address not listed'}</p><p><i class="fa-solid fa-phone mr-2 text-gray-400"></i> ${d.orphanagePhone || 'Phone not listed'}</p></div><button onclick="initiateFulfillment('${doc.id}', '${d.itemNeeded}', '${d.quantity}', '${d.orphanageId}', '${d.orphanageName}')" class="w-full py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"><span>Donate Now</span> <i class="fa-solid fa-hand-holding-heart"></i></button></div>`;
+                    const cardHtml = `<div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-red-500 relative overflow-hidden transform hover:-translate-y-1 transition duration-300">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-bullhorn"></i></div>
+                                                <div>
+                                                    <h4 class="font-bold text-gray-800 text-lg">${d.itemNeeded}</h4>
+                                                    <p class="text-xs text-red-500 font-bold uppercase tracking-wide">Qty: ${d.quantity}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-6 text-sm text-gray-600 space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                            <p class="font-bold text-gray-800"><i class="fa-solid fa-house-chimney mr-2 text-brand-orange"></i> ${d.orphanageName}</p>
+                                            <p><i class="fa-solid fa-location-dot mr-2 text-gray-400"></i> ${d.orphanageAddress || 'Address not listed'}</p>
+                                            <p><i class="fa-solid fa-phone mr-2 text-gray-400"></i> ${d.orphanagePhone || 'Phone not listed'}</p>
+                                        </div>
+                                        <button onclick="initiateFulfillment('${doc.id}', '${d.itemNeeded}', '${d.quantity}', '${d.orphanageId}', '${d.orphanageName}')" class="w-full py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-md flex items-center justify-center gap-2 transition-all active:scale-95">
+                                            <span>Donate Now</span> <i class="fa-solid fa-hand-holding-heart"></i>
+                                        </button>
+                                    </div>`;
+                    container.innerHTML += cardHtml;
                 });
             });
         }
 
         // --- ACTIVE PICKUPS ---
         function loadActivePickups() {
+            // Note: This fetches donations made by the current restaurant that are "Claimed" (scheduled for pickup).
             db.collection('donations').where('restaurantId', '==', currentUser.uid).where('status', '==', 'Claimed').onSnapshot(snap => {
                 const container = document.getElementById('scheduled-pickups-container');
                 if(!container) return;
                 container.innerHTML = '';
                 
-                if(snap.empty) { container.innerHTML = `<div class="bg-orange-50 border border-orange-100 rounded-xl p-4 text-center text-orange-600 text-sm">No scheduled pickups currently.</div>`; return; }
+                if(snap.empty) { container.innerHTML = `<div class="bg-orange-50 border border-orange-100 rounded-xl p-4 text-center text-orange-600 text-sm font-medium">No scheduled pickups currently. Post a donation!</div>`; return; }
 
                 snap.forEach(doc => {
                     const d = doc.data();
-                    container.innerHTML += `
+                    const pickupHtml = `
                         <div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-green-500 relative">
                             <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center"><i class="fa-solid fa-truck-fast text-green-500 mr-2"></i> Pickup Scheduled</h3>
                             <div class="grid md:grid-cols-2 gap-4 mb-4">
@@ -403,11 +462,12 @@
                                     <p class="text-sm text-gray-600 mt-1"><i class="fa-solid fa-location-dot text-gray-400 mr-2"></i> ${d.orphanageAddress || 'N/A'}</p>
                                 </div>
                             </div>
-                            <div class="text-sm text-gray-500 italic bg-green-50 p-2 rounded text-center">
+                            <div class="text-sm text-gray-500 italic bg-green-50 p-2 rounded text-center border border-green-100">
                                 Waiting for orphanage confirmation of receipt...
                             </div>
                         </div>
                     `;
+                    container.innerHTML += pickupHtml;
                 });
             });
         }
@@ -427,11 +487,13 @@
             msgEl.innerText = message;
 
             if (type === 'fulfill') {
-                btn.className = "flex-1 py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg transition-all transform active:scale-95 text-sm md:text-base";
+                btn.innerText = 'Confirm Fulfillment';
+                btn.className = "flex-1 py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg transition-all transform active:scale-95 text-base md:text-base";
                 iconContainer.className = "w-14 h-14 md:w-16 md:h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-5 text-xl md:text-2xl shadow-sm";
                 icon.className = "fa-solid fa-truck-fast";
-            } else {
-                btn.className = "flex-1 py-3.5 bg-brand-orange text-white font-bold rounded-xl hover:bg-orange-600 shadow-lg transition-all transform active:scale-95 text-sm md:text-base";
+            } else if (type === 'donate') {
+                btn.innerText = 'Post Donation';
+                btn.className = "flex-1 py-3.5 bg-brand-orange text-white font-bold rounded-xl hover:bg-orange-600 shadow-lg transition-all transform active:scale-95 text-base md:text-base";
                 iconContainer.className = "w-14 h-14 md:w-16 md:h-16 bg-brand-orange/10 text-brand-orange rounded-full flex items-center justify-center mx-auto mb-4 md:mb-5 text-xl md:text-2xl shadow-sm";
                 icon.className = "fa-solid fa-hand-holding-heart";
             }
@@ -462,24 +524,24 @@
             const qty = document.getElementById('food-qty').value;
 
             if(!userData.address || !userData.phone) {
-                 alert("Please update details first!");
-                 switchTab('details');
-                 return;
+                showToast("Please update your Address and Phone in the Details tab first!", 'error');
+                switchTab('details');
+                return;
             }
             if (!name || !qty) return;
 
             pendingAction = { type: 'donate', data: { name, qty, form: e.target } };
-            showConfirmModal("Confirm Donation", `Donate ${qty} servings of ${name}?`, 'donate');
+            showConfirmModal("Confirm Donation", `Donate ${qty} servings of ${name}? This will be posted immediately for pickup.`, 'donate');
         }
 
         function initiateFulfillment(reqId, item, qty, orphId, orphName) {
             if(!userData.address || !userData.phone) { 
-                alert("Please update your restaurant details (Address & Phone) first!"); 
+                showToast("Please update your restaurant details (Address & Phone) in the Details tab first!", 'error'); 
                 switchTab('details'); 
                 return; 
             }
             pendingAction = { type: 'fulfill', data: { reqId, item, qty, orphId, orphName } };
-            showConfirmModal("Confirm Fulfillment", `Fulfill request for ${qty} ${item} from ${orphName}?`, 'fulfill');
+            showConfirmModal("Confirm Fulfillment", `Fulfill request for ${qty} ${item} from ${orphName}? This will instantly reserve the food and notify the orphanage.`, 'fulfill');
         }
 
         async function executeAction() {
@@ -495,18 +557,23 @@
                 btn.disabled = true;
 
                 try {
+                    // Check required fields before posting
+                    if (!userData.address || !userData.phone || !userData.name) {
+                        throw new Error("Missing required profile details (Name, Address, or Phone). Please update your profile.");
+                    }
+                    
                     await db.collection('donations').add({
                         restaurantId: currentUser.uid, restaurantName: userData.name, restaurantEmail: currentUser.email, restaurantAddress: userData.address, restaurantPhone: userData.phone,
                         foodName: name, servings: parseInt(qty), imageUrl: base64Image || null, status: "Available", createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    showToast("Donation posted successfully!");
+                    showToast("Donation posted successfully! It is now available for orphanages to claim.");
                     form.reset();
                     base64Image = "";
                     document.getElementById('image-preview').classList.add('hidden');
                     document.getElementById('upload-placeholder').classList.remove('hidden');
                 } catch (err) {
-                    console.error(err);
-                    alert("Error posting: " + err.message);
+                    console.error("Donation Error:", err);
+                    showToast("Error posting donation: " + err.message, 'error');
                 } finally {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
@@ -515,22 +582,37 @@
             } else if (pendingAction.type === 'fulfill') {
                 const { reqId, item, qty, orphId, orphName } = pendingAction.data;
                 try {
+                    // 1. Get request details to pull contact info
                     const reqDoc = await db.collection('requests').doc(reqId).get();
                     const reqData = reqDoc.data();
 
-                    await db.collection('requests').doc(reqId).update({ status: 'Fulfilled', fulfilledBy: currentUser.uid, restaurantName: userData.name, fulfilledAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    // 2. Mark the Request as Fulfilled
+                    await db.collection('requests').doc(reqId).update({ 
+                        status: 'Fulfilled', 
+                        fulfilledBy: currentUser.uid, 
+                        restaurantName: userData.name, 
+                        fulfilledAt: firebase.firestore.FieldValue.serverTimestamp() 
+                    });
+                    
+                    // 3. Create a Donation record linking this fulfillment
                     await db.collection('donations').add({
                         restaurantId: currentUser.uid, restaurantName: userData.name, restaurantEmail: currentUser.email, restaurantAddress: userData.address, restaurantPhone: userData.phone,
-                        foodName: item, servings: parseInt(qty), imageUrl: null, status: "Claimed", claimedBy: orphId, 
+                        foodName: item, servings: parseInt(qty), imageUrl: null, 
+                        status: "Claimed", // Directly set to claimed since it was a direct request fulfillment
+                        claimedBy: orphId, 
                         orphanageName: orphName, 
-                        orphanageEmail: reqData.orphanageEmail, orphanagePhone: reqData.orphanagePhone, orphanageAddress: reqData.orphanageAddress || '',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(), claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        orphanageEmail: reqData.orphanageEmail, 
+                        orphanagePhone: reqData.orphanagePhone, 
+                        orphanageAddress: reqData.orphanageAddress || '',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(), claimedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        isFulfillment: true,
+                        originalRequestId: reqId
                     });
-                    showToast("Request Fulfilled!");
+                    showToast(`Successfully reserved ${item} for ${orphName}. Pickup is now scheduled.`);
                     switchTab('history');
                 } catch(e) {
-                    console.error(e);
-                    alert("Error: " + e.message);
+                    console.error("Fulfillment Error:", e);
+                    showToast("Error fulfilling request: " + e.message, 'error');
                 }
             }
         }
@@ -539,47 +621,171 @@
 
         function loadData() {
             db.collection('donations').where("restaurantId", "==", currentUser.uid).orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-                  const recentList = document.getElementById('recent-list'); const historyBody = document.getElementById('history-table-body');
-                  if (recentList) recentList.innerHTML = ""; if (historyBody) historyBody.innerHTML = "";
-                  totalMeals = 0; let docCount = 0;
-                  if (snapshot.empty) { if (recentList) recentList.innerHTML = "<p class='text-center text-gray-400 py-4'>No donations yet.</p>"; if (historyBody) historyBody.innerHTML = "<tr><td colspan='6' class='text-center p-4 text-gray-400'>No history found.</td></tr>"; }
-                  snapshot.forEach(doc => {
-                      const data = doc.data(); docCount++; totalMeals += parseInt(data.servings || 0);
-                      const date = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Just now';
-                      
-                      // Status Handling
-                      let statusBadge = `<span class="text-green-600 bg-green-50 px-2 py-1 rounded-lg text-xs font-bold border">${data.status}</span>`;
-                      if(data.status === 'Completed') statusBadge = `<span class="text-white bg-green-500 px-2 py-1 rounded-lg text-xs font-bold">Completed</span>`;
-                      if(data.status === 'Issue') statusBadge = `<span class="text-white bg-red-500 px-2 py-1 rounded-lg text-xs font-bold">Issue Reported</span>`;
+                const recentList = document.getElementById('recent-list'); 
+                const historyBody = document.getElementById('history-table-body');
+                if (recentList) recentList.innerHTML = ""; 
+                if (historyBody) historyBody.innerHTML = "";
+                totalMeals = 0; 
+                let docCount = 0;
 
-                      const recipient = data.orphanageName || '-';
-                      let contactInfo = '-';
-                      if(data.status === 'Claimed' || data.status === 'Completed') { 
-                          contactInfo = `<div class="text-xs text-gray-500 space-y-0.5">
+                if (snapshot.empty) { 
+                    if (recentList) recentList.innerHTML = "<p class='text-center text-gray-400 py-4'>No donations yet. Post one above!</p>"; 
+                    if (historyBody) historyBody.innerHTML = "<tr><td colspan='6' class='text-center p-4 text-gray-400'>No history found.</td></tr>"; 
+                }
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data(); 
+                    docCount++; 
+                    totalMeals += parseInt(data.servings || 0);
+                    const date = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : 'Just now';
+                    
+                    // Status Handling
+                    let statusBadge = `<span class="text-green-600 bg-green-50 px-2 py-1 rounded-lg text-xs font-bold border border-green-100">${data.status}</span>`;
+                    if(data.status === 'Completed') statusBadge = `<span class="text-white bg-brand-green px-2 py-1 rounded-lg text-xs font-bold">Completed</span>`;
+                    if(data.status === 'Issue') statusBadge = `<span class="text-white bg-red-500 px-2 py-1 rounded-lg text-xs font-bold">Issue Reported</span>`;
+                    if(data.status === 'Available') statusBadge = `<span class="text-brand-orange bg-orange-50 px-2 py-1 rounded-lg text-xs font-bold border border-orange-100">Available</span>`;
+                    if(data.status === 'Claimed') statusBadge = `<span class="text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg text-xs font-bold border border-indigo-100">Claimed</span>`;
+
+
+                    const recipient = data.orphanageName || '-';
+                    let contactInfo = '-';
+                    if(data.status === 'Claimed' || data.status === 'Completed') { 
+                        contactInfo = `<div class="text-xs text-gray-500 space-y-0.5">
                             <p><i class="fa-solid fa-phone text-brand-orange mr-1"></i> ${data.orphanagePhone || 'N/A'}</p>
                             <p><i class="fa-solid fa-location-dot text-brand-orange mr-1"></i> ${data.orphanageAddress || 'N/A'}</p>
-                          </div>`; 
-                      }
+                            </div>`; 
+                    }
 
-                      if (docCount <= 5 && recentList) { 
-                          recentList.innerHTML += `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-gray-400 shadow-sm border border-gray-100"><i class="fa-solid fa-utensils"></i></div><div><h4 class="font-bold text-gray-800 text-sm">${data.foodName}</h4><p class="text-xs text-gray-500">${data.servings} Servings • ${date}</p></div></div>${statusBadge}</div>`; 
-                      }
-                      if (historyBody) { 
-                          historyBody.innerHTML += `<tr class="hover:bg-gray-50 transition-colors"><td class="px-4 py-3 md:px-6 md:py-4 text-gray-500 text-sm">${date}</td><td class="px-4 py-3 md:px-6 md:py-4 font-bold text-gray-800 text-sm">${data.foodName}</td><td class="px-4 py-3 md:px-6 md:py-4 text-gray-600 text-sm">${data.servings}</td><td class="px-4 py-3 md:px-6 md:py-4">${statusBadge}</td><td class="px-4 py-3 md:px-6 md:py-4 text-gray-500 text-sm font-medium">${recipient}</td><td class="px-4 py-3 md:px-6 md:py-4">${contactInfo}</td></tr>`; 
-                      }
-                  });
-                  const elMeals = document.getElementById('stat-meals'); if (elMeals) elMeals.innerText = totalMeals;
-                  const elWaste = document.getElementById('stat-waste'); if (elWaste) elWaste.innerText = (totalMeals * 0.5).toFixed(1);
-                  const elCount = document.getElementById('history-count'); if (elCount) elCount.innerText = docCount;
-                  updateChart(totalMeals);
-              });
+                    if (docCount <= 5 && recentList) { 
+                        recentList.innerHTML += `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-gray-400 shadow-sm border border-gray-100"><i class="fa-solid fa-utensils"></i></div><div><h4 class="font-bold text-gray-800 text-sm">${data.foodName}</h4><p class="text-xs text-gray-500">${data.servings} Servings • ${date}</p></div></div>${statusBadge}</div>`; 
+                    }
+                    if (historyBody) { 
+                        historyBody.innerHTML += `<tr class="hover:bg-gray-50 transition-colors"><td class="px-4 py-3 md:px-6 md:py-4 text-gray-500 text-sm">${date}</td><td class="px-4 py-3 md:px-6 md:py-4 font-bold text-gray-800 text-sm">${data.foodName}</td><td class="px-4 py-3 md:px-6 md:py-4 text-gray-600 text-sm">${data.servings}</td><td class="px-4 py-3 md:px-6 md:py-4">${statusBadge}</td><td class="px-4 py-3 md:px-6 md:py-4 text-gray-500 text-sm font-medium">${recipient}</td><td class="px-4 py-3 md:px-6 md:py-4">${contactInfo}</td></tr>`; 
+                    }
+                });
+                
+                const elMeals = document.getElementById('stat-meals'); if (elMeals) elMeals.innerText = totalMeals;
+                const elWaste = document.getElementById('stat-waste'); if (elWaste) elWaste.innerText = (totalMeals * 0.5).toFixed(1); // Estimation: 0.5kg saved per meal
+                const elCount = document.getElementById('history-count'); if (elCount) elCount.innerText = docCount;
+                updateChart(totalMeals);
+            });
         }
 
-        async function saveProfile(e) { e.preventDefault(); const name = document.getElementById('detail-name').value; const phone = document.getElementById('detail-phone').value; const address = document.getElementById('detail-address').value; try { await db.collection('users').doc(currentUser.uid).update({ name, phone, address }); userData.name = name; userData.phone = phone; userData.address = address; const navUser = document.getElementById('nav-username'); if (navUser) navUser.innerText = name; const sideName = document.getElementById('sidebar-name'); if (sideName) sideName.innerText = name; showToast("Profile Updated!"); } catch (err) { alert("Error: " + err.message); } }
-        function previewImage(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { document.getElementById('image-preview').src = e.target.result; document.getElementById('image-preview').classList.remove('hidden'); document.getElementById('upload-placeholder').classList.add('hidden'); base64Image = e.target.result; }; reader.readAsDataURL(input.files[0]); } }
-        function showToast(msg) { const t = document.getElementById('toast'); if (t) { document.getElementById('toast-message').innerText = msg; t.classList.remove('translate-y-32', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3000); } }
-        function logout() { auth.signOut().then(() => { window.location.href = 'https://foodbridge.qzz.io/index.html'; }); }
-        let myChart; function updateChart(userTotal) { const ctxElem = document.getElementById('motivationChart'); if (!ctxElem) return; const ctx = ctxElem.getContext('2d'); const avg = 500; if(myChart) myChart.destroy(); myChart = new Chart(ctx, { type: 'bar', data: { labels: ['City Avg.', 'You'], datasets: [{ label: 'Meals', data: [avg, userTotal], backgroundColor: ['#E5E7EB', '#F97316'], borderRadius: 6, barThickness: 50 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false, grid: { display: false } }, x: { grid: { display: false } } } } }); }
+        async function saveProfile(e) { 
+            e.preventDefault(); 
+            const name = document.getElementById('detail-name').value; 
+            const phone = document.getElementById('detail-phone').value; 
+            const address = document.getElementById('detail-address').value; 
+            try { 
+                await db.collection('users').doc(currentUser.uid).update({ name, phone, address }); 
+                userData.name = name; 
+                userData.phone = phone; 
+                userData.address = address; 
+                const navUser = document.getElementById('nav-username'); if (navUser) navUser.innerText = name; 
+                const sideName = document.getElementById('sidebar-name'); if (sideName) sideName.innerText = name; 
+                showToast("Profile Updated Successfully!"); 
+            } catch (err) { 
+                console.error(err);
+                showToast("Error updating profile: " + err.message, 'error'); 
+            } 
+        }
+
+        function previewImage(input) { 
+            if (input.files && input.files[0]) { 
+                const reader = new FileReader(); 
+                reader.onload = function(e) { 
+                    document.getElementById('image-preview').src = e.target.result; 
+                    document.getElementById('image-preview').classList.remove('hidden'); 
+                    document.getElementById('upload-placeholder').classList.add('hidden'); 
+                    base64Image = e.target.result; 
+                }; 
+                reader.readAsDataURL(input.files[0]); 
+            } 
+        }
+
+        function showToast(msg, type = 'success') { 
+            const t = document.getElementById('toast'); 
+            if (t) { 
+                const icon = t.querySelector('i');
+                // Reset classes
+                t.classList.remove('bg-red-600', 'bg-brand-dark');
+                icon.classList.remove('fa-circle-check', 'fa-triangle-exclamation', 'text-green-400', 'text-red-400');
+
+                if (type === 'error') {
+                    t.classList.add('bg-red-600');
+                    icon.classList.add('fa-triangle-exclamation', 'text-red-400');
+                } else {
+                    t.classList.add('bg-brand-dark');
+                    icon.classList.add('fa-circle-check', 'text-green-400');
+                }
+
+                document.getElementById('toast-message').innerText = msg; 
+                t.classList.remove('translate-y-32', 'opacity-0'); 
+                setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3000); 
+            } 
+        }
+
+        function logout() { 
+            auth.signOut().then(() => { 
+                window.location.href = 'https://foodbridge.qzz.io/index.html'; 
+            }).catch(e => {
+                console.error("Logout failed:", e);
+            }); 
+        }
+        
+        let myChart; 
+        function updateChart(userTotal) { 
+            const ctxElem = document.getElementById('motivationChart'); 
+            if (!ctxElem) return; 
+            const ctx = ctxElem.getContext('2d'); 
+            const avg = 500; // Mock city average for comparison
+
+            if(myChart) myChart.destroy(); 
+            
+            myChart = new Chart(ctx, { 
+                type: 'bar', 
+                data: { 
+                    labels: ['City Avg.', 'You'], 
+                    datasets: [{ 
+                        label: 'Meals', 
+                        data: [avg, userTotal], 
+                        backgroundColor: ['#D1D5DB', '#F97316'], // Gray for Avg, Orange for You
+                        borderRadius: 6, 
+                        barThickness: 50 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y + ' meals';
+                                }
+                            }
+                        }
+                    }, 
+                    scales: { 
+                        y: { 
+                            display: false, 
+                            beginAtZero: true,
+                            grid: { display: false } 
+                        }, 
+                        x: { 
+                            grid: { display: false },
+                            ticks: { font: { weight: 'bold' } }
+                        } 
+                    } 
+                } 
+            }); 
+        }
+        
+        // Initial setup for the first tab
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('overview');
+        });
     </script>
 </body>
 </html>
