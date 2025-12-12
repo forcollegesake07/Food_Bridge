@@ -159,30 +159,164 @@
     <script>
         const firebaseConfig = { apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0", authDomain: "panel-9e1a6.firebaseapp.com", projectId: "panel-9e1a6", storageBucket: "panel-9e1a6.firebasestorage.app", messagingSenderId: "491001640513", appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0" };
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth(); const db = firebase.firestore(); let pendingGoogleUser = null; 
+        const auth = firebase.auth(); const db = firebase.firestore(); let pendingGoogleUser = null;
         
         window.addEventListener('DOMContentLoaded', () => { const urlParams = new URLSearchParams(window.location.search); if (urlParams.get('mode') === 'signup') toggleView('signup'); });
 
         function toggleView(view) {
-            const loginForm = document.getElementById('login-form'); const signupForm = document.getElementById('signup-form'); const tabLogin = document.getElementById('tab-login'); const tabSignup = document.getElementById('tab-signup'); document.getElementById('auth-message').classList.add('hidden'); 
-            if (view === 'login') { loginForm.classList.remove('hidden'); signupForm.classList.add('hidden'); tabLogin.className = "w-1/2 py-3 md:py-4 font-bold text-sm text-brand-orange border-b-2 border-brand-orange transition-colors hover:bg-gray-50"; tabSignup.className = "w-1/2 py-3 md:py-4 font-bold text-sm text-gray-400 hover:text-gray-600 transition-colors hover:bg-gray-50"; } 
-            else { loginForm.classList.add('hidden'); signupForm.classList.remove('hidden'); tabSignup.className = "w-1/2 py-3 md:py-4 font-bold text-sm text-brand-green border-b-2 border-brand-green transition-colors hover:bg-gray-50"; tabLogin.className = "w-1/2 py-3 md:py-4 font-bold text-sm text-gray-400 hover:text-gray-600 transition-colors hover:bg-gray-50"; }
+            const loginForm = document.getElementById('login-form'); const signupForm = document.getElementById('signup-form'); const tabLogin = document.getElementById('tab-login'); const tabSignup = document.getElementById('tab-signup'); document.getElementById('auth-message').classList.add('hidden');
+            if (view === 'login') { 
+                loginForm.classList.remove('hidden'); signupForm.classList.add('hidden'); 
+                tabLogin.className = "w-1/2 py-3 md:py-4 font-bold text-sm text-brand-orange border-b-2 border-brand-orange transition-colors hover:bg-gray-50"; 
+                tabSignup.className = "w-1/2 py-3 md:py-4 font-bold text-sm text-gray-400 hover:text-gray-600 transition-colors hover:bg-gray-50"; 
+                document.getElementById('header-subtitle').innerText = "Sign in to start connecting.";
+            } 
+            else { 
+                loginForm.classList.add('hidden'); signupForm.classList.remove('hidden'); 
+                tabSignup.className = "w-1/2 py-3 md:py-4 font-bold text-sm text-brand-orange border-b-2 border-brand-orange transition-colors hover:bg-gray-50"; 
+                tabLogin.className = "w-1/2 py-3 md:py-4 font-bold text-sm text-gray-400 hover:text-gray-600 transition-colors hover:bg-gray-50"; 
+                document.getElementById('header-subtitle').innerText = "Create a new partner account.";
+            }
         }
-        function showMessage(msg, type) { const el = document.getElementById('auth-message'); el.innerText = msg; el.className = `text-center text-sm mt-4 block font-medium ${type === 'error' ? 'text-red-500' : 'text-green-600'}`; el.classList.remove('hidden'); }
+
+        function showMessage(msg, type) { 
+            const el = document.getElementById('auth-message'); 
+            el.innerText = msg; 
+            el.className = `text-center text-sm mt-4 block font-medium ${type === 'error' ? 'text-red-500' : 'text-green-600'}`; 
+            el.classList.remove('hidden'); 
+        }
         
         function performRedirect(role) { 
-            const base = "https://foodbridge.qzz.io/"; 
+            const base = window.location.origin + "/";
             setTimeout(() => { 
                 if (role === 'restaurant') window.location.href = base + "restaurant.html"; 
                 else if (role === 'orphanage') window.location.href = base + "orphanages.html"; 
                 else if (role === 'admin') window.location.href = base + "admin.html"; 
+                else window.location.href = base + "index.html";
             }, 1000); 
         }
         
-        async function handleGoogleLogin() { const provider = new firebase.auth.GoogleAuthProvider(); try { const result = await auth.signInWithPopup(provider); const user = result.user; const doc = await db.collection('users').doc(user.uid).get(); if (doc.exists) { const userData = doc.data(); if (userData.isDisabled === true) { showMessage("Your account has been disabled by Admin.", "error"); await firebase.auth().signOut(); return; } showMessage(`Welcome back, ${userData.name}!`, "success"); performRedirect(userData.role); } else { pendingGoogleUser = user; document.getElementById('google-role-modal').classList.remove('hidden'); } } catch (error) { console.error(error); showMessage(error.message, "error"); } }
-        async function finalizeGoogleRole(role) { if (!pendingGoogleUser) return; const orgName = document.getElementById('google-org-name').value.trim(); if (!orgName) { alert("Please enter your Organization Name."); return; } try { await db.collection('users').doc(pendingGoogleUser.uid).set({ name: orgName, email: pendingGoogleUser.email, role: role, googleDisplayName: pendingGoogleUser.displayName, isDisabled: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); document.getElementById('google-role-modal').classList.add('hidden'); showMessage("Account setup complete!", "success"); performRedirect(role); } catch (error) { console.error(error); alert("Error saving role: " + error.message); } }
-        async function handleSignup(e) { e.preventDefault(); const btn = document.getElementById('btn-signup'); btn.innerText = "Creating Account..."; btn.disabled = true; const name = document.getElementById('signup-name').value; const email = document.getElementById('signup-email').value; const password = document.getElementById('signup-password').value; const role = document.querySelector('input[name="role"]:checked').value; try { const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password); const user = userCredential.user; await firebase.firestore().collection('users').doc(user.uid).set({ name: name, email: email, role: role, isDisabled: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); showMessage("Account created! Redirecting...", "success"); performRedirect(role); } catch (error) { console.error(error); showMessage(error.message, "error"); btn.innerText = "Create Account"; btn.disabled = false; } }
-        async function handleLogin(e) { e.preventDefault(); const btn = document.getElementById('btn-login'); btn.innerText = "Signing In..."; btn.disabled = true; const email = document.getElementById('login-email').value; const password = document.getElementById('login-password').value; try { const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password); const user = userCredential.user; const doc = await db.collection('users').doc(user.uid).get(); if (doc.exists) { const userData = doc.data(); if (userData.isDisabled === true) { showMessage("Your account has been disabled by Admin.", "error"); await firebase.auth().signOut(); btn.innerText = "Sign In"; btn.disabled = false; return; } showMessage(`Welcome back, ${userData.name}!`, "success"); performRedirect(userData.role); } else { showMessage("User role not found.", "error"); btn.innerText = "Sign In"; btn.disabled = false; } } catch (error) { console.error(error); showMessage("Invalid email or password.", "error"); btn.innerText = "Sign In"; btn.disabled = false; } }
+        async function handleGoogleLogin() { 
+            const provider = new firebase.auth.GoogleAuthProvider(); 
+            try { 
+                const result = await auth.signInWithPopup(provider); 
+                const user = result.user; 
+                const doc = await db.collection('users').doc(user.uid).get(); 
+                
+                if (doc.exists) { 
+                    const userData = doc.data(); 
+                    // Check isDisable field instead of isDisabled
+                    if (userData.isDisable === true) { 
+                        showMessage("Your account has been disabled by Admin.", "error"); 
+                        await firebase.auth().signOut(); 
+                        return; 
+                    } 
+                    showMessage(`Welcome back, ${userData.name}!`, "success"); 
+                    performRedirect(userData.role); 
+                } else { 
+                    pendingGoogleUser = user; 
+                    document.getElementById('google-role-modal').classList.remove('hidden'); 
+                } 
+            } catch (error) { 
+                console.error(error); 
+                showMessage(error.message, "error"); 
+            } 
+        }
+
+        async function finalizeGoogleRole(role) { 
+            if (!pendingGoogleUser) return; 
+            const orgName = document.getElementById('google-org-name').value.trim(); 
+            if (!orgName) { alert("Please enter your Organization Name."); return; } 
+            try { 
+                await db.collection('users').doc(pendingGoogleUser.uid).set({ 
+                    name: orgName, 
+                    email: pendingGoogleUser.email, 
+                    role: role, 
+                    googleDisplayName: pendingGoogleUser.displayName, 
+                    isDisable: false, // Standardized to isDisable
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+                }); 
+                document.getElementById('google-role-modal').classList.add('hidden'); 
+                showMessage("Account setup complete!", "success"); 
+                performRedirect(role); 
+            } catch (error) { 
+                console.error(error); 
+                alert("Error saving role: " + error.message); 
+            } 
+        }
+
+        async function handleSignup(e) { 
+            e.preventDefault(); 
+            const btn = document.getElementById('btn-signup'); 
+            btn.innerText = "Creating Account..."; 
+            btn.disabled = true; 
+            const name = document.getElementById('signup-name').value; 
+            const email = document.getElementById('signup-email').value; 
+            const password = document.getElementById('signup-password').value; 
+            const role = document.querySelector('input[name="role"]:checked').value; 
+            try { 
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password); 
+                const user = userCredential.user; 
+                await firebase.firestore().collection('users').doc(user.uid).set({ 
+                    name: name, 
+                    email: email, 
+                    role: role, 
+                    isDisable: false, // Standardized to isDisable
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+                }); 
+                showMessage("Account created! Redirecting...", "success"); 
+                performRedirect(role); 
+            } catch (error) { 
+                console.error(error); 
+                showMessage(error.message, "error"); 
+                btn.innerText = "Create Account"; 
+                btn.disabled = false; 
+            } 
+        }
+
+        async function handleLogin(e) { 
+            e.preventDefault(); 
+            const btn = document.getElementById('btn-login'); 
+            const originalText = btn.innerText;
+            btn.innerText = "Signing In..."; 
+            btn.disabled = true; 
+            const email = document.getElementById('login-email').value; 
+            const password = document.getElementById('login-password').value; 
+            try { 
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password); 
+                const user = userCredential.user; 
+                const doc = await db.collection('users').doc(user.uid).get(); 
+                
+                if (doc.exists) { 
+                    const userData = doc.data(); 
+                    
+                    // CRITICAL CHECK: Using 'isDisable' now (matches Admin panel)
+                    if (userData.isDisable === true) { 
+                        showMessage("Your account has been disabled by Admin.", "error"); 
+                        await firebase.auth().signOut(); 
+                        btn.innerText = originalText;
+                        btn.disabled = false; 
+                        return; 
+                    } 
+                    
+                    showMessage(`Welcome back, ${userData.name}!`, "success"); 
+                    performRedirect(userData.role); 
+                } else { 
+                    showMessage("User profile incomplete. Please try signing up.", "error"); 
+                    btn.innerText = originalText;
+                    btn.disabled = false; 
+                } 
+            } catch (error) { 
+                console.error(error); 
+                let message = "Invalid email or password.";
+                if (error.message.includes('disabled')) {
+                    message = "This account has been disabled by the administrator.";
+                }
+                showMessage(message, "error"); 
+                btn.innerText = originalText;
+                btn.disabled = false; 
+            } 
+        }
     </script>
 </body>
 </html>
