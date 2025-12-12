@@ -54,7 +54,7 @@
     <aside class="w-72 bg-white/95 backdrop-blur-md border-r border-gray-200 flex flex-col z-20 shadow-xl h-full flex-shrink-0 transition-transform duration-300 transform md:translate-x-0 -translate-x-full absolute md:relative" id="sidebar">
         <div class="p-8 flex items-center border-b border-gray-100">
             <div class="bg-brand-green/10 p-2.5 rounded-xl mr-3 shadow-sm">
-                 <!-- Header Icon (Updated to Hand Holding Heart - Green) -->
+                 <!-- Header Icon -->
                 <i class="fa-solid fa-hand-holding-heart text-brand-green text-2xl"></i>
             </div>
             <div>
@@ -117,7 +117,7 @@
                 </div>
             </div>
 
-            <!-- Pending Pickups Block (New) -->
+            <!-- Pending Pickups Block -->
             <div id="pending-pickups-container" class="space-y-4">
                 <!-- Dynamically populated -->
             </div>
@@ -199,14 +199,28 @@
                 </div>
             </div>
 
-            <!-- Available Food (Overview) -->
-            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 h-96 flex flex-col">
-                <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                    <h2 class="text-lg font-bold text-gray-800">Available Donations (Restaurants)</h2>
-                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center border text-green-500 shadow-sm"><i class="fa-solid fa-utensils"></i></div>
+            <!-- GRID: Available Donations & My Active Requests -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-4">
+                <!-- Available Food List -->
+                <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 h-96 flex flex-col">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                        <h2 class="text-lg font-bold text-gray-800">Available Donations</h2>
+                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center border text-green-500 shadow-sm"><i class="fa-solid fa-utensils"></i></div>
+                    </div>
+                    <div class="p-4 flex-grow overflow-y-auto space-y-3" id="overview-donations-list">
+                        <p class="text-center text-gray-400 py-10">Searching for food...</p>
+                    </div>
                 </div>
-                <div class="p-4 flex-grow overflow-y-auto space-y-3" id="overview-donations-list">
-                    <p class="text-center text-gray-400 py-10">Searching for food...</p>
+
+                <!-- My Active Requests (NEW BLOCK) -->
+                <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 h-96 flex flex-col">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                        <h2 class="text-lg font-bold text-gray-800">My Active Requests</h2>
+                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center border text-red-500 shadow-sm"><i class="fa-solid fa-tower-broadcast"></i></div>
+                    </div>
+                    <div class="p-4 flex-grow overflow-y-auto space-y-3" id="my-requests-list">
+                        <p class="text-center text-gray-400 py-10">No active requests broadcasting.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -315,7 +329,8 @@
                     loadAvailableDonations();
                     loadHistory();
                     loadStats();
-                    loadActiveOrders(); // Load Pending Pickups
+                    loadMyRequests(); // Load active requests
+                    loadPendingPickups(); // Load pending pickups
                 }
             } else { window.location.href = 'https://foodbridge.qzz.io/login.html'; }
         });
@@ -337,24 +352,66 @@
         // --- DATA LOADERS ---
 
         function loadStats() {
+            // Count Claims and Meals
             db.collection('donations').where('claimedBy', '==', currentUser.uid).onSnapshot(snap => {
-                let claims = 0; let meals = 0;
-                snap.forEach(d => { claims++; meals += parseInt(d.data().servings || 0); });
+                let claims = 0;
+                let meals = 0;
+                snap.forEach(d => {
+                    claims++;
+                    meals += parseInt(d.data().servings || 0);
+                });
                 const elClaims = document.getElementById('stat-claims-count'); if(elClaims) elClaims.innerText = claims;
                 const elMeals = document.getElementById('stat-meals-count'); if(elMeals) elMeals.innerText = meals;
             });
+
+            // Count Active Requests
             db.collection('requests').where('orphanageId', '==', currentUser.uid).where('status', '==', 'Pending').onSnapshot(snap => {
-                const elReq = document.getElementById('stat-active-requests'); if(elReq) elReq.innerText = snap.size;
+                const elReq = document.getElementById('stat-active-requests'); 
+                if(elReq) elReq.innerText = snap.size;
             });
         }
 
-        function loadActiveOrders() {
-            db.collection('donations').where('claimedBy', '==', currentUser.uid).where('status', '==', 'Claimed').onSnapshot(snap => {
+        // NEW: Load My Active Requests
+        function loadMyRequests() {
+            db.collection('requests').where('orphanageId', '==', currentUser.uid).onSnapshot(snap => {
+                const list = document.getElementById('my-requests-list');
+                if(!list) return;
+                list.innerHTML = '';
+                
+                let count = 0;
+                let docs = [];
+                snap.forEach(d => docs.push({ ...d.data(), id: d.id }));
+                docs.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+                docs.forEach(data => {
+                    if (data.status === 'Pending') {
+                        count++;
+                        list.innerHTML += `
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-all">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <p class="font-bold text-gray-800 text-sm">${data.itemNeeded}</p>
+                                        <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold animate-pulse">Broadcasting</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Qty: ${data.quantity} &bull; Posted: ${data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now'}</p>
+                                </div>
+                                <button onclick="confirmCancelRequest('${data.id}', '${data.itemNeeded}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition" title="Delete Request"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        `;
+                    }
+                });
+                if(count === 0) list.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-400"><i class="fa-solid fa-bullhorn text-3xl mb-2 opacity-20"></i><p class="text-sm">No active broadcasting requests.</p></div>`;
+            });
+        }
+
+        // Pending Pickups (Existing logic logic from previous turn)
+        function loadPendingPickups() {
+             db.collection('donations').where('claimedBy', '==', currentUser.uid).where('status', '==', 'Claimed').onSnapshot(snap => {
                 const container = document.getElementById('pending-pickups-container');
                 if(!container) return;
                 container.innerHTML = '';
                 
-                if(snap.empty) { container.innerHTML = `<div class="bg-blue-50 border border-blue-100 rounded-xl p-4 text-center text-blue-600 text-sm">No active orders pending pickup.</div>`; return; }
+                if(snap.empty) { container.innerHTML = `<div class="bg-blue-50 border border-blue-100 rounded-xl p-4 text-center text-blue-600 text-sm">No pending pickups.</div>`; return; }
 
                 snap.forEach(doc => {
                     const d = doc.data();
@@ -398,13 +455,30 @@
 
                 snap.forEach(doc => {
                     const d = doc.data();
-                    if(container) container.innerHTML += `<div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-green-500 relative overflow-hidden transform hover:-translate-y-1 transition duration-300"><div class="flex justify-between items-start mb-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-utensils"></i></div><div><h4 class="font-bold text-gray-800 text-lg">${d.foodName}</h4><p class="text-xs text-green-600 font-bold uppercase tracking-wide">Qty: ${d.servings}</p></div></div></div><div class="mb-6 text-sm text-gray-600 space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p class="font-bold text-gray-800"><i class="fa-solid fa-store mr-2 text-brand-green"></i> ${d.restaurantName}</p><p><i class="fa-solid fa-location-dot mr-2 text-gray-400"></i> ${d.restaurantAddress || 'N/A'}</p></div><button onclick="initiateClaim('${doc.id}', '${d.foodName}', '${d.servings}', '${d.restaurantName}')" class="w-full py-3.5 bg-brand-green text-white font-bold rounded-xl hover:bg-green-700 shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"><span>Accept Donation</span> <i class="fa-solid fa-check"></i></button></div>`;
-                    if(overviewList) overviewList.innerHTML += `<div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-white hover:shadow-md transition-all"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-green-500"><i class="fa-solid fa-utensils"></i></div><div><p class="font-bold text-gray-800">${d.foodName} <span class="text-green-600 text-xs bg-green-50 px-2 py-0.5 rounded-full ml-2">${d.servings} Servings</span></p><p class="text-xs text-gray-500"><i class="fa-solid fa-store mr-1"></i> ${d.restaurantName}</p></div></div><button onclick="initiateClaim('${doc.id}', '${d.foodName}', '${d.servings}', '${d.restaurantName}')" class="text-sm bg-brand-green text-white hover:bg-green-700 px-4 py-2 rounded-lg font-bold transition shadow-sm">Claim</button></div>`;
+                    // Populate Card (Donations Tab)
+                    if(container) {
+                        container.innerHTML += `<div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-green-500 relative overflow-hidden transform hover:-translate-y-1 transition duration-300"><div class="flex justify-between items-start mb-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-utensils"></i></div><div><h4 class="font-bold text-gray-800 text-lg">${d.foodName}</h4><p class="text-xs text-green-600 font-bold uppercase tracking-wide">Qty: ${d.servings}</p></div></div></div><div class="mb-6 text-sm text-gray-600 space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p class="font-bold text-gray-800"><i class="fa-solid fa-store mr-2 text-brand-green"></i> ${d.restaurantName}</p><p><i class="fa-solid fa-location-dot mr-2 text-gray-400"></i> ${d.restaurantAddress || 'N/A'}</p></div><button onclick="initiateClaim('${doc.id}', '${d.foodName}', '${d.servings}', '${d.restaurantName}')" class="w-full py-3.5 bg-brand-green text-white font-bold rounded-xl hover:bg-green-700 shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"><span>Accept Donation</span> <i class="fa-solid fa-check"></i></button></div>`;
+                    }
+                    // Populate List (Overview Tab)
+                    if(overviewList) {
+                        overviewList.innerHTML += `
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-white hover:shadow-md transition-all">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-green-500"><i class="fa-solid fa-utensils"></i></div>
+                                    <div>
+                                        <p class="font-bold text-gray-800">${d.foodName} <span class="text-green-600 text-xs bg-green-50 px-2 py-0.5 rounded-full ml-2">${d.servings} Servings</span></p>
+                                        <p class="text-xs text-gray-500"><i class="fa-solid fa-store mr-1"></i> ${d.restaurantName}</p>
+                                    </div>
+                                </div>
+                                <button onclick="initiateClaim('${doc.id}', '${d.foodName}', '${d.servings}', '${d.restaurantName}')" class="text-sm bg-brand-green text-white hover:bg-green-700 px-4 py-2 rounded-lg font-bold transition shadow-sm">Claim</button>
+                            </div>`;
+                    }
                 });
             });
         }
 
         function loadHistory() {
+            // Fetch claimed donations
             db.collection('donations').where('claimedBy', '==', currentUser.uid).onSnapshot(snap => {
                 const tbody = document.getElementById('history-table-body');
                 if(!tbody) return;
@@ -414,14 +488,32 @@
                 snap.forEach(d => docs.push(d.data()));
                 docs.sort((a,b) => (b.claimedAt?.seconds || 0) - (a.claimedAt?.seconds || 0));
 
+                if(docs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-gray-400">No claim history found.</td></tr>';
+                    return;
+                }
+
                 docs.forEach(data => {
                     const date = data.claimedAt ? new Date(data.claimedAt.seconds * 1000).toLocaleDateString() : 'N/A';
-                    // Determine Status Color
-                    let statusBadge = `<span class="text-green-600 bg-green-50 px-2 py-1 rounded text-xs font-bold border border-green-100">${data.status}</span>`;
-                    if (data.status === 'Completed') statusBadge = `<span class="text-white bg-green-500 px-2 py-1 rounded text-xs font-bold">Completed</span>`;
-                    if (data.status === 'Issue' || data.status === 'Cancelled') statusBadge = `<span class="text-white bg-red-500 px-2 py-1 rounded text-xs font-bold">Cancelled</span>`;
+                    
+                    let statusBadge = `<span class="text-green-600 bg-green-50 px-2 py-1 rounded-lg text-xs font-bold border border-green-100">${data.status}</span>`;
+                    if(data.status === 'Completed') statusBadge = `<span class="text-white bg-green-500 px-2 py-1 rounded-lg text-xs font-bold">Completed</span>`;
+                    if(data.status === 'Issue') statusBadge = `<span class="text-white bg-red-500 px-2 py-1 rounded-lg text-xs font-bold">Issue</span>`;
 
-                    tbody.innerHTML += `<tr class="hover:bg-gray-50 transition-colors border-b border-gray-100"><td class="px-6 py-4 text-gray-500 text-sm">${date}</td><td class="px-6 py-4 font-bold text-gray-800 text-sm">${data.foodName} (${data.servings})</td><td class="px-6 py-4 text-gray-700 text-sm font-medium">${data.restaurantName}</td><td class="px-6 py-4"><div class="text-xs text-gray-500"><p><i class="fa-solid fa-phone text-green-500 mr-1"></i> ${data.restaurantPhone || 'N/A'}</p><p><i class="fa-solid fa-location-dot text-green-500 mr-1"></i> ${data.restaurantAddress || 'N/A'}</p></div></td><td class="px-6 py-4">${statusBadge}</td></tr>`;
+                    let contactInfo = `<div class="text-xs text-gray-500">
+                        <p><i class="fa-solid fa-phone text-green-500 mr-1"></i> ${data.restaurantPhone || 'N/A'}</p>
+                        <p><i class="fa-solid fa-location-dot text-green-500 mr-1"></i> ${data.restaurantAddress || 'N/A'}</p>
+                    </div>`;
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                            <td class="px-6 py-4 text-gray-500 text-sm">${date}</td>
+                            <td class="px-6 py-4 font-bold text-gray-800 text-sm">${data.foodName} (${data.servings})</td>
+                            <td class="px-6 py-4 text-gray-700 text-sm font-medium">${data.restaurantName}</td>
+                            <td class="px-6 py-4">${contactInfo}</td>
+                            <td class="px-6 py-4">${statusBadge}</td>
+                        </tr>
+                    `;
                 });
             });
         }
@@ -434,9 +526,12 @@
             const qty = document.getElementById('req-qty').value;
             if(!userData.address || !userData.phone) { showToast("Please update profile details first!", true); window.switchTab('details'); return; }
             if(!item || !qty) return;
+
             pendingAction = { type: 'request', data: { item, qty, form: e.target } };
+            
             document.getElementById('confirm-title').innerText = "Broadcast Request?";
             document.getElementById('confirm-message').innerText = `Requesting ${qty} ${item}. This will be visible to restaurants immediately.`;
+            
             const btn = document.getElementById('confirm-yes-btn');
             btn.className = "flex-1 py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg transition-all transform active:scale-95";
             btn.innerText = "Yes, Broadcast";
@@ -444,6 +539,18 @@
             document.getElementById('confirm-icon').className = "fa-solid fa-tower-broadcast";
             toggleModal('confirm-modal', true);
         };
+
+        window.confirmCancelRequest = function(reqId, itemName) {
+            pendingAction = { type: 'cancel', data: { reqId } };
+            document.getElementById('confirm-title').innerText = "Delete Request?";
+            document.getElementById('confirm-message').innerText = `Stop broadcasting request for ${itemName}?`;
+            const btn = document.getElementById('confirm-yes-btn');
+            btn.className = "flex-1 py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg transition-all transform active:scale-95";
+            btn.innerText = "Yes, Delete";
+            document.getElementById('confirm-icon-container').className = "w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-5 text-2xl shadow-sm";
+            document.getElementById('confirm-icon').className = "fa-solid fa-trash-can";
+            toggleModal('confirm-modal', true);
+        }
 
         window.initiateClaim = function(donId, item, qty, restName) {
             if(!userData.address || !userData.phone) { showToast("Update profile to accept donations!", true); window.switchTab('details'); return; }
@@ -472,7 +579,6 @@
 
         window.reportOrderIssue = function(donId) {
             if(!confirm("Are you sure you want to report an issue/cancel this order?")) return;
-            // Direct action for issue reporting, or can use custom modal
             db.collection('donations').doc(donId).update({ status: 'Issue' });
             showToast("Order status updated to Issue.");
         }
@@ -489,6 +595,10 @@
                     });
                     showToast("Request broadcasted successfully!"); form.reset();
                 } 
+                else if (pendingAction.type === 'cancel') {
+                    await db.collection('requests').doc(pendingAction.data.reqId).delete();
+                    showToast("Request deleted.");
+                }
                 else if (pendingAction.type === 'claim') {
                     await db.collection('donations').doc(pendingAction.data.donId).update({
                         status: 'Claimed', claimedBy: currentUser.uid, orphanageName: userData.name, orphanagePhone: userData.phone, orphanageEmail: userData.email || '', claimedAt: firebase.firestore.FieldValue.serverTimestamp()
