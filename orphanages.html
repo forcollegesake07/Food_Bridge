@@ -412,6 +412,7 @@
                 
                 if(listContainer) {
                     listContainer.innerHTML = '';
+                    // Filter to show ONLY Active/Pending in the Requests Tab as requested
                     const pendingDocs = snap.docs.filter(d => d.data().status === 'Pending');
                     
                     if(pendingDocs.length === 0) { 
@@ -445,9 +446,7 @@
             });
 
             // 4. History & Stats & Graph
-            // Need to merge history from both Donations and Requests to show complete picture
-            // Simplified: Focusing on Donations for now as per previous logic, but ensuring completed/issue states are clear
-            db.collection('donations').where('orphanageId', '==', currentUser.uid).orderBy('updatedAt', 'desc').onSnapshot(snap => {
+            db.collection('donations').where('orphanageId', '==', currentUser.uid).orderBy('updatedAt', 'desc').onSnapshot(async snap => {
                 const tbody = document.getElementById('history-table-body');
                 const recentList = document.getElementById('recent-list');
                 
@@ -457,40 +456,60 @@
                 if(tbody) tbody.innerHTML = '';
                 if(recentList) recentList.innerHTML = '';
 
-                snap.forEach(doc => {
+                // Process docs asynchronously to fetch contacts
+                const historyItems = await Promise.all(snap.docs.map(async doc => {
                     const d = doc.data();
                     if(d.status === 'Completed') totalReceived += parseInt(d.servings || 0);
                     
+                    // Don't show active/claimed in history
                     if(d.status !== 'Claimed') { 
                         historyCount++;
                         let statusBadge = `<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-lg text-xs font-bold">${d.status}</span>`;
                         if(d.status === 'Completed') statusBadge = `<span class="bg-green-100 text-green-600 px-2 py-1 rounded-lg text-xs font-bold">Completed</span>`;
                         if(d.status === 'Issue') statusBadge = `<span class="bg-red-100 text-red-600 px-2 py-1 rounded-lg text-xs font-bold">Issue</span>`;
 
+                        // Fetch contact if missing
+                        let restPhone = d.restaurantPhone;
+                        let restAddr = d.restaurantAddress;
+                        
+                        if(!restPhone && d.restaurantId) {
+                            try {
+                                const uDoc = await db.collection('users').doc(d.restaurantId).get();
+                                if(uDoc.exists) {
+                                    restPhone = uDoc.data().phone;
+                                    restAddr = uDoc.data().address;
+                                }
+                            } catch(e) {}
+                        }
+
                         const contact = `<div class="text-xs text-gray-500">
-                            <p class="font-bold text-gray-700">${d.restaurantName}</p>
-                            <p><i class="fa-solid fa-phone mr-1 text-brand-green"></i>${d.restaurantPhone || 'N/A'}</p>
-                            <p><i class="fa-solid fa-location-dot mr-1 text-brand-green"></i>${d.restaurantAddress || 'N/A'}</p>
+                            <p class="font-bold text-gray-700">${d.restaurantName || 'Unknown'}</p>
+                            <p><i class="fa-solid fa-phone mr-1 text-brand-green"></i>${restPhone || 'N/A'}</p>
+                            <p><i class="fa-solid fa-location-dot mr-1 text-brand-green"></i>${restAddr || 'N/A'}</p>
                         </div>`;
 
-                        // History Table
-                        if(tbody) tbody.innerHTML += `
-                            <tr class="hover:bg-gray-50 border-b border-gray-50">
+                        return {
+                            html: `<tr class="hover:bg-gray-50 border-b border-gray-50">
                                 <td class="px-6 py-4 text-gray-500">${d.updatedAt ? new Date(d.updatedAt.seconds*1000).toLocaleDateString() : '-'}</td>
                                 <td class="px-6 py-4">${contact}</td>
                                 <td class="px-6 py-4 text-gray-600">${d.foodName} (${d.servings})</td>
                                 <td class="px-6 py-4">${statusBadge}</td>
-                            </tr>`;
-                            
-                        // Recent Activity (Overview)
-                        if(historyCount <= 5 && recentList) {
-                             recentList.innerHTML += `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-gray-400 shadow-sm border border-gray-100"><i class="fa-solid fa-utensils"></i></div><div><h4 class="font-bold text-gray-800 text-sm">${d.foodName}</h4><p class="text-xs text-gray-500">${d.restaurantName} • ${d.updatedAt ? new Date(d.updatedAt.seconds*1000).toLocaleDateString() : ''}</p></div></div>${statusBadge}</div>`;
-                        }
+                            </tr>`,
+                            recentHtml: `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-gray-400 shadow-sm border border-gray-100"><i class="fa-solid fa-utensils"></i></div><div><h4 class="font-bold text-gray-800 text-sm">${d.foodName}</h4><p class="text-xs text-gray-500">${d.restaurantName} • ${d.updatedAt ? new Date(d.updatedAt.seconds*1000).toLocaleDateString() : ''}</p></div></div>${statusBadge}</div>`
+                        };
                     }
-                });
+                    return null;
+                }));
+
+                const validItems = historyItems.filter(i => i !== null);
                 
-                if(recentList && historyCount === 0) recentList.innerHTML = "<p class='text-center text-gray-400 py-4'>No recent activity.</p>";
-                if(tbody && historyCount === 0) tbody.innerHTML = "<tr><td colspan='4' class='text-center p-4 text-gray-400'>No history found.</td></tr>";
+                if(tbody) tbody.innerHTML = validItems.map(i => i.html).join('');
+                if(recentList) recentList.innerHTML = validItems.slice(0, 5).map(i => i.recentHtml).join('');
+                
+                if(validItems.length === 0) {
+                    if(recentList) recentList.innerHTML = "<p class='text-center text-gray-400 py-4'>No recent activity.</p>";
+                    if(tbody) tbody.innerHTML = "<tr><td colspan='4' class='text-center p-4 text-gray-400'>No history found.</td></tr>";
+                }
 
                 const elReceived = document.getElementById('stat-received'); if(elReceived) elReceived.innerText = totalReceived;
                 const elCount = document.getElementById('history-count'); if(elCount) elCount.innerText = historyCount;
@@ -499,7 +518,7 @@
         }
 
         // --- Helper for Incoming Items ---
-        function renderIncomingItems(snap, type) {
+        async function renderIncomingItems(snap, type) {
             const section = document.getElementById('incoming-section');
             const containerId = type === 'donation' ? 'incoming-donations-container' : 'incoming-requests-container';
             const container = document.getElementById(containerId);
@@ -507,36 +526,39 @@
             if(!container) return;
             container.innerHTML = '';
 
-            // Check if section should be visible (if either container has kids)
-            // Simplified check: if this snap has items, show section. 
             if(!snap.empty) section.classList.remove('hidden');
-            
-            // To properly hide section if BOTH are empty would require tracking state, 
-            // but for simplicity we just show it if data comes in.
 
-            snap.forEach(doc => {
+            const htmlPromises = snap.docs.map(async doc => {
                 const d = doc.data();
-                
-                // Fields differ slightly between Request and Donation
                 const title = type === 'donation' ? d.foodName : d.itemNeeded;
                 const subtitle = type === 'donation' ? `(${d.servings} servings)` : `(Qty: ${d.quantity})`;
                 const statusLabel = type === 'donation' ? 'Incoming Donation' : 'Fulfilled Request';
                 const statusColor = type === 'donation' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
                 
-                // We need to fetch/display contact info. 
-                // For donations, it's usually embedded. For requests, restaurantName is there, phone might need fetch or exist.
-                // Assuming basic fields exist or we degrade gracefully.
-                const restName = d.restaurantName || 'Unknown Restaurant';
-                const restPhone = d.restaurantPhone || 'Contact not listed';
-                const restAddr = d.restaurantAddress || '';
+                let restName = d.restaurantName || 'Unknown Restaurant';
+                let restPhone = d.restaurantPhone || 'Contact not listed';
+                let restAddr = d.restaurantAddress || '';
+
+                // Fetch missing contact info
+                const targetId = type === 'donation' ? d.restaurantId : d.fulfilledBy;
+                if (targetId && (!d.restaurantPhone || type === 'request')) {
+                     try {
+                         const uDoc = await db.collection('users').doc(targetId).get();
+                         if(uDoc.exists) {
+                             const uData = uDoc.data();
+                             restName = uData.name || restName;
+                             restPhone = uData.phone || restPhone;
+                             restAddr = uData.address || restAddr;
+                         }
+                     } catch(e) { console.error("Error fetching contact", e); }
+                }
 
                 const contact = `<i class="fa-solid fa-store mr-1 text-brand-green"></i> ${restName} <span class="mx-2 text-gray-300">|</span> <i class="fa-solid fa-phone mr-1 text-brand-green"></i> ${restPhone}`;
                 
-                // Action Types
                 const receiveAction = type === 'donation' ? `confirmAction('receive', '${doc.id}')` : `confirmAction('req_receive', '${doc.id}')`;
                 const reportAction = type === 'donation' ? `openReportModal('${doc.id}', 'donation')` : `openReportModal('${doc.id}', 'request')`;
 
-                container.innerHTML += `
+                return `
                     <div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 ${type === 'donation' ? 'border-blue-500' : 'border-purple-500'} relative transform hover:-translate-y-1 transition duration-300">
                         <div class="flex justify-between items-start mb-3">
                             <div>
@@ -556,6 +578,9 @@
                         </div>
                     </div>`;
             });
+
+            const htmlItems = await Promise.all(htmlPromises);
+            container.innerHTML = htmlItems.join('');
         }
 
         // --- Confirmation & Actions ---
@@ -575,16 +600,19 @@
                 msg.innerText = "Are you sure you want to claim this food?";
                 btn.className = "flex-1 py-3 bg-brand-green text-white font-bold rounded-xl hover:bg-green-600 shadow-lg";
                 icon.className = "fa-solid fa-utensils";
+                iconContainer.className = "w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm";
             } else if (type === 'receive' || type === 'req_receive') {
                 title.innerText = "Mark Received?";
                 msg.innerText = "Confirm that you have received the food.";
                 btn.className = "flex-1 py-3 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 shadow-lg";
                 icon.className = "fa-solid fa-check-double";
+                iconContainer.className = "w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm";
             } else if (type === 'delete_req') {
                 title.innerText = "Delete Request?";
                 msg.innerText = "Remove this urgent request?";
                 btn.className = "flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg";
                 icon.className = "fa-solid fa-trash";
+                iconContainer.className = "w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm";
             }
 
             modal.classList.remove('hidden');
