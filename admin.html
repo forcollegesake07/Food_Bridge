@@ -68,7 +68,8 @@
     <aside class="fixed md:relative w-72 bg-white/95 backdrop-blur-md border-r border-gray-200 flex flex-col z-40 shadow-2xl h-full flex-shrink-0 transition-transform duration-300 transform -translate-x-full md:translate-x-0" id="sidebar">
         <div class="p-6 md:p-8 flex items-center border-b border-gray-100">
             <div class="bg-brand-dark p-2.5 rounded-xl mr-3 shadow-sm text-white">
-                <i class="fa-solid fa-shield-halved text-xl md:text-2xl"></i>
+                <!-- NEW ICON HERE -->
+                <i class="fa-solid fa-hand-holding-heart text-brand-orange text-2xl"></i>
             </div>
             <div>
                 <span class="font-bold text-lg md:text-xl text-brand-dark block leading-none tracking-tight">Food<span class="text-brand-green">Bridge</span></span>
@@ -174,6 +175,7 @@
                                 <th class="px-4 py-3 md:px-6 md:py-4" id="hist-col-2">Item</th>
                                 <th class="px-4 py-3 md:px-6 md:py-4" id="hist-col-3">Sender/Requester</th>
                                 <th class="px-4 py-3 md:px-6 md:py-4" id="hist-col-4">Status</th>
+                                <th class="px-4 py-3 md:px-6 md:py-4">Action</th> <!-- Added Action Column -->
                             </tr>
                         </thead>
                         <tbody id="history-table-body" class="divide-y divide-gray-100">
@@ -222,6 +224,21 @@
 
     </main>
 
+    <!-- CONFIRMATION MODAL -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden transform transition-all scale-100 p-6 text-center">
+            <div class="w-14 h-14 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i id="confirm-icon" class="fa-solid fa-trash"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2" id="confirm-title">Confirm Action</h3>
+            <p class="text-gray-500 mb-6 text-sm" id="confirm-msg">Are you sure you want to delete this record?</p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 py-3 text-gray-600 font-bold hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors">Cancel</button>
+                <button onclick="executeAction()" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 shadow-md transition-all">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
     <!-- USER DETAIL MODAL -->
     <div id="user-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform transition-all scale-100">
@@ -262,7 +279,7 @@
     </div>
 
     <!-- TOAST -->
-    <div id="toast" class="fixed bottom-6 right-6 left-6 md:left-auto bg-brand-dark text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-4 z-50"><i class="fa-solid fa-circle-check text-green-400 text-lg"></i><p class="text-sm" id="toast-message">Success</p></div>
+    <div id="toast" class="fixed bottom-6 right-6 left-6 md:left-auto bg-brand-dark text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-4 z-[60]"><i class="fa-solid fa-circle-check text-green-400 text-lg"></i><p class="text-sm" id="toast-message">Success</p></div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0", authDomain: "panel-9e1a6.firebaseapp.com", projectId: "panel-9e1a6", storageBucket: "panel-9e1a6.firebasestorage.app", messagingSenderId: "491001640513", appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0" };
@@ -270,6 +287,8 @@
         const auth = firebase.auth(); const db = firebase.firestore();
         let currentUser = null;
         let selectedUserId = null;
+        let pendingAction = null;
+        let currentHistoryType = 'donations';
         let chartInstances = {};
 
         // Auth Check
@@ -387,6 +406,7 @@
 
         // --- HISTORY LOGIC ---
         function toggleHistory(type) {
+            currentHistoryType = type; // Set global
             const btnDon = document.getElementById('filter-donations');
             const btnReq = document.getElementById('filter-requests');
             if(type === 'donations') {
@@ -412,7 +432,18 @@
                 db.collection('donations').orderBy('createdAt', 'desc').get().then(snap => {
                     snap.forEach(doc => {
                         const d = doc.data();
-                        tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b border-gray-100"><td class="px-4 py-3 md:px-6 md:py-4">${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'N/A'}</td><td class="px-4 py-3 md:px-6 md:py-4 font-bold">${d.foodName} (${d.servings})</td><td class="px-4 py-3 md:px-6 md:py-4">${d.restaurantName}</td><td class="px-4 py-3 md:px-6 md:py-4"><span class="px-2 py-1 rounded text-xs font-bold ${getStatusColor(d.status)}">${d.status}</span></td></tr>`;
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50 border-b border-gray-100">
+                                <td class="px-4 py-3 md:px-6 md:py-4">${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'N/A'}</td>
+                                <td class="px-4 py-3 md:px-6 md:py-4 font-bold">${d.foodName} (${d.servings})</td>
+                                <td class="px-4 py-3 md:px-6 md:py-4">${d.restaurantName}</td>
+                                <td class="px-4 py-3 md:px-6 md:py-4"><span class="px-2 py-1 rounded text-xs font-bold ${getStatusColor(d.status)}">${d.status}</span></td>
+                                <td class="px-4 py-3 md:px-6 md:py-4">
+                                    <button onclick="confirmDeleteHistory('${doc.id}', 'donations')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded transition" title="Delete Record">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>`;
                     });
                 });
             } else {
@@ -420,10 +451,28 @@
                 db.collection('requests').orderBy('createdAt', 'desc').get().then(snap => {
                     snap.forEach(doc => {
                         const d = doc.data();
-                        tbody.innerHTML += `<tr class="hover:bg-gray-50 border-b border-gray-100"><td class="px-4 py-3 md:px-6 md:py-4">${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'N/A'}</td><td class="px-4 py-3 md:px-6 md:py-4 font-bold">${d.itemNeeded} (${d.quantity})</td><td class="px-4 py-3 md:px-6 md:py-4">${d.orphanageName}</td><td class="px-4 py-3 md:px-6 md:py-4"><span class="px-2 py-1 rounded text-xs font-bold ${getStatusColor(d.status)}">${d.status}</span></td></tr>`;
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50 border-b border-gray-100">
+                                <td class="px-4 py-3 md:px-6 md:py-4">${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString() : 'N/A'}</td>
+                                <td class="px-4 py-3 md:px-6 md:py-4 font-bold">${d.itemNeeded} (${d.quantity})</td>
+                                <td class="px-4 py-3 md:px-6 md:py-4">${d.orphanageName}</td>
+                                <td class="px-4 py-3 md:px-6 md:py-4"><span class="px-2 py-1 rounded text-xs font-bold ${getStatusColor(d.status)}">${d.status}</span></td>
+                                <td class="px-4 py-3 md:px-6 md:py-4">
+                                    <button onclick="confirmDeleteHistory('${doc.id}', 'requests')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded transition" title="Delete Record">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>`;
                     });
                 });
             }
+        }
+
+        function confirmDeleteHistory(id, collectionType) {
+            pendingAction = { type: 'delete_history', data: { id: id, collection: collectionType } };
+            document.getElementById('confirm-title').innerText = "Delete Record";
+            document.getElementById('confirm-msg').innerText = "Are you sure you want to delete this history record? This cannot be undone.";
+            document.getElementById('confirm-modal').classList.remove('hidden');
         }
 
         // --- REPORTS LOGIC ---
@@ -497,6 +546,24 @@
         }
 
         function closeUserModal() { document.getElementById('user-modal').classList.add('hidden'); selectedUserId = null; }
+        
+        function closeConfirmModal() { document.getElementById('confirm-modal').classList.add('hidden'); pendingAction = null; }
+
+        async function executeAction() {
+            if(!pendingAction) return;
+            closeConfirmModal();
+            try {
+                if (pendingAction.type === 'delete_history') {
+                    await db.collection(pendingAction.data.collection).doc(pendingAction.data.id).delete();
+                    showToast("Record deleted successfully.");
+                    // Reload history for the current type to reflect changes immediately
+                    loadHistory(currentHistoryType);
+                }
+            } catch(e) {
+                console.error(e);
+                showToast("Action failed", true);
+            }
+        }
 
         function filterUsers() {
             const input = document.getElementById('user-search').value.toLowerCase();
