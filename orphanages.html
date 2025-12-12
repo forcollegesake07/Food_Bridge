@@ -563,7 +563,20 @@
 
                         const name = isDonation ? data.foodName : data.itemNeeded;
                         const qty = isDonation ? data.servings : data.quantity;
-                        const source = isDonation ? (data.restaurantName || '-') : 'Broadcast';
+                        
+                        // Refined Source/Dest Column Logic
+                        let sourceHtml = '';
+                        if (isDonation) {
+                            sourceHtml = `
+                                <div>
+                                    <p class="font-bold text-gray-800">${data.restaurantName || '-'}</p>
+                                    <p class="text-xs text-gray-500 mt-0.5"><i class="fa-solid fa-phone mr-1"></i> ${data.restaurantPhone || 'N/A'}</p>
+                                    <p class="text-xs text-gray-500"><i class="fa-solid fa-location-dot mr-1"></i> ${data.restaurantAddress || 'N/A'}</p>
+                                </div>
+                            `;
+                        } else {
+                            sourceHtml = '<span class="italic text-gray-400">Broadcast</span>';
+                        }
 
                         // Recent Activity (Top 5)
                         if (count < 5 && recentList) {
@@ -587,7 +600,7 @@
                                     <td class="px-4 py-3 font-bold text-xs uppercase text-gray-400">${item.type}</td>
                                     <td class="px-4 py-3 font-bold text-gray-800 text-sm">${name} <span class="text-gray-400 font-normal">(${qty})</span></td>
                                     <td class="px-4 py-3">${statusBadge}</td>
-                                    <td class="px-4 py-3 text-gray-500 text-sm font-medium">${source}</td>
+                                    <td class="px-4 py-3 text-gray-500 text-sm font-medium">${sourceHtml}</td>
                                 </tr>`;
                         }
                         count++;
