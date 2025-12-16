@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Leaflet CSS & JS -->
+    <!-- Leaflet CSS & JS for Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
@@ -64,7 +64,8 @@
     <!-- SIDEBAR BACKDROP -->
     <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden backdrop-blur-sm transition-opacity duration-300"></div>
 
-    <!-- SIDEBAR (FIXED POSITIONING ADDED) -->
+    <!-- SIDEBAR -->
+    <!-- Fixed the positioning logic here -->
     <aside class="fixed top-0 left-0 h-full w-72 bg-white/95 backdrop-blur-md border-r border-gray-200 flex flex-col z-50 shadow-2xl flex-shrink-0 transition-transform duration-300 transform -translate-x-full md:translate-x-0 md:relative md:h-auto smooth-scroll-touch" id="sidebar">
         <div class="p-6 md:p-8 flex items-center justify-between border-b border-gray-100">
             <div class="flex items-center">
@@ -138,8 +139,10 @@
                 </button>
             </div>
 
-            <!-- Active Listings Block -->
-            <div id="scheduled-pickups-container" class="space-y-4"></div>
+            <!-- Active Listings Block (Replaces Scheduled Pickups) -->
+            <div id="scheduled-pickups-container" class="space-y-4">
+                <!-- Dynamically Populated -->
+            </div>
 
             <!-- Post Donation Form -->
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
@@ -173,7 +176,7 @@
                             <img id="image-preview" class="hidden w-full h-20 object-cover rounded-lg mx-auto relative z-10">
                         </div>
 
-                        <button type="submit" id="btn-submit" class="w-full py-4 bg-brand-orange text-white font-bold text-base md:text-lg rounded-xl shadow-md hover:bg-orange-600 hover:shadow-lg transform active:scale-[0.98] transition-all flex items-center justify-center gap-2 touch-manipulation">
+                        <button type="submit" id="btn-submit" class="w-full py-4 bg-brand-orange text-white font-bold text-base md:text-lg rounded-xl shadow-md hover:bg-orange-600 hover:shadow-lg transform active:scale-[0.99] transition-all flex items-center justify-center gap-2 touch-manipulation">
                             <span>Post Donation</span>
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
@@ -423,7 +426,11 @@
             if(tab === 'alerts') activeBtn.classList.add('bg-red-500', 'text-white', 'shadow-md');
             else activeBtn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
             
-            if (window.innerWidth < 768) toggleSidebar();
+            // Fixed Logic: Only toggle sidebar if it's currently open AND on mobile
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth < 768 && !sidebar.classList.contains('-translate-x-full')) {
+                toggleSidebar();
+            }
 
             // Initialize Map if Details tab selected
             if (tab === 'details') {
