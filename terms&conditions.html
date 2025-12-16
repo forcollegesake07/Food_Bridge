@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Terms & Conditions | FoodBridge</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath fill='%23F97316' d='M148 76.6C148 34.3 182.3 0 224.6 0c20.3 0 39.8 8.1 54.1 22.4l9.3 9.3 9.3-9.3C311.6 8.1 331.1 0 351.4 0C393.7 0 428 34.3 428 76.6c0 21.2-8.4 41.5-23.4 56.5L288 249.7 171.4 133.1C156.4 118.1 148 97.8 148 76.6zm338.9 239.3l-20.1-20.1c-4.7-4.7-12.3-4.7-17 0L288 457.6 126.1 295.8c-4.7-4.7-12.3-4.7-17 0L89 315.9c-25 25-25 65.5 0 90.5L253.3 570.8c19.1 19.1 50.3 19.1 69.4 0l164.2-164.2c25-25 25-65.5 0-90.5z'/%3E%3C/svg%3E">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: {
+                        brand: { orange: '#F97316', green: '#10B981', dark: '#1F2937', light: '#FFF7ED' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-white/95 backdrop-blur-md shadow-md fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <a href="index.html" class="flex items-center cursor-pointer group">
+                    <div class="bg-brand-orange/10 p-2 rounded-lg mr-2 group-hover:bg-brand-orange/20 transition">
+                        <i class="fa-solid fa-hand-holding-heart text-brand-orange text-2xl"></i>
+                    </div>
+                    <span class="font-bold text-xl text-brand-dark tracking-wide">Food<span class="text-brand-green">Bridge</span></span>
+                </a>
+                <a href="index.html" class="text-gray-600 hover:text-brand-orange font-bold transition flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="pt-32 pb-20 px-4">
+        <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="bg-brand-dark p-8 md:p-12 text-center text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                <h1 class="text-3xl md:text-4xl font-bold mb-4 relative z-10">Terms & Conditions</h1>
+                <p class="text-gray-400 relative z-10">Last Updated: October 2025</p>
+            </div>
+            
+            <div class="p-8 md:p-12 space-y-10">
+                
+                <!-- Section 1 -->
+                <section>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-brand-orange/10 text-brand-orange rounded-lg flex items-center justify-center text-sm mr-3">1</span>
+                        Platform Role & Liability
+                    </h2>
+                    <div class="pl-11 text-gray-600 space-y-3 leading-relaxed">
+                        <p><strong>FoodBridge acts solely as an intermediary technology platform</strong> connecting food donors (Restaurants) with recipients (Orphanages). We do not cook, handle, package, or transport any food items.</p>
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                            <p class="text-red-800 font-bold mb-1">Disclaimer of Liability</p>
+                            <p class="text-sm text-red-700">FoodBridge is not responsible for any health issues, illness, or damages arising from the consumption of donated food. The responsibility for food safety lies entirely with the donor.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2 -->
+                <section>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-brand-orange/10 text-brand-orange rounded-lg flex items-center justify-center text-sm mr-3">2</span>
+                        Strict Action Against Negligence
+                    </h2>
+                    <div class="pl-11 text-gray-600 space-y-3 leading-relaxed">
+                        <p>While FoodBridge claims no liability, we enforce a <strong>Zero Tolerance Policy</strong> regarding food safety to protect our community.</p>
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li><strong>Reporting Mechanism:</strong> Orphanages are encouraged to report any instance of spoiled, stale, or unhygienic food immediately via the dashboard.</li>
+                            <li><strong>Administrative Action:</strong> Upon receiving a report, our Admin team will investigate. If a Restaurant is found to have donated unsafe food:
+                                <ul class="list-none mt-2 pl-2 space-y-2 text-sm font-medium text-brand-dark">
+                                    <li class="flex items-center"><i class="fa-solid fa-triangle-exclamation text-brand-orange mr-2"></i> 1st Offense: Formal Warning & temporary account suspension.</li>
+                                    <li class="flex items-center"><i class="fa-solid fa-ban text-red-600 mr-2"></i> Repeated Offense: Permanent ban from the platform and blacklisting.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Section 3 -->
+                <section>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-brand-orange/10 text-brand-orange rounded-lg flex items-center justify-center text-sm mr-3">3</span>
+                        User Obligations
+                    </h2>
+                    <div class="pl-11 text-gray-600 space-y-4 leading-relaxed">
+                        <div>
+                            <h3 class="font-bold text-gray-800 mb-2">For Restaurants (Donors):</h3>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>You must ensure all food donated is fresh, edible, and packaged hygienically.</li>
+                                <li>You must provide an accurate location pin (within 15km accuracy) to ensure feasible pickups.</li>
+                                <li>You must not donate leftovers from customer plates; only untouched surplus food is permitted.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800 mb-2">For Orphanages (Recipients):</h3>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>You agree to pick up claimed donations within the agreed timeframe.</li>
+                                <li>You must inspect food upon collection. Accepting the food implies you are satisfied with its visible condition.</li>
+                                <li>False reports against restaurants will result in account suspension.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4 -->
+                <section>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-brand-orange/10 text-brand-orange rounded-lg flex items-center justify-center text-sm mr-3">4</span>
+                        Data Privacy & Location
+                    </h2>
+                    <div class="pl-11 text-gray-600 space-y-3 leading-relaxed">
+                        <p>By using the "Pin Location" feature, you consent to FoodBridge storing your geolocation coordinates. This data is used strictly to calculate the 10-15km radius for matching donors with nearby recipients. We do not sell your location data to third parties.</p>
+                    </div>
+                </section>
+
+                <!-- Section 5 -->
+                <section>
+                    <h2 class="text-2xl font-bold text-brand-dark mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-brand-orange/10 text-brand-orange rounded-lg flex items-center justify-center text-sm mr-3">5</span>
+                        Account Termination
+                    </h2>
+                    <div class="pl-11 text-gray-600 space-y-3 leading-relaxed">
+                        <p>FoodBridge reserves the right to disable or delete any account (Restaurant or Orphanage) at any time, without prior notice, if we suspect:</p>
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li>Violation of these Terms & Conditions.</li>
+                            <li>Creation of fake requests or donations.</li>
+                            <li>Abusive behavior towards other partners.</li>
+                        </ul>
+                        <p class="text-sm italic mt-2">Disabled accounts will be unable to log in and must contact support for resolution.</p>
+                    </div>
+                </section>
+
+            </div>
+            
+            <div class="bg-gray-50 p-8 text-center border-t border-gray-100">
+                <p class="text-gray-500 mb-4">By creating an account, you agree to these terms.</p>
+                <a href="index.html" class="inline-block bg-brand-dark text-white px-8 py-3 rounded-full font-bold hover:bg-gray-800 transition shadow-lg transform hover:-translate-y-0.5">I Understand</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-brand-dark text-white py-8 border-t border-gray-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm">&copy; 2025 FoodBridge Project.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
