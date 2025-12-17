@@ -185,25 +185,30 @@
 <script>
   function testEmail() {
     sendConfirmationEmail({
-      restaurant_name: "Test Restaurant",
-      restaurant_phone: "+91 9999999999",
-      restaurant_address: "Test Street, City",
+      to_email: "devilboytej5625@gmail.com", // REAL email
 
-      orphanage_name: "Test Orphanage",
+      restaurant_name: "ABC Restaurant",
+      restaurant_phone: "+91 9999999999",
+      restaurant_address: "MG Road, City",
+
+      orphanage_name: "Hope Orphanage",
       orphanage_phone: "+91 8888888888",
-      orphanage_address: "Care Road, City",
+      orphanage_address: "Care Street, City",
 
       food_name: "Veg Biryani",
-      food_quantity: 50,
+      food_quantity: 40,
       status: "TEST EMAIL"
     })
-    .then(() => alert("✅ Email sent successfully"))
+    .then(() => {
+      alert("✅ EMAIL SENT SUCCESSFULLY");
+    })
     .catch(err => {
-      console.error(err);
-      alert("❌ Email failed");
+      console.error("EMAIL FAILED", err);
+      alert("❌ EMAIL FAILED AGAIN");
     });
   }
 </script>
+
 
                         <button type="submit" id="btn-submit" class="w-full py-4 bg-brand-orange text-white font-bold text-base md:text-lg rounded-xl shadow-md hover:bg-orange-600 hover:shadow-lg transform active:scale-[0.99] transition-all flex items-center justify-center gap-2 touch-manipulation">
                             <span>Post Donation</span>
@@ -708,6 +713,8 @@
       "service_ug3hj2o",
       "template_dva8yqz",
       {
+        to_email: String(data.to_email).trim(),
+
         restaurant_name: data.restaurant_name,
         restaurant_phone: data.restaurant_phone,
         restaurant_address: data.restaurant_address,
@@ -723,6 +730,7 @@
     );
   }
 </script>
+
 
 </body>
 </html>
