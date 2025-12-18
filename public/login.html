@@ -43,13 +43,13 @@
     <div class="fixed-bg-layer"></div>
     <nav class="bg-white/95 backdrop-blur-md shadow-md w-full py-3 px-4 md:py-4 md:px-6 fixed top-0 z-50 transition-all">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="index.html" class="flex items-center hover:opacity-90 transition group">
+            <a href="index" class="flex items-center hover:opacity-90 transition group">
                 <div class="bg-brand-orange/10 p-1.5 md:p-2 rounded-lg mr-2 group-hover:bg-brand-orange/20 transition">
                     <i class="fa-solid fa-hand-holding-heart text-brand-orange text-xl md:text-2xl"></i>
                 </div>
                 <span class="font-bold text-lg md:text-xl text-brand-dark tracking-wide">Food<span class="text-brand-green">Bridge</span></span>
             </a>
-            <a href="index.html" class="text-xs md:text-sm text-gray-600 hover:text-brand-orange font-bold bg-gray-50 hover:bg-gray-100 px-3 py-2 md:px-4 md:py-2 rounded-full border border-gray-200 transition shadow-sm flex items-center">
+            <a href="index" class="text-xs md:text-sm text-gray-600 hover:text-brand-orange font-bold bg-gray-50 hover:bg-gray-100 px-3 py-2 md:px-4 md:py-2 rounded-full border border-gray-200 transition shadow-sm flex items-center">
                 <i class="fa-solid fa-arrow-left mr-1.5"></i> Home
             </a>
         </div>
@@ -191,10 +191,10 @@
         function performRedirect(role) { 
             const base = window.location.origin + "/";
             setTimeout(() => { 
-                if (role === 'restaurant') window.location.href = base + "restaurant.html"; 
-                else if (role === 'orphanage') window.location.href = base + "orphanages.html"; 
-                else if (role === 'admin') window.location.href = base + "admin.html"; 
-                else window.location.href = base + "index.html";
+                if (role === 'restaurant') window.location.href = base + "restaurant"; 
+                else if (role === 'orphanage') window.location.href = base + "orphanages"; 
+                else if (role === 'admin') window.location.href = base + "admin"; 
+                else window.location.href = base + "index";
             }, 1000); 
         }
         
