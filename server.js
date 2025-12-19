@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const Brevo = require("@getbrevo/brevo");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,36 +11,39 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-/* ============================
-   🔥 STATIC FRONTEND (FIX)
-   This is what broke earlier
-============================ */
-app.use(
-  express.static(path.join(__dirname, "public"), {
-    extensions: ["html"]
-  })
-);
+app.use(express.static(path.join(__dirname, "public"), {
+  extensions: ["html"]
+}));
 
 console.log("BREVO KEY EXISTS:", !!process.env.BREVO_API_KEY);
 
 /* ============================
-   EMAIL SENDER (RAW, STABLE)
+   BREVO EMAIL (RAW REST API)
 ============================ */
 async function sendTemplateEmail({ to, templateId, params }) {
-  const api = new Brevo.TransactionalEmailsApi();
-
-  return api.sendTransacEmail(
+  const response = await fetch(
+    "https://api.brevo.com/v3/smtp/email",
     {
-      to,
-      templateId,
-      params
-    },
-    {
+      method: "POST",
       headers: {
+        "Content-Type": "application/json",
         "api-key": process.env.BREVO_API_KEY
-      }
+      },
+      body: JSON.stringify({
+        to,
+        templateId,
+        params
+      })
     }
   );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw data;
+  }
+
+  return data;
 }
 
 /* ============================
@@ -60,11 +62,9 @@ app.post("/api/claim-food", async (req, res) => {
       params: {
         food_name: food.name,
         food_quantity: food.quantity,
-
         restaurant_name: restaurant.name,
         restaurant_phone: restaurant.phone,
         restaurant_address: restaurant.address,
-
         orphanage_name: orphanage.name,
         orphanage_phone: orphanage.phone,
         orphanage_address: orphanage.address
@@ -73,8 +73,8 @@ app.post("/api/claim-food", async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ BREVO ERROR:", err.response?.body || err);
-    res.status(500).json({ error: "Email failed" });
+    console.error("❌ BREVO ERROR:", err);
+    res.status(500).json({ error: "Email failed", details: err });
   }
 });
 
@@ -100,22 +100,18 @@ app.post("/api/confirm-receipt", async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ BREVO ERROR:", err.response?.body || err);
-    res.status(500).json({ error: "Email failed" });
+    console.error("❌ BREVO ERROR:", err);
+    res.status(500).json({ error: "Email failed", details: err });
   }
 });
 
 /* ============================
-   🔥 FALLBACK (IMPORTANT)
-   Allows refresh on any page
+   FALLBACK
 ============================ */
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-/* ============================
-   START SERVER
-============================ */
 app.listen(PORT, () => {
   console.log(`🚀 FoodBridge backend running on port ${PORT}`);
 });
