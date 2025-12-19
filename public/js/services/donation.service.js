@@ -9,6 +9,27 @@ export async function createDonation({ foodName, quantity }) {
   if (!state.authUser || !state.profile) {
     throw new Error("User not ready");
   }
+  export function listenToMyDonations(callback) {
+  if (!state.authUser) return;
+
+  return db
+    .collection("donations")
+    .where("restaurantId", "==", state.authUser.uid)
+    .orderBy("createdAt", "desc")
+    .onSnapshot(snapshot => {
+      const donations = [];
+
+      snapshot.forEach(doc => {
+        donations.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+
+      callback(donations);
+    });
+}
+
 
   const donation = {
     restaurantId: state.authUser.uid,
