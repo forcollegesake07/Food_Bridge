@@ -12,7 +12,11 @@ const path = require("path");
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    extensions: ["html"]
+  })
+);
 console.log("BREVO KEY EXISTS:", !!process.env.BREVO_API_KEY);
 
 /* ============================
