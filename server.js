@@ -1,5 +1,4 @@
 const express = require("express");
-const path = require("path");
 const cors = require("cors");
 const Brevo = require("@getbrevo/brevo");
 
@@ -13,14 +12,13 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 /* ============================
-   BREVO CONFIG (CORRECT WAY)
+   BREVO CONFIG (CORRECT FOR v2)
 ============================ */
-const brevoClient = Brevo.ApiClient.instance;
-const apiKey = brevoClient.authentications["api-key"];
-
-apiKey.apiKey = process.env.BREVO_API_KEY;
-
 const emailApi = new Brevo.TransactionalEmailsApi();
+
+// 🔑 THIS IS THE FIX
+emailApi.apiClient.authentications["api-key"].apiKey =
+  process.env.BREVO_API_KEY;
 
 console.log("BREVO KEY EXISTS:", !!process.env.BREVO_API_KEY);
 
@@ -64,7 +62,7 @@ app.post("/api/claim-food", async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error("BREVO ERROR:", err.response?.body || err);
+    console.error("❌ BREVO ERROR:", err.response?.body || err);
     res.status(500).json({ error: "Email failed" });
   }
 });
@@ -91,11 +89,11 @@ app.post("/api/confirm-receipt", async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error("BREVO ERROR:", err.response?.body || err);
+    console.error("❌ BREVO ERROR:", err.response?.body || err);
     res.status(500).json({ error: "Email failed" });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`FoodBridge backend running on port ${PORT}`);
+  console.log(`🚀 FoodBridge backend running on port ${PORT}`);
 });
