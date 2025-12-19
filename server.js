@@ -11,26 +11,26 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-/* ============================
-   BREVO CONFIG (CORRECT FOR v2)
-============================ */
-const emailApi = new Brevo.TransactionalEmailsApi();
-
-// 🔑 THIS IS THE FIX
-emailApi.apiClient.authentications["api-key"].apiKey =
-  process.env.BREVO_API_KEY;
-
 console.log("BREVO KEY EXISTS:", !!process.env.BREVO_API_KEY);
 
 /* ============================
-   EMAIL HELPER
+   EMAIL SENDER (RAW, STABLE)
 ============================ */
 async function sendTemplateEmail({ to, templateId, params }) {
-  return emailApi.sendTransacEmail({
-    to,
-    templateId,
-    params
-  });
+  const api = new Brevo.TransactionalEmailsApi();
+
+  return api.sendTransacEmail(
+    {
+      to,
+      templateId,
+      params
+    },
+    {
+      headers: {
+        "api-key": process.env.BREVO_API_KEY
+      }
+    }
+  );
 }
 
 /* ============================
