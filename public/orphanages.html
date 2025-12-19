@@ -360,7 +360,7 @@
         const auth = firebase.auth(); const db = firebase.firestore();
         let currentUser = null; let userData = {}; let totalReceived = 0;
         let pendingAction = null; let reportDonationId = null;
-         const API_BASE = " https://food-bridge-fzvr.onrender.com";
+         const API_BASE = "https://food-bridge-fzvr.onrender.com";
         // Map Vars
         let map, marker;
         let currentLat = 0, currentLng = 0;
@@ -619,97 +619,121 @@
         }
 
         async function executeAction() {
-            if (!pendingAction) return;
-            closeConfirmModal();
-            try {
-                if (pendingAction.type === 'request') {
-                    const { item, qty, form } = pendingAction.data;
-                    const btn = document.getElementById('btn-submit-req'); const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Broadcasting...'; btn.disabled = true;
-                    // Add Request with Location
-                    await db.collection('requests').add({
-                        orphanageId: currentUser.uid, orphanageName: userData.name, orphanageEmail: currentUser.email, orphanagePhone: userData.phone, orphanageAddress: userData.address,
-                        itemNeeded: item, quantity: parseInt(qty), status: 'Pending', createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        location: userData.location || null // Save Location
-                    });
-                    showToast("Request broadcasted!"); form.reset(); btn.innerHTML = originalText; btn.disabled = false; loadMyRequests();
-                } else if (pendingAction.type === 'claim') {
-    const { donationId, foodName, servings, restName } = pendingAction.data;
+    if (!pendingAction) return;
+    closeConfirmModal();
 
-    // 1️⃣ Update Firestore
-    const donationRef = db.collection('donations').doc(donationId);
-    const donationSnap = await donationRef.get();
-    const donationData = donationSnap.data();
+    try {
+        if (pendingAction.type === 'request') {
+            const { item, qty, form } = pendingAction.data;
 
-    await donationRef.update({
-        status: 'Claimed',
-        claimedBy: currentUser.uid,
-        orphanageName: userData.name,
-        orphanagePhone: userData.phone,
-        orphanageAddress: userData.address,
-        claimedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+            const btn = document.getElementById('btn-submit-req');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Broadcasting...';
+            btn.disabled = true;
 
-    // 2️⃣ Trigger Brevo email via backend
-    await fetch(`${API_BASE}/api/claim-food`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            food: {
-                name: donationData.foodName,
-                quantity: donationData.servings
-            },
-            restaurant: {
-                name: donationData.restaurantName,
-                email: donationData.restaurantEmail,
-                phone: donationData.restaurantPhone,
-                address: donationData.restaurantAddress
-            },
-            orphanage: {
-                name: userData.name,
-                email: currentUser.email,
-                phone: userData.phone,
-                address: userData.address
-            }
-        })
-    });
+            await db.collection('requests').add({
+                orphanageId: currentUser.uid,
+                orphanageName: userData.name,
+                orphanageEmail: currentUser.email,
+                orphanagePhone: userData.phone,
+                orphanageAddress: userData.address,
+                itemNeeded: item,
+                quantity: parseInt(qty),
+                status: 'Pending',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                location: userData.location || null
+            });
 
-    showToast("Donation claimed! Contact details sent by email 📧");
-    switchTab('overview');
-}} else if (pendingAction.type === 'receive') {
-    const { donationId } = pendingAction.data;
+            showToast("Request broadcasted!");
+            form.reset();
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            loadMyRequests();
 
-    const donationRef = db.collection('donations').doc(donationId);
-    const donationSnap = await donationRef.get();
-    const donationData = donationSnap.data();
+        } else if (pendingAction.type === 'claim') {
+            const { donationId } = pendingAction.data;
 
-    // 1️⃣ Update Firestore
-    await donationRef.update({
-        status: 'Completed',
-        completedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+            const donationRef = db.collection('donations').doc(donationId);
+            const donationSnap = await donationRef.get();
+            const donationData = donationSnap.data();
 
-    // 2️⃣ Trigger confirmation email
-    await fetch(`${API_BASE}/api/confirm-receipt`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            food: {
-                name: donationData.foodName,
-                quantity: donationData.servings
-            },
-            restaurant: {
-                name: donationData.restaurantName,
-                email: donationData.restaurantEmail
-            },
-            orphanage: {
-                name: userData.name,
-                email: currentUser.email
-            }
-        })
-    });
+            await donationRef.update({
+                status: 'Claimed',
+                claimedBy: currentUser.uid,
+                orphanageName: userData.name,
+                orphanagePhone: userData.phone,
+                orphanageAddress: userData.address,
+                claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
 
-    showToast("Order completed! Confirmation email sent 📧");
+            await fetch(`${API_BASE}/api/claim-food`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    food: {
+                        name: donationData.foodName,
+                        quantity: donationData.servings
+                    },
+                    restaurant: {
+                        name: donationData.restaurantName,
+                        email: donationData.restaurantEmail,
+                        phone: donationData.restaurantPhone,
+                        address: donationData.restaurantAddress
+                    },
+                    orphanage: {
+                        name: userData.name,
+                        email: currentUser.email,
+                        phone: userData.phone,
+                        address: userData.address
+                    }
+                })
+            });
+
+            showToast("Donation claimed! Contact details sent by email 📧");
+            switchTab('overview');
+
+        } else if (pendingAction.type === 'receive') {
+            const { donationId } = pendingAction.data;
+
+            const donationRef = db.collection('donations').doc(donationId);
+            const donationSnap = await donationRef.get();
+            const donationData = donationSnap.data();
+
+            await donationRef.update({
+                status: 'Completed',
+                completedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            await fetch(`${API_BASE}/api/confirm-receipt`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    food: {
+                        name: donationData.foodName,
+                        quantity: donationData.servings
+                    },
+                    restaurant: {
+                        name: donationData.restaurantName,
+                        email: donationData.restaurantEmail
+                    },
+                    orphanage: {
+                        name: userData.name,
+                        email: currentUser.email
+                    }
+                })
+            });
+
+            showToast("Order completed! Confirmation email sent 📧");
+        }
+
+    } catch (err) {
+        console.error(err);
+        showToast("Something went wrong. Please try again.", "error");
+    } finally {
+        pendingAction = null;
+    }
 }
+
 
         function showConfirmModal(title, message, type) {
             const modal = document.getElementById('confirm-modal');
