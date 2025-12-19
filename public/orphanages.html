@@ -366,18 +366,83 @@
         let currentLat = 0, currentLng = 0;
 
         auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                currentUser = user;
-                const doc = await db.collection('users').doc(user.uid).get();
-                if (doc.exists) {
-                    userData = doc.data();
-                    if (userData.isDisable === true) { await auth.signOut(); window.location.href = 'https://foodbridge.qzz.io/login'; return; }
-                    if (userData.role !== 'orphanage') { 
-                        if (userData.role === 'restaurant') window.location.href = 'restaurant';
-                        else if (userData.role === 'admin') window.location.href = 'admin';
-                        else window.location.href = 'login';
-                        return;
-                    }
+    if (!user) {
+        window.location.href = "https://foodbridge.qzz.io/login";
+        return;
+    }
+
+    // ✅ EMAIL VERIFICATION CHECK
+    if (!user.emailVerified) {
+        await auth.signOut();
+        alert("Please verify your email before logging in.");
+        window.location.href = "https://foodbridge.qzz.io/login";
+        return;
+    }
+
+    currentUser = user;
+
+    try {
+        const userRef = db.collection("users").doc(user.uid);
+        const docSnap = await userRef.get();
+
+        // ✅ CREATE USER DOC IF MISSING
+        if (!docSnap.exists) {
+            const defaultUser = {
+                name: "New Orphanage",
+                email: user.email,
+                role: "orphanage",
+                phone: "",
+                address: "",
+                isDisable: false,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await userRef.set(defaultUser);
+            userData = defaultUser;
+        } else {
+            userData = docSnap.data();
+        }
+
+        // ✅ DISABLED ACCOUNT CHECK
+        if (userData.isDisable === true) {
+            await auth.signOut();
+            alert("Your account has been disabled by admin.");
+            window.location.href = "https://foodbridge.qzz.io/login";
+            return;
+        }
+
+        // ✅ ROLE VERIFICATION (THIS WAS FAILING)
+        if (userData.role !== "orphanage") {
+            if (userData.role === "restaurant") {
+                window.location.href = "restaurant";
+            } else if (userData.role === "admin") {
+                window.location.href = "admin";
+            } else {
+                window.location.href = "login";
+            }
+            return;
+        }
+
+        // ✅ LOGIN VERIFIED — LOAD DASHBOARD
+        updateUIWithUserData();
+
+        if (userData.location) {
+            currentLat = userData.location.lat;
+            currentLng = userData.location.lng;
+        }
+
+        document.getElementById("tab-overview").classList.remove("hidden");
+        loadHistory();
+        loadAvailableDonations();
+        loadIncomingDeliveries();
+        loadMyRequests();
+
+    } catch (err) {
+        console.error("Auth verification failed:", err);
+        alert("Authentication error. Please login again.");
+        await auth.signOut();
+        window.location.href = "https://foodbridge.qzz.io/login";
+    }
+});
                     updateUIWithUserData();
                     
                     // Init Lat/Lng
