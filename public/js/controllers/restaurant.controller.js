@@ -22,7 +22,44 @@ function bindUI() {
   window.switchTab = switchTab;
   window.logout = logout;
 
+  const form = document.getElementById("donate-form");
+  if (form) {
+    form.addEventListener("submit", handleDonate);
+  }
+
   switchTab("overview");
+}
+
+async function handleDonate(event) {
+  event.preventDefault();
+
+  const name = document.getElementById("food-name").value;
+  const qty = document.getElementById("food-qty").value;
+
+  if (!name || !qty) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  try {
+    await createDonation({
+      foodName: name,
+      servings: Number(qty),
+      restaurantId: state.authUser.uid,
+      restaurantName: state.profile.name,
+      restaurantEmail: state.profile.email,
+      restaurantPhone: state.profile.phone,
+      restaurantAddress: state.profile.address,
+      location: state.location
+    });
+
+    event.target.reset();
+    alert("✅ Donation posted");
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Failed to post donation");
+  }
 }
 
 /* =========================
