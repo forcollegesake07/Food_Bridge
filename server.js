@@ -1,35 +1,39 @@
 const express = require("express");
 const path = require("path");
+const cors = require("cors");
 const Brevo = require("@getbrevo/brevo");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+/* ============================
+   MIDDLEWARE
+============================ */
+app.use(cors({
+  origin: "https://foodbridge.qzz.io"
+}));
 app.use(express.json());
 
-// Serve static frontend
-app.use(express.static(path.join(__dirname, "public"), {
-  extensions: ["html"]
-}));
-
 /* ============================
-   BREVO CONFIG (CORRECT)
+   BREVO CONFIG
 ============================ */
-const emailApi = new Brevo.TransactionalEmailsApi();
+const brevoClient = Brevo.ApiClient.instance;
+const apiKey = brevoClient.authentications["api-key"];
+apiKey.apiKey = process.env.BREVO_API_KEY;
 
-emailApi.setApiKey(
-  Brevo.TransactionalEmailsApiApiKeys.apiKey,
-  process.env.BREVO_API_KEY
-);
+const emailApi = new Brevo.TransactionalEmailsApi();
 
 /* ============================
    EMAIL HELPER
 ============================ */
 async function sendTemplateEmail({ to, templateId, params }) {
   return emailApi.sendTransacEmail({
+    sender: {
+      email: process.env.FROM_EMAIL,
+      name: process.env.FROM_NAME
+    },
     to,
-    templateId,
+    templateId: Number(templateId),
     params
   });
 }
@@ -46,9 +50,8 @@ app.post("/api/claim-food", async (req, res) => {
         { email: restaurant.email, name: restaurant.name },
         { email: orphanage.email, name: orphanage.name }
       ],
-      templateId: 1, // ✅ your template ID
+      templateId: process.env.CLAIM_TEMPLATE_ID,
       params: {
-        receiver_name: restaurant.name,
         food_name: food.name,
         food_quantity: food.quantity,
 
@@ -62,9 +65,10 @@ app.post("/api/claim-food", async (req, res) => {
       }
     });
 
+    console.log("✅ Claim email sent");
     res.json({ success: true });
   } catch (err) {
-    console.error("Claim email error:", err);
+    console.error("❌ Claim email error:", err);
     res.status(500).json({ error: "Failed to send claim email" });
   }
 });
@@ -81,31 +85,26 @@ app.post("/api/confirm-receipt", async (req, res) => {
         { email: restaurant.email, name: restaurant.name },
         { email: orphanage.email, name: orphanage.name }
       ],
-      templateId: 2, // ✅ your template ID
+      templateId: process.env.CONFIRM_TEMPLATE_ID,
       params: {
-        receiver_name: restaurant.name,
         food_name: food.name,
         food_quantity: food.quantity,
-
         orphanage_name: orphanage.name,
         orphanage_address: orphanage.address
       }
     });
 
+    console.log("✅ Confirmation email sent");
     res.json({ success: true });
   } catch (err) {
-    console.error("Confirm email error:", err);
+    console.error("❌ Confirm email error:", err);
     res.status(500).json({ error: "Failed to send confirmation email" });
   }
 });
 
 /* ============================
-   FALLBACK
+   START SERVER
 ============================ */
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
 app.listen(PORT, () => {
-  console.log(`FoodBridge backend running on port ${PORT}`);
+  console.log(`🚀 FoodBridge backend running on port ${PORT}`);
 });
