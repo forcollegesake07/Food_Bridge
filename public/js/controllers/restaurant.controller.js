@@ -10,14 +10,16 @@ import { state } from "../state.js";
  */
 export function initRestaurant() {
   console.log("🍽️ Restaurant controller started");
-
   console.log("User:", state.authUser);
   console.log("Profile:", state.profile);
   console.log("Location:", state.location);
 
   bindUI();
-  listenToMyDonations(renderDonations);
 
+  // 🔥 Live donations listener
+  listenToMyDonations(donations => {
+    renderDonations(donations);
+  });
 }
 
 /* =========================
@@ -34,75 +36,34 @@ function bindUI() {
 
   switchTab("overview");
 }
-function handleDonateSubmit(e) {
+
+/* =========================
+   DONATION HANDLER
+========================= */
+async function handleDonateSubmit(e) {
   e.preventDefault();
 
-  const nameInput = document.getElementById("food-name");
-  const qtyInput = document.getElementById("food-qty");
-
-  const foodName = nameInput.value.trim();
-  const quantity = qtyInput.value.trim();
+  const foodName = document.getElementById("food-name")?.value.trim();
+  const quantity = document.getElementById("food-qty")?.value.trim();
 
   if (!foodName || !quantity) {
-    console.warn("Missing food details");
-    return;
-  }
-
-  console.log("🍛 Donation Form Submitted");
-  console.log("Food:", foodName);
-  console.log("Quantity:", quantity);
-
-  // TEMP: reset form (no DB yet)
-  e.target.reset();
-}
-
-async function handleDonate(event) {
-  event.preventDefault();
-
-  const name = document.getElementById("food-name").value;
-  const qty = document.getElementById("food-qty").value;
-
-  if (!name || !qty) {
     alert("Please fill all fields");
     return;
   }
 
   try {
-    await createDonation({
-      foodName: name,
-      servings: Number(qty),
-      restaurantId: state.authUser.uid,
-      restaurantName: state.profile.name,
-      restaurantEmail: state.profile.email,
-      restaurantPhone: state.profile.phone,
-      restaurantAddress: state.profile.address,
-      location: state.location
-    });
-
-    event.target.reset();
-    alert("✅ Donation posted");
-
+    await createDonation({ foodName, quantity });
+    e.target.reset();
+    console.log("✅ Donation created");
   } catch (err) {
-    console.error(err);
-    alert("❌ Failed to post donation");
+    console.error("❌ Donation failed", err);
+    alert(err.message || "Failed to create donation");
   }
 }
 
 /* =========================
-   BASIC FUNCTIONS (TEMP)
+   RENDER DONATIONS (OVERVIEW)
 ========================= */
-function switchTab(tab) {
-  console.log("Switch tab:", tab);
-
-  ["overview", "history", "details", "alerts"].forEach(t => {
-    const el = document.getElementById("tab-" + t);
-    if (el) el.classList.add("hidden");
-  });
-
-  const active = document.getElementById("tab-" + tab);
-  if (active) active.classList.remove("hidden");
-}
-
 function renderDonations(donations) {
   const container = document.getElementById("scheduled-pickups-container");
   if (!container) return;
@@ -138,6 +99,17 @@ function renderDonations(donations) {
       </div>
     `;
   });
+}
+
+/* =========================
+   BASIC NAV
+========================= */
+function switchTab(tab) {
+  ["overview", "history", "details", "alerts"].forEach(t => {
+    document.getElementById("tab-" + t)?.classList.add("hidden");
+  });
+
+  document.getElementById("tab-" + tab)?.classList.remove("hidden");
 }
 
 function logout() {
