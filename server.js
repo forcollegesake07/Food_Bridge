@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
    MIDDLEWARE
 ============================ */
 app.use(cors({
-  origin: "*", // allow GitHub Pages
+  origin: "*",
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"]
 }));
@@ -22,74 +22,105 @@ app.use(express.static(path.join(__dirname, "public"), {
 }));
 
 /* ============================
-   BREVO CONFIG (CORRECT v2)
+   BREVO CONFIG
 ============================ */
+if (!process.env.BREVO_API_KEY) {
+  console.error("❌ BREVO_API_KEY is missing");
+  process.exit(1);
+}
+
 const emailApi = new Brevo.TransactionalEmailsApi();
 
 /* ============================
-   EMAIL HELPER
+   EMAIL HELPER (FIXED)
 ============================ */
 async function sendTemplateEmail({ to, templateId, params }) {
-  const response = await emailApi.sendTransacEmail(
-    { to, templateId, params },
-    { headers: { "api-key": process.env.BREVO_API_KEY } }
-  );
+  try {
+    const response = await emailApi.sendTransacEmail(
+      {
+        to,
+        templateId,
+        params,
 
-  console.log("BREVO RESPONSE:", response);
-  return response;
+        // ✅ REQUIRED: VERIFIED SENDER
+        sender: {
+          email: "forcollegesake07@gmail.com", // MUST be verified in Brevo
+          name: "FoodBridge"
+        }
+      },
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY
+        }
+      }
+    );
+
+    console.log("✅ BREVO RESPONSE:", response);
+    return response;
+  } catch (err) {
+    console.error(
+      "❌ BREVO ERROR:",
+      err.response?.body || err.message || err
+    );
+    throw err;
+  }
 }
+
 console.log("BREVO KEY EXISTS:", !!process.env.BREVO_API_KEY);
+
 /* ============================
    API: CLAIM FOOD
 ============================ */
 app.post("/api/claim-food", async (req, res) => {
   try {
     const { restaurant, orphanage, food } = req.body;
-     // 🔐 SAFETY CHECK: location must exist
-if (
-  !restaurant ||
-  !orphanage ||
-  !restaurant.location ||
-  !orphanage.location ||
-  restaurant.location.lat == null ||
-  restaurant.location.lng == null ||
-  orphanage.location.lat == null ||
-  orphanage.location.lng == null
-) {
-  return res.status(400).json({
-    error: "Location data missing for restaurant or orphanage"
-  });
-}
-     const restaurantMapLink =
-  `https://www.google.com/maps?q=${restaurant.location.lat},${restaurant.location.lng}`;
 
-const orphanageMapLink =
-  `https://www.google.com/maps?q=${orphanage.location.lat},${orphanage.location.lng}`;
+    // 🔐 SAFETY CHECK
+    if (
+      !restaurant ||
+      !orphanage ||
+      !restaurant.location ||
+      !orphanage.location ||
+      restaurant.location.lat == null ||
+      restaurant.location.lng == null ||
+      orphanage.location.lat == null ||
+      orphanage.location.lng == null
+    ) {
+      return res.status(400).json({
+        error: "Location data missing for restaurant or orphanage"
+      });
+    }
 
-   await sendTemplateEmail({
-  to: [
-    { email: restaurant.email, name: restaurant.name },
-    { email: orphanage.email, name: orphanage.name }
-  ],
-  templateId: 1,
-  params: {
-    food_name: food.name,
-    food_quantity: food.quantity,
+    const restaurantMapLink =
+      `https://www.google.com/maps?q=${restaurant.location.lat},${restaurant.location.lng}`;
 
-    restaurant_name: restaurant.name,
-    restaurant_phone: restaurant.phone,
-    restaurant_address: restaurant.address,
-    restaurant_map: restaurantMapLink,
+    const orphanageMapLink =
+      `https://www.google.com/maps?q=${orphanage.location.lat},${orphanage.location.lng}`;
 
-    orphanage_name: orphanage.name,
-    orphanage_phone: orphanage.phone,
-    orphanage_address: orphanage.address,
-    orphanage_map: orphanageMapLink
-  }
-});
+    await sendTemplateEmail({
+      to: [
+        { email: restaurant.email, name: restaurant.name },
+        { email: orphanage.email, name: orphanage.name }
+      ],
+      templateId: 1, // ⚠️ MUST MATCH BREVO TEMPLATE ID
+      params: {
+        food_name: food.name,
+        food_quantity: food.quantity,
+
+        restaurant_name: restaurant.name,
+        restaurant_phone: restaurant.phone,
+        restaurant_address: restaurant.address,
+        restaurant_map: restaurantMapLink,
+
+        orphanage_name: orphanage.name,
+        orphanage_phone: orphanage.phone,
+        orphanage_address: orphanage.address,
+        orphanage_map: orphanageMapLink
+      }
+    });
+
     res.json({ success: true });
   } catch (err) {
-    console.error("Claim email error:", err.response?.body || err);
     res.status(500).json({ error: "Failed to send claim email" });
   }
 });
@@ -106,7 +137,7 @@ app.post("/api/confirm-receipt", async (req, res) => {
         { email: restaurant.email, name: restaurant.name },
         { email: orphanage.email, name: orphanage.name }
       ],
-      templateId: 2,
+      templateId: 2, // ⚠️ MUST MATCH BREVO TEMPLATE ID
       params: {
         food_name: food.name,
         food_quantity: food.quantity,
@@ -116,7 +147,6 @@ app.post("/api/confirm-receipt", async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error("Confirm email error:", err.response?.body || err);
     res.status(500).json({ error: "Failed to send confirmation email" });
   }
 });
@@ -129,5 +159,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`FoodBridge backend running on port ${PORT}`);
+  console.log(`🚀 FoodBridge backend running on port ${PORT}`);
 });
