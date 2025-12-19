@@ -4,6 +4,7 @@ const Brevo = require("@getbrevo/brevo");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+const path = require("path");
 
 /* ============================
    MIDDLEWARE
@@ -11,6 +12,7 @@ const PORT = process.env.PORT || 10000;
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
+app.use(express.static(path.join(__dirname, "public")));
 console.log("BREVO KEY EXISTS:", !!process.env.BREVO_API_KEY);
 
 /* ============================
