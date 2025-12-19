@@ -1,4 +1,7 @@
-import { createDonation } from "../services/donation.service.js";
+import {
+  createDonation,
+  listenToMyDonations
+} from "../services/donation.service.js";
 import { state } from "../state.js";
 
 /**
@@ -13,6 +16,8 @@ export function initRestaurant() {
   console.log("Location:", state.location);
 
   bindUI();
+  listenToMyDonations(renderDonations);
+
 }
 
 /* =========================
@@ -96,6 +101,43 @@ function switchTab(tab) {
 
   const active = document.getElementById("tab-" + tab);
   if (active) active.classList.remove("hidden");
+}
+
+function renderDonations(donations) {
+  const container = document.getElementById("scheduled-pickups-container");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (donations.length === 0) {
+    container.innerHTML = `
+      <div class="bg-orange-50 border border-orange-100 rounded-xl p-4 text-center text-orange-600 text-sm font-medium">
+        No active listings. Post a donation!
+      </div>
+    `;
+    return;
+  }
+
+  donations.forEach(d => {
+    const statusColor =
+      d.status === "Available"
+        ? "border-brand-orange"
+        : "border-green-500";
+
+    const title =
+      d.status === "Available"
+        ? "Available Listing"
+        : "Pickup Scheduled";
+
+    container.innerHTML += `
+      <div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 ${statusColor}">
+        <h3 class="text-lg font-bold text-gray-800 mb-2">${title}</h3>
+        <p class="font-medium">${d.foodName}</p>
+        <p class="text-sm text-gray-500">${d.servings} servings</p>
+        <p class="text-xs mt-2 text-gray-400">Status: ${d.status}</p>
+      </div>
+    `;
+  });
 }
 
 function logout() {
