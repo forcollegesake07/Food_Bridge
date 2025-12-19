@@ -29,9 +29,6 @@ function bindUI() {
 
   switchTab("overview");
 }
-
-  switchTab("overview");
-}
 function handleDonateSubmit(e) {
   e.preventDefault();
 
