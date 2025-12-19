@@ -43,7 +43,7 @@ async function sendTemplateEmail({ to, templateId, params }) {
     }
   );
 }
-
+console.log("BREVO KEY EXISTS:", !!process.env.BREVO_API_KEY);
 /* ============================
    API: CLAIM FOOD
 ============================ */
