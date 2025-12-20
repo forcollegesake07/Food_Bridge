@@ -18,6 +18,7 @@ export function initRestaurant() {
 
   hydrateProfileUI();
   bindUI();
+  bindProfileForm();
 
   listenToMyDonations(donations => {
     renderDonations(donations); // ✅ FIXED
