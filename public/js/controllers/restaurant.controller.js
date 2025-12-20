@@ -420,10 +420,24 @@ async function claimRequest(
   }
 
   const confirm = window.confirm(
-    `Confirm donation of ${quantity} ${itemNeeded}?`
-  );
+  `Confirm donation of ${quantity} ${itemNeeded}?`
+);
+if (!confirm) return;
 
-  if (!confirm) return;
+// 🔥 FETCH REQUEST DATA FIRST
+const reqSnap = await db.collection("requests").doc(requestId).get();
+if (!reqSnap.exists) {
+  alert("Request no longer exists");
+  return;
+}
+
+const reqData = reqSnap.data();
+
+// ✅ NOW CREATE GOOGLE MAPS LINK
+const mapsLink = `https://www.google.com/maps/dir/?api=1
+  &origin=${state.location.lat},${state.location.lng}
+  &destination=${reqData.location.lat},${reqData.location.lng}`;
+
 
   try {
     // 1️⃣ Update request
@@ -453,6 +467,8 @@ async function claimRequest(
       location: state.profile.location || null,
       isUrgent: true,
       sourceRequestId: requestId
+      mapsLink: mapsLink,
+      emailSent: false
     });
 
     alert("✅ Request claimed successfully!");
