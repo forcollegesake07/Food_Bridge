@@ -8,7 +8,7 @@ const path = require("path");
 
 /* ============================
    MIDDLEWARE
-============================ */
+=========================== */
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
