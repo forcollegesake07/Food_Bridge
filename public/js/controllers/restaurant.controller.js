@@ -8,6 +8,7 @@ import { db } from "../firebase.js";
 
 let map = null;
 let marker = null;
+window.claimRequest = claimRequest;
 /**
  * Entry point for restaurant dashboard
  * Runs AFTER auth + profile are ready
@@ -378,11 +379,18 @@ function listenToUrgentRequests() {
               </p>
 
               <button
-                class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition"
-                onclick="alert('Fulfillment comes in Step 13')"
-              >
-                Donate Now
-              </button>
+  class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition"
+  onclick="claimRequest(
+    '${doc.id}',
+    '${r.itemNeeded}',
+    '${r.quantity}',
+    '${r.orphanageId}',
+    '${r.orphanageName}'
+  )"
+>
+  Donate Now
+</button>
+
             </div>
           `;
         }
@@ -398,7 +406,63 @@ function listenToUrgentRequests() {
     });
 }
 
+async function claimRequest(
+  requestId,
+  itemNeeded,
+  quantity,
+  orphanageId,
+  orphanageName
+) {
+  if (!state.profile?.address || !state.profile?.phone) {
+    alert("Please complete your profile (address & phone) first.");
+    switchTab("details");
+    return;
+  }
 
+  const confirm = window.confirm(
+    `Confirm donation of ${quantity} ${itemNeeded}?`
+  );
+
+  if (!confirm) return;
+
+  try {
+    // 1️⃣ Update request
+    await db.collection("requests").doc(requestId).update({
+      status: "Fulfilled",
+      fulfilledBy: state.authUser.uid,
+      restaurantName: state.profile.name,
+      fulfilledAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // 2️⃣ Create donation record
+    await db.collection("donations").add({
+      restaurantId: state.authUser.uid,
+      restaurantName: state.profile.name,
+      restaurantEmail: state.profile.email,
+      restaurantPhone: state.profile.phone,
+      restaurantAddress: state.profile.address,
+
+      orphanageId,
+      orphanageName,
+
+      foodName: itemNeeded,
+      servings: Number(quantity),
+
+      status: "Claimed",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      location: state.profile.location || null,
+      isUrgent: true,
+      sourceRequestId: requestId
+    });
+
+    alert("✅ Request claimed successfully!");
+    switchTab("history");
+
+  } catch (err) {
+    console.error("❌ Claim failed", err);
+    alert("Failed to claim request. Try again.");
+  }
+}
 /* =========================
    BASIC NAV
 ========================= */
