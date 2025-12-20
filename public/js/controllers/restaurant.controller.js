@@ -4,6 +4,7 @@ import {
 } from "../services/donation.service.js";
 import { state } from "../state.js";
 import { saveProfile } from "../services/profile.service.js";
+import { db } from "../firebase.js";
 
 let map = null;
 let marker = null;
@@ -178,6 +179,46 @@ async function fetchAddressFromLatLng(lat, lng) {
     console.error("Reverse geocode failed", err);
   }
 }
+async function handleSaveProfile(e) {
+  e.preventDefault();
+
+  const name = document.getElementById("detail-name")?.value.trim();
+  const phone = document.getElementById("detail-phone")?.value.trim();
+  const address = document.getElementById("detail-address")?.value.trim();
+
+  if (!name || !phone || !address) {
+    alert("Please fill all profile fields");
+    return;
+  }
+
+  if (!state.location.lat || !state.location.lng) {
+    alert("Please pin your location on the map");
+    return;
+  }
+
+  try {
+    await db.collection("users").doc(state.authUser.uid).update({
+      name,
+      phone,
+      address,
+      location: {
+        lat: state.location.lat,
+        lng: state.location.lng
+      }
+    });
+
+    // 🔁 Update local state
+    state.profile.name = name;
+    state.profile.phone = phone;
+    state.profile.address = address;
+
+    console.log("✅ Profile + location saved");
+    alert("Profile updated successfully");
+  } catch (err) {
+    console.error("❌ Profile save failed", err);
+    alert("Failed to save profile");
+  }
+}
 
 /* =========================
    UI BINDINGS
@@ -189,6 +230,11 @@ function bindUI() {
   const donateForm = document.getElementById("donation-form");
   if (donateForm) {
     donateForm.addEventListener("submit", handleDonateSubmit);
+  }
+
+  const profileForm = document.querySelector("#tab-details form");
+  if (profileForm) {
+    profileForm.addEventListener("submit", handleSaveProfile);
   }
 
   switchTab("overview");
