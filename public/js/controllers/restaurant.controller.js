@@ -80,7 +80,41 @@ function renderHistory(donations) {
   });
 }
 
+function bindProfileForm() {
+  const form = document.getElementById("profile-form");
+  if (!form) return;
 
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("detail-name")?.value.trim();
+    const phone = document.getElementById("detail-phone")?.value.trim();
+    const address = document.getElementById("detail-address")?.value.trim();
+
+    if (!name || !phone || !address) {
+      alert("Please fill all profile fields");
+      return;
+    }
+
+    try {
+      await saveProfile({
+        name,
+        phone,
+        address,
+        location: state.location || null
+      });
+
+      // Update sidebar instantly
+      const sidebarName = document.getElementById("sidebar-name");
+      if (sidebarName) sidebarName.textContent = name;
+
+      alert("✅ Profile updated successfully");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to save profile");
+    }
+  });
+}
 /* =========================
    UI BINDINGS
 ========================= */
