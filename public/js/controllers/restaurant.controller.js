@@ -5,6 +5,8 @@ import {
 import { state } from "../state.js";
 import { saveProfile } from "../services/profile.service.js";
 
+let map = null;
+let marker = null;
 /**
  * Entry point for restaurant dashboard
  * Runs AFTER auth + profile are ready
@@ -116,6 +118,67 @@ function bindProfileForm() {
     }
   });
 }
+function initMap() {
+  const mapContainer = document.getElementById("map-container");
+  if (!mapContainer) return;
+
+  // Prevent double init
+  if (map) {
+    map.invalidateSize();
+    return;
+  }
+
+  // Use saved location OR fallback
+  const lat = state.location.lat ?? 20.5937; // India center
+  const lng = state.location.lng ?? 78.9629;
+  const zoom = state.location.lat ? 14 : 5;
+
+  map = L.map("map-container").setView([lat, lng], zoom);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors",
+  }).addTo(map);
+
+  marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+  // 🟢 DRAG → UPDATE STATE
+  marker.on("dragend", () => {
+    const pos = marker.getLatLng();
+    state.location.lat = pos.lat;
+    state.location.lng = pos.lng;
+
+    fetchAddressFromLatLng(pos.lat, pos.lng);
+  });
+
+  // 🔵 AUTO-DETECT (FIRST TIME ONLY)
+  if (!state.location.lat) {
+    map.locate({ setView: true, maxZoom: 16 });
+
+    map.on("locationfound", e => {
+      state.location.lat = e.latlng.lat;
+      state.location.lng = e.latlng.lng;
+
+      marker.setLatLng(e.latlng);
+      fetchAddressFromLatLng(e.latlng.lat, e.latlng.lng);
+    });
+  }
+}
+async function fetchAddressFromLatLng(lat, lng) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+    );
+    const data = await res.json();
+
+    if (data?.display_name) {
+      const addressInput = document.getElementById("detail-address");
+      if (addressInput) addressInput.value = data.display_name;
+    }
+  } catch (err) {
+    console.error("Reverse geocode failed", err);
+  }
+}
+
 /* =========================
    UI BINDINGS
 ========================= */
@@ -204,6 +267,10 @@ function switchTab(tab) {
   });
 
   document.getElementById("tab-" + tab)?.classList.remove("hidden");
+
+    if (tab === "details") {
+    setTimeout(initMap, 200);
+    }
 }
 
 function logout() {
