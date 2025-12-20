@@ -10,17 +10,75 @@ import { state } from "../state.js";
  */
 export function initRestaurant() {
   console.log("🍽️ Restaurant controller started");
+
   console.log("User:", state.authUser);
   console.log("Profile:", state.profile);
   console.log("Location:", state.location);
 
+  hydrateProfileUI();
   bindUI();
 
-  // 🔥 Live donations listener
   listenToMyDonations(donations => {
-    renderDonations(donations);
+    renderDonations(donations); // ✅ FIXED
+    renderHistory(donations);
   });
 }
+function hydrateProfileUI() {
+  // Sidebar
+  const nameEl = document.getElementById("sidebar-name");
+  const idEl = document.getElementById("sidebar-id");
+
+  if (nameEl) nameEl.textContent = state.profile.name || "Restaurant";
+  if (idEl) idEl.textContent = "ID: " + state.authUser.uid.slice(0, 6);
+
+  // Details tab inputs
+  const nameInput = document.getElementById("detail-name");
+  const phoneInput = document.getElementById("detail-phone");
+  const addressInput = document.getElementById("detail-address");
+
+  if (nameInput) nameInput.value = state.profile.name || "";
+  if (phoneInput) phoneInput.value = state.profile.phone || "";
+  if (addressInput) addressInput.value = state.profile.address || "";
+}
+function renderHistory(donations) {
+  const body = document.getElementById("history-table-body");
+  const countEl = document.getElementById("history-count");
+
+  if (!body) return;
+
+  body.innerHTML = "";
+  countEl.textContent = donations.length;
+
+  if (donations.length === 0) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-6 text-gray-400">
+          No donation history yet
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  donations.forEach(d => {
+    const date = d.createdAt?.toDate
+      ? d.createdAt.toDate().toLocaleDateString()
+      : "—";
+
+    body.innerHTML += `
+      <tr class="border-b text-sm">
+        <td class="px-4 py-3">${date}</td>
+        <td class="px-4 py-3 font-semibold">${d.foodName}</td>
+        <td class="px-4 py-3">${d.servings}</td>
+        <td class="px-4 py-3">${d.status}</td>
+        <td class="px-4 py-3">${d.orphanageName || "-"}</td>
+        <td class="px-4 py-3">${d.orphanagePhone || "-"}</td>
+        <td class="px-4 py-3 text-center">—</td>
+      </tr>
+    `;
+  });
+}
+
 
 /* =========================
    UI BINDINGS
