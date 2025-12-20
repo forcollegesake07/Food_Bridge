@@ -3,6 +3,7 @@ import {
   listenToMyDonations
 } from "../services/donation.service.js";
 import { state } from "../state.js";
+import { saveProfile } from "../services/profile.service.js";
 
 /**
  * Entry point for restaurant dashboard
