@@ -81,16 +81,6 @@ app.post("/api/claim-food", async (req, res) => {
     res.status(500).json({ error: "Email failed" });
   }
 });
-app.post("/api/admin-broadcast", async (req, res) => {
-  const { message } = req.body;
-
-  // reuse your email service (Brevo / nodemailer)
-  // example placeholder:
-  console.log("ADMIN BROADCAST:", message);
-
-  res.json({ success: true });
-});
-
 /* ============================
    API: CONFIRM RECEIPT
 ============================ */
