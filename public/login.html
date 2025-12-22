@@ -198,8 +198,11 @@
     <script>
         const firebaseConfig = { apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0", authDomain: "panel-9e1a6.firebaseapp.com", projectId: "panel-9e1a6", storageBucket: "panel-9e1a6.firebasestorage.app", messagingSenderId: "491001640513", appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0" };
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth(); const db = firebase.firestore(); let pendingGoogleUser = null;
+        const auth = firebase.auth(); const db = firebase.firestore(); 
         
+        let pendingGoogleUser = null;
+        let isSigningUp = false; // CRITICAL FIX: Flag to prevent auto-logout race condition during signup
+
         window.addEventListener('DOMContentLoaded', () => { 
             const urlParams = new URLSearchParams(window.location.search); 
             if (urlParams.get('mode') === 'signup') toggleView('signup'); 
@@ -207,15 +210,19 @@
 
         // --- AUTO LOGIN LOGIC ---
         auth.onAuthStateChanged(async (user) => {
+            // FIX: If we are in the middle of a manual signup, DO NOT interfere.
+            // Let handleSignup() manage the flow.
+            if (isSigningUp) return; 
+
             if (user) {
                 // If the modal for selecting role is currently open, do not auto-redirect yet
                 if (!document.getElementById('google-role-modal').classList.contains('hidden')) {
                     return;
                 }
 
-                // CHECK EMAIL VERIFICATION (Skip check for Google/Provider logins as they are pre-verified)
+                // CHECK EMAIL VERIFICATION 
                 if (!user.emailVerified) {
-                    console.log("Email not verified. Staying on login page.");
+                    console.log("Email not verified. Signing out to enforce verification.");
                     await auth.signOut();
                     return;
                 }
@@ -377,6 +384,10 @@
             const originalText = btn.innerText;
             btn.innerText = "Creating Account..."; 
             btn.disabled = true; 
+            
+            // FIX: Enable flag so onAuthStateChanged doesn't kick us out while we save data
+            isSigningUp = true;
+
             const name = document.getElementById('signup-name').value; 
             const email = document.getElementById('signup-email').value; 
             const password = document.getElementById('signup-password').value; 
@@ -386,10 +397,7 @@
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password); 
                 const user = userCredential.user; 
 
-                // 1. Send Verification Email
-                await user.sendEmailVerification();
-                
-                // 2. Save User Data
+                // 1. Save User Data (Critical: Must happen before we sign out)
                 await firebase.firestore().collection('users').doc(user.uid).set({ 
                     name: name, 
                     email: email, 
@@ -398,8 +406,11 @@
                     isVerified: false, 
                     createdAt: firebase.firestore.FieldValue.serverTimestamp() 
                 }); 
+
+                // 2. Send Verification Email
+                await user.sendEmailVerification();
                 
-                // 3. Force Sign Out (so they can't login without verifying)
+                // 3. NOW we sign out manually
                 await auth.signOut();
 
                 // 4. UI Feedback
@@ -412,6 +423,8 @@
             } finally {
                 btn.innerText = originalText;
                 btn.disabled = false; 
+                // Reset flag
+                isSigningUp = false;
             }
         }
 
@@ -486,7 +499,7 @@
             try {
                 await auth.sendPasswordResetEmail(email);
                 showMessage("Password reset link sent! Check your inbox.", "success");
-                setTimeout(() => toggleView('login'), 3000); // Optional: Redirect back to login
+                setTimeout(() => toggleView('login'), 3000); 
             } catch (error) {
                 console.error(error);
                 let msg = error.message;
@@ -500,3 +513,5 @@
     </script>
 </body>
 </html>
+
+
