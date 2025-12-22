@@ -186,8 +186,14 @@
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 // If the modal for selecting role is currently open, do not auto-redirect yet
-                // as we are likely in the middle of a first-time google login
                 if (!document.getElementById('google-role-modal').classList.contains('hidden')) {
+                    return;
+                }
+
+                // CHECK EMAIL VERIFICATION (Skip check for Google/Provider logins as they are pre-verified)
+                if (!user.emailVerified) {
+                    console.log("Email not verified. Staying on login page.");
+                    await auth.signOut();
                     return;
                 }
 
@@ -212,8 +218,6 @@
                         performRedirect(userData.role);
                     } else {
                         // User is authenticated but has no profile document. 
-                        // This usually happens if they refreshed during the Google Signup Modal step.
-                        // We check if we are NOT already in the middle of handleGoogleLogin flow (which sets pendingGoogleUser)
                         if (!pendingGoogleUser) {
                              pendingGoogleUser = user;
                              document.getElementById('google-role-modal').classList.remove('hidden');
@@ -249,8 +253,6 @@
         }
         
         function performRedirect(role) { 
-            const base = window.location.origin + "/";
-            // Reduce delay for auto-login smoothness
             setTimeout(() => { 
                 if (role === 'restaurant') window.location.href = "restaurant"; 
                 else if (role === 'orphanage') window.location.href = "orphanages"; 
@@ -311,6 +313,7 @@
                     role: role, 
                     googleDisplayName: pendingGoogleUser.displayName, 
                     isDisable: false,
+                    isVerified: true, 
                     createdAt: firebase.firestore.FieldValue.serverTimestamp() 
                 }); 
                 document.getElementById('google-role-modal').classList.add('hidden'); 
@@ -332,24 +335,38 @@
             const email = document.getElementById('signup-email').value; 
             const password = document.getElementById('signup-password').value; 
             const role = document.querySelector('input[name="role"]:checked').value; 
+            
             try { 
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password); 
                 const user = userCredential.user; 
+
+                // 1. Send Verification Email
+                await user.sendEmailVerification();
+                
+                // 2. Save User Data
                 await firebase.firestore().collection('users').doc(user.uid).set({ 
                     name: name, 
                     email: email, 
                     role: role, 
                     isDisable: false,
+                    isVerified: false, 
                     createdAt: firebase.firestore.FieldValue.serverTimestamp() 
                 }); 
-                showMessage("Account created! Redirecting...", "success"); 
-                performRedirect(role); 
+                
+                // 3. Force Sign Out (so they can't login without verifying)
+                await auth.signOut();
+
+                // 4. UI Feedback
+                showMessage(`Verification link sent to ${email}. Please check your inbox before logging in.`, "success"); 
+                toggleView('login'); 
+
             } catch (error) { 
                 console.error(error); 
                 showMessage(error.message, "error"); 
+            } finally {
                 btn.innerText = originalText;
                 btn.disabled = false; 
-            } 
+            }
         }
 
         async function handleLogin(e) { 
@@ -360,9 +377,18 @@
             btn.disabled = true; 
             const email = document.getElementById('login-email').value; 
             const password = document.getElementById('login-password').value; 
+            
             try { 
                 const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password); 
                 const user = userCredential.user; 
+                
+                // 1. Check Email Verification
+                if (!user.emailVerified) {
+                    await auth.signOut();
+                    throw new Error("Email not verified. Please check your inbox for the verification link.");
+                }
+
+                // 2. Retrieve User Data
                 const doc = await db.collection('users').doc(user.uid).get(); 
                 
                 if (doc.exists) { 
@@ -386,7 +412,9 @@
             } catch (error) { 
                 console.error(error); 
                 let message = "Invalid email or password.";
-                if (error.message.includes('disabled')) {
+                if (error.message.includes('verified')) {
+                    message = error.message;
+                } else if (error.message.includes('disabled')) {
                     message = "This account has been disabled by the administrator.";
                 }
                 showMessage(message, "error"); 
