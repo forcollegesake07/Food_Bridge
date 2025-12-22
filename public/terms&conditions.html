@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Legal | FoodBridge</title>
+    <title>Legal Center | FoodBridge</title>
     
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath fill='%23F97316' d='M148 76.6C148 34.3 182.3 0 224.6 0c20.3 0 39.8 8.1 54.1 22.4l9.3 9.3 9.3-9.3C311.6 8.1 331.1 0 351.4 0C393.7 0 428 34.3 428 76.6c0 21.2-8.4 41.5-23.4 56.5L288 249.7 171.4 133.1C156.4 118.1 148 97.8 148 76.6zm338.9 239.3l-20.1-20.1c-4.7-4.7-12.3-4.7-17 0L288 457.6 126.1 295.8c-4.7-4.7-12.3-4.7-17 0L89 315.9c-25 25-25 65.5 0 90.5L253.3 570.8c19.1 19.1 50.3 19.1 69.4 0l164.2-164.2c25-25 25-65.5 0-90.5z'/%3E%3C/svg%3E">
 
@@ -30,6 +30,7 @@
         html { -webkit-text-size-adjust: 100%; }
         .tab-active { border-bottom: 3px solid #F97316; color: #F97316; }
         .tab-inactive { border-bottom: 3px solid transparent; color: #6B7280; }
+        .legal-list { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.5rem; space-y: 0.25rem; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans selection:bg-brand-orange selection:text-white flex flex-col min-h-screen">
@@ -72,6 +73,8 @@
                 
                 <!-- TERMS TAB -->
                 <div id="tab-terms" class="space-y-10 animate-fade-in">
+                    
+                    <!-- 1. Platform Role -->
                     <section>
                         <h2 class="text-xl md:text-2xl font-bold text-brand-dark mb-4 flex items-center">
                             <span class="w-8 h-8 bg-brand-orange/10 text-brand-orange rounded-lg flex items-center justify-center text-sm mr-3">1</span>
@@ -86,6 +89,7 @@
                         </div>
                     </section>
 
+                    <!-- 2. Strict Action -->
                     <section>
                         <h2 class="text-xl md:text-2xl font-bold text-brand-dark mb-4 flex items-center">
                             <span class="w-8 h-8 bg-brand-orange/10 text-brand-orange rounded-lg flex items-center justify-center text-sm mr-3">2</span>
@@ -93,7 +97,7 @@
                         </h2>
                         <div class="pl-11 text-gray-600 space-y-3 leading-relaxed text-sm md:text-base">
                             <p>While FoodBridge claims no liability, we enforce a <strong>Zero Tolerance Policy</strong> regarding food safety to protect our community.</p>
-                            <ul class="list-disc pl-5 space-y-2">
+                            <ul class="legal-list">
                                 <li><strong>Reporting Mechanism:</strong> Orphanages are encouraged to report any instance of spoiled, stale, or unhygienic food immediately via the dashboard using the "Report Issue" button.</li>
                                 <li><strong>Administrative Action:</strong> Upon receiving a report, our Admin team will investigate. If a Restaurant is found to have donated unsafe food:
                                     <ul class="list-none mt-2 pl-2 space-y-2 text-sm font-medium text-brand-dark">
@@ -105,6 +109,7 @@
                         </div>
                     </section>
 
+                    <!-- 3. User Obligations -->
                     <section>
                         <h2 class="text-xl md:text-2xl font-bold text-brand-dark mb-4 flex items-center">
                             <span class="w-8 h-8 bg-brand-orange/10 text-brand-orange rounded-lg flex items-center justify-center text-sm mr-3">3</span>
@@ -113,15 +118,16 @@
                         <div class="pl-11 text-gray-600 space-y-4 leading-relaxed text-sm md:text-base">
                             <div>
                                 <h3 class="font-bold text-gray-800 mb-2">For Restaurants (Donors):</h3>
-                                <ul class="list-disc pl-5 space-y-1">
+                                <ul class="legal-list">
                                     <li>You represent and warrant that all food donated is fresh, edible, and packaged hygienically in food-grade containers.</li>
                                     <li>You must provide an accurate location pin (within 15km accuracy) to ensure feasible pickups.</li>
                                     <li><strong>No Leftovers:</strong> You must not donate food that has been served to customers or touched. Only untouched surplus food from the kitchen is permitted.</li>
+                                    <li><strong>Accurate Imagery:</strong> Photos uploaded must represent the actual food being donated. Misleading stock photos are prohibited.</li>
                                 </ul>
                             </div>
                             <div>
                                 <h3 class="font-bold text-gray-800 mb-2">For Orphanages (Recipients):</h3>
-                                <ul class="list-disc pl-5 space-y-1">
+                                <ul class="legal-list">
                                     <li>You agree to arrange transportation and pick up claimed donations within the agreed timeframe.</li>
                                     <li>You must inspect food upon collection. Accepting the food implies you are satisfied with its visible condition and temperature.</li>
                                     <li>False reports against restaurants for personal grievances will result in immediate account suspension.</li>
@@ -130,9 +136,26 @@
                         </div>
                     </section>
 
+                    <!-- 4. Account Management -->
                     <section>
                         <h2 class="text-xl md:text-2xl font-bold text-brand-dark mb-4 flex items-center">
                             <span class="w-8 h-8 bg-brand-orange/10 text-brand-orange rounded-lg flex items-center justify-center text-sm mr-3">4</span>
+                            Account Management & Verification
+                        </h2>
+                        <div class="pl-11 text-gray-600 space-y-3 leading-relaxed text-sm md:text-base">
+                            <p>FoodBridge reserves the right to manage user access to maintain platform integrity.</p>
+                            <ul class="legal-list">
+                                <li><strong>Verification:</strong> Accounts may be marked as "Verified" (Blue Check) by Admins after successful document verification or history of successful donations. This status can be revoked at any time.</li>
+                                <li><strong>Suspension:</strong> Admins retain the right to disable any account without prior notice for violation of terms, suspicious activity, or inactivity.</li>
+                                <li><strong>Broadcasts:</strong> By using the platform, you agree to receive system-wide broadcasts and urgent notifications from the Administrator regarding service status or emergency appeals.</li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <!-- 5. Logistics & Indemnification -->
+                    <section>
+                        <h2 class="text-xl md:text-2xl font-bold text-brand-dark mb-4 flex items-center">
+                            <span class="w-8 h-8 bg-brand-orange/10 text-brand-orange rounded-lg flex items-center justify-center text-sm mr-3">5</span>
                             Logistics & Indemnification
                         </h2>
                         <div class="pl-11 text-gray-600 space-y-3 leading-relaxed text-sm md:text-base">
@@ -140,10 +163,25 @@
                             <p class="mt-2">You agree to indemnify, defend, and hold harmless FoodBridge, its creators, and affiliates from any claims, liabilities, damages, or legal fees arising out of your use of the platform.</p>
                         </div>
                     </section>
+
+                     <!-- 6. Content & Dispute Resolution -->
+                     <section>
+                        <h2 class="text-xl md:text-2xl font-bold text-brand-dark mb-4 flex items-center">
+                            <span class="w-8 h-8 bg-brand-orange/10 text-brand-orange rounded-lg flex items-center justify-center text-sm mr-3">6</span>
+                            Content & Disputes
+                        </h2>
+                        <div class="pl-11 text-gray-600 space-y-3 leading-relaxed text-sm md:text-base">
+                            <ul class="legal-list">
+                                <li><strong>Image Uploads:</strong> You retain ownership of images uploaded, but grant FoodBridge a license to display them on the platform. You must not upload copyrighted or offensive material.</li>
+                                <li><strong>Dispute Resolution:</strong> In case of a dispute between a Donor and Recipient, the FoodBridge Admin acts as the final arbitrator. The Admin's decision regarding account suspension or warning points is final.</li>
+                            </ul>
+                        </div>
+                    </section>
                 </div>
 
                 <!-- PRIVACY TAB -->
                 <div id="tab-privacy" class="hidden space-y-10 animate-fade-in">
+                    <!-- 1. Info We Collect -->
                     <section>
                         <h2 class="text-xl md:text-2xl font-bold text-brand-dark mb-4 flex items-center">
                             <i class="fa-solid fa-user-shield text-brand-green mr-3 text-2xl"></i>
@@ -151,15 +189,34 @@
                         </h2>
                         <div class="text-gray-600 space-y-3 leading-relaxed text-sm md:text-base border-l-2 border-gray-100 pl-4">
                             <p>To operate FoodBridge effectively, we collect the following types of information when you register:</p>
-                            <ul class="list-disc pl-5 space-y-1">
+                            <ul class="legal-list">
                                 <li><strong>Identity Data:</strong> Organization Name, Contact Person Name.</li>
                                 <li><strong>Contact Data:</strong> Email address, Phone number.</li>
-                                <li><strong>Technical Data:</strong> Login credentials (via Google Auth or Email/Password), IP address.</li>
+                                <li><strong>Technical Data:</strong> Login credentials (via Google Auth or Email/Password), IP address, and Device type.</li>
                                 <li><strong>Geolocation Data:</strong> Precise latitude and longitude coordinates when you use the "Pin Location" feature.</li>
+                                <li><strong>Content Data:</strong> Images of food uploaded to the platform.</li>
                             </ul>
                         </div>
                     </section>
 
+                    <!-- 2. Third Party Services (Expanded) -->
+                    <section>
+                        <h2 class="text-xl md:text-2xl font-bold text-brand-dark mb-4 flex items-center">
+                            <i class="fa-solid fa-server text-brand-green mr-3 text-2xl"></i>
+                            Third-Party Service Providers
+                        </h2>
+                        <div class="text-gray-600 space-y-3 leading-relaxed text-sm md:text-base border-l-2 border-gray-100 pl-4">
+                            <p>We share specific data with trusted third-party services to provide core functionalities:</p>
+                            <ul class="legal-list">
+                                <li><strong>Brevo (formerly Sendinblue):</strong> Your name, email address, and order details are transmitted to Brevo API to send transactional emails (e.g., "Donation Claimed", "Receipt Confirmed"). By using this service, you consent to receiving these automated system emails.</li>
+                                <li><strong>Google Firebase:</strong> Used for secure authentication, database storage, and hosting. Google may store cookies to maintain your login session.</li>
+                                <li><strong>OpenStreetMap & Nominatim:</strong> Your latitude/longitude coordinates are sent to these services to generate human-readable address data and map visualizations.</li>
+                            </ul>
+                            <p class="text-sm italic mt-2">We are not responsible for the privacy practices of these third-party providers, though we select them based on their reliability and security standards.</p>
+                        </div>
+                    </section>
+
+                    <!-- 3. Location Data Usage -->
                     <section>
                         <h2 class="text-xl md:text-2xl font-bold text-brand-dark mb-4 flex items-center">
                             <i class="fa-solid fa-map-location-dot text-brand-green mr-3 text-2xl"></i>
@@ -167,15 +224,16 @@
                         </h2>
                         <div class="text-gray-600 space-y-3 leading-relaxed text-sm md:text-base border-l-2 border-gray-100 pl-4">
                             <p>Your location data is critical to the core functionality of FoodBridge. We use your coordinates specifically to:</p>
-                            <ul class="list-disc pl-5 space-y-1">
+                            <ul class="legal-list">
                                 <li>Calculate the distance between Restaurants and Orphanages.</li>
-                                <li>Filter "Urgent Requests" and "Available Donations" to show only those within a <strong>15km operational radius</strong>.</li>
+                                <li>Filter "Urgent Requests" and "Available Donations" to show only those within a <strong>10-15km operational radius</strong>.</li>
                                 <li>Provide accurate pickup addresses to the other party once a donation is claimed.</li>
                             </ul>
-                            <p class="text-sm italic mt-2">We do not track your location in real-time or background; we only store the static location you explicitly save in your profile.</p>
+                            <p class="text-sm italic mt-2">We do not track your location in real-time background services; we only store the static location you explicitly save in your profile.</p>
                         </div>
                     </section>
 
+                    <!-- 4. Data Sharing -->
                     <section>
                         <h2 class="text-xl md:text-2xl font-bold text-brand-dark mb-4 flex items-center">
                             <i class="fa-solid fa-share-nodes text-brand-green mr-3 text-2xl"></i>
@@ -184,22 +242,22 @@
                         <div class="text-gray-600 space-y-3 leading-relaxed text-sm md:text-base border-l-2 border-gray-100 pl-4">
                             <p>We respect your privacy. <strong>We do not sell your personal data</strong> to advertisers or third parties.</p>
                             <p>However, essential contact information (Phone, Address, Name) is shared automatically with:</p>
-                            <ul class="list-disc pl-5 space-y-1">
+                            <ul class="legal-list">
                                 <li><strong>The Counterparty:</strong> When a donation is claimed, the Restaurant sees the Orphanage's details, and vice versa, to facilitate the pickup.</li>
-                                <li><strong>Service Providers:</strong> We use Firebase (Google) for secure data storage and authentication services.</li>
+                                <li><strong>Service Providers:</strong> As mentioned above (Brevo, Firebase).</li>
                                 <li><strong>Legal Authorities:</strong> If required by law or to protect the safety of our users.</li>
                             </ul>
                         </div>
                     </section>
 
+                    <!-- 5. Data Retention -->
                     <section>
                         <h2 class="text-xl md:text-2xl font-bold text-brand-dark mb-4 flex items-center">
-                            <i class="fa-solid fa-lock text-brand-green mr-3 text-2xl"></i>
-                            Data Security
+                            <i class="fa-solid fa-database text-brand-green mr-3 text-2xl"></i>
+                            Data Retention
                         </h2>
                         <div class="text-gray-600 space-y-3 leading-relaxed text-sm md:text-base border-l-2 border-gray-100 pl-4">
-                            <p>We implement robust security measures to protect your data. All data is transmitted via secure SSL/TLS encryption. User authentication is handled securely through Google Firebase Auth standards.</p>
-                            <p>While we strive for maximum security, no internet transmission is 100% secure. You are responsible for keeping your login credentials confidential.</p>
+                            <p>We retain your personal information and transaction history for as long as your account is active to provide you with history logs and statistics. If you wish to delete your account, please contact the Administrator. Note that some transaction records may be anonymized and kept for platform analytics.</p>
                         </div>
                     </section>
                 </div>
@@ -254,5 +312,3 @@
 
 </body>
 </html>
-
-
