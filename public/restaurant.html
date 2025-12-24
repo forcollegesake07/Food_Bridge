@@ -416,33 +416,34 @@
         }
 
         // Updated switchTab logic
-        function switchTab(tab) {
-            ['overview', 'history', 'details', 'alerts'].forEach(t => {
-                document.getElementById('tab-' + t).classList.add('hidden');
-                const btn = document.getElementById('btn-' + t);
-                btn.classList.remove('bg-brand-orange', 'text-white', 'shadow-md', 'bg-red-500');
-                if (t === 'alerts') {
-                    btn.classList.remove('hover:bg-gray-50', 'hover:text-gray-900');
-                    btn.classList.add('text-gray-500', 'hover:bg-red-50', 'hover:text-red-500', 'border', 'border-transparent', 'hover:border-red-100');
-                } else {
-                    btn.classList.remove('hover:bg-red-50', 'hover:text-red-500', 'border', 'border-transparent', 'hover:border-red-100');
-                    btn.classList.add('text-gray-500', 'hover:bg-gray-50', 'hover:text-gray-900');
-                }
-            });
-            document.getElementById('tab-' + tab).classList.remove('hidden');
-            const activeBtn = document.getElementById('btn-' + tab);
-            activeBtn.classList.remove('text-gray-500', 'hover:bg-gray-50', 'hover:text-gray-900', 'hover:bg-red-50', 'hover:text-red-500', 'border', 'hover:border-red-100');
-            if(tab === 'alerts') activeBtn.classList.add('bg-red-500', 'text-white', 'shadow-md');
-            else activeBtn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
-            
-            // Only close sidebar if currently OPEN and on mobile
-            const sidebar = document.getElementById('sidebar');
-            if (window.innerWidth < 768 && !sidebar.classList.contains('-translate-x-full')) {
-                toggleSidebar();
-            }
+          window.__tabHistory = [];
+  window.currentTab = "overview"; // default
 
-            if (tab === 'details') { setTimeout(initMap, 200); }
-        }
+  function switchTab(tab) {
+    // Prevent duplicate pushes
+    if (window.currentTab && window.currentTab !== tab) {
+      window.__tabHistory.push(window.currentTab);
+    }
+
+    window.currentTab = tab;
+
+    // --- YOUR EXISTING TAB LOGIC ---
+    document.querySelectorAll('[id^="tab-"]').forEach(el => {
+      el.style.display = 'none';
+    });
+
+    const active = document.getElementById('tab-' + tab);
+    if (active) active.style.display = 'block';
+  }
+
+  function goBackTab() {
+    if (window.__tabHistory.length === 0) {
+      return false;
+    }
+    const prev = window.__tabHistory.pop();
+    switchTab(prev);
+    return true;
+  }
 
         // --- MAP LOGIC ---
         function initMap() {
