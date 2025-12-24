@@ -820,6 +820,28 @@ async function sendClaimEmail({ restaurant, orphanage, food }) {
     alert("Failed to send claim email. Please try again.");
   }
 }
+         // Tab history stack
+  window.__tabHistory = [];
+
+  function switchTab(tab) {
+    // Push previous tab
+    if (window.currentTab && window.currentTab !== tab) {
+      window.__tabHistory.push(window.currentTab);
+    }
+
+    window.currentTab = tab;
+
+    // EXISTING TAB SWITCH LOGIC BELOW
+    document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display = 'none');
+    document.getElementById('tab-' + tab).style.display = 'block';
+  }
+
+  function goBackTab() {
+    if (window.__tabHistory.length === 0) return false;
+    const prev = window.__tabHistory.pop();
+    switchTab(prev);
+    return true;
+  }
     </script>
 </body>
 </html>
