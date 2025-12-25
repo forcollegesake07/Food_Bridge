@@ -409,7 +409,7 @@
                     if(userData.location) { currentLat = userData.location.lat; currentLng = userData.location.lng; }
 
                     document.getElementById('tab-overview').classList.remove('hidden');
-                    loadBroadcasts(); // NEW: Load Admin Broadcasts
+                    loadBroadcasts(); 
                     loadHistory();
                     loadAvailableDonations();
                     loadIncomingDeliveries();
@@ -419,7 +419,7 @@
                     await db.collection('users').doc(user.uid).set(userData);
                     updateUIWithUserData();
                     document.getElementById('tab-overview').classList.remove('hidden');
-                    loadBroadcasts(); // NEW
+                    loadBroadcasts();
                     loadHistory();
                     loadAvailableDonations();
                     loadIncomingDeliveries();
@@ -436,6 +436,14 @@
             if(document.getElementById('detail-address')) document.getElementById('detail-address').value = userData.address || "";
         }
 
+        // [NEW] Function called by Android App to update FCM Token
+        window.updateFCMToken = async function(token) {
+            if(currentUser) {
+                await db.collection('users').doc(currentUser.uid).update({ fcmToken: token });
+                console.log("FCM Token Updated");
+            }
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
@@ -444,33 +452,22 @@
         }
 
         // ============================================================
-        //  FIXED TAB LOGIC (Consistent with Restaurant Dashboard)
+        //  FIXED TAB LOGIC
         // ============================================================
         window.currentTab = "overview"; 
 
         function switchTab(tab, fromPopState = false) {
-            // 1. Push history only when user clicks (not when pressing Back)
-            if (!fromPopState) {
-                history.pushState({ tab }, "", "#" + tab);
-            }
-
-            // 2. Hide all tabs
+            if (!fromPopState) { history.pushState({ tab }, "", "#" + tab); }
             ['overview', 'history', 'details', 'alerts'].forEach(t => {
                 const el = document.getElementById('tab-' + t);
                 if(el) el.classList.add('hidden');
             });
-
-            // 3. Update Sidebar Buttons (Fixed highlighting issue)
             const buttons = ['overview', 'alerts', 'history', 'details'];
             buttons.forEach(b => {
                 const btn = document.getElementById('btn-' + b);
                 if (!btn) return;
-                
-                // Reset to base state
                 btn.classList.remove('bg-brand-green', 'bg-brand-orange', 'text-white', 'shadow-md');
                 btn.classList.add('text-gray-500', 'border', 'border-transparent');
-
-                // Add specific hover effects
                 if (b === 'alerts') {
                     btn.classList.add('hover:bg-orange-50', 'hover:text-brand-orange', 'hover:border-orange-100');
                     btn.classList.remove('hover:bg-gray-50', 'hover:text-gray-900');
@@ -478,48 +475,28 @@
                     btn.classList.add('hover:bg-gray-50', 'hover:text-gray-900');
                     btn.classList.remove('hover:bg-orange-50', 'hover:text-brand-orange', 'hover:border-orange-100');
                 }
-
-                // Apply Active State
                 if (b === tab) {
                     btn.classList.remove('text-gray-500', 'hover:bg-gray-50', 'hover:text-gray-900', 'hover:bg-orange-50', 'hover:text-brand-orange', 'hover:border-orange-100');
-                    
-                    if (b === 'alerts') {
-                        btn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
-                    } else {
-                        btn.classList.add('bg-brand-green', 'text-white', 'shadow-md');
-                    }
+                    if (b === 'alerts') btn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
+                    else btn.classList.add('bg-brand-green', 'text-white', 'shadow-md');
                 }
             });
-
-            // 4. Show selected tab
             const activeContent = document.getElementById('tab-' + tab);
             if(activeContent) activeContent.classList.remove('hidden');
-            
             window.currentTab = tab;
-
-            if (window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) {
-                toggleSidebar();
-            }
-
-            // Init Map if switching to Details
+            if (window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) { toggleSidebar(); }
             if (tab === 'details') { setTimeout(initMap, 200); }
         }
 
-        // Listen for Browser/Android Back Button
         window.addEventListener("popstate", function (e) {
-            if (e.state && e.state.tab) {
-                switchTab(e.state.tab, true);
-            } else {
-                switchTab("overview", true);
-            }
+            if (e.state && e.state.tab) switchTab(e.state.tab, true);
+            else switchTab("overview", true);
         });
 
-        // Default tab on first load
         document.addEventListener("DOMContentLoaded", function () {
             const initialTab = location.hash.replace("#", "") || "overview";
             switchTab(initialTab, true);
         });
-        // ============================================================
 
         // --- MAP ---
         function initMap() {
@@ -536,7 +513,6 @@
               currentLng = position.lng;
               fetchAddressFromLatLng(currentLat, currentLng);
             });
-
             if (!currentLat) {
                 map.locate({setView: true, maxZoom: 16});
                 map.on('locationfound', function(e) {
@@ -545,24 +521,17 @@
             }
         }
 
-        // --- DISTANCE CALCULATION ---
         function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
             if(!lat1 || !lon1 || !lat2 || !lon2) return 99999;
-            var R = 6371; 
-            var dLat = deg2rad(lat2-lat1); var dLon = deg2rad(lon2-lon1); 
+            var R = 6371; var dLat = deg2rad(lat2-lat1); var dLon = deg2rad(lon2-lon1); 
             var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
-            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-            return R * c; 
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R * c; 
         }
         function deg2rad(deg) { return deg * (Math.PI/180); }
 
         // --- NOTIFICATIONS LOGIC ---
         function loadBroadcasts() {
-            db.collection('notifications')
-              .where('targetAudience', 'in', ['all', 'orphanage'])
-              .orderBy('createdAt', 'desc')
-              .limit(10)
-              .onSnapshot(snap => {
+            db.collection('notifications').where('targetAudience', 'in', ['all', 'orphanage']).orderBy('createdAt', 'desc').limit(10).onSnapshot(snap => {
                   broadcastNotifs = [];
                   snap.forEach(doc => {
                       const d = doc.data();
@@ -591,81 +560,47 @@
         function renderAllNotifs() {
             const list = document.getElementById('notif-list');
             const badge = document.getElementById('notif-badge');
-            
-            // Merge & Sort
             const all = [...broadcastNotifs, ...operationalNotifs].sort((a,b) => b.time - a.time);
-            
             if (all.length === 0) {
                 list.innerHTML = '<p class="p-4 text-center text-sm text-gray-400">No new notifications.</p>';
                 badge.classList.add('hidden');
             } else {
                 list.innerHTML = '';
                 all.forEach(n => {
-                    let iconClass = 'fa-circle-info';
-                    let iconColor = 'text-blue-500';
-                    
+                    let iconClass = 'fa-circle-info'; let iconColor = 'text-blue-500';
                     if(n.type === 'broadcast') { iconClass = 'fa-tower-broadcast'; iconColor = 'text-brand-orange'; }
                     if(n.type === 'fulfilled') { iconClass = 'fa-circle-check'; iconColor = 'text-green-500'; }
-                    
                     list.innerHTML += `<div class="p-3 border-b border-gray-50 hover:bg-gray-50 transition"><div class="flex items-start gap-3"><div class="mt-1 ${iconColor}"><i class="fa-solid ${iconClass}"></i></div><div><p class="text-xs font-bold text-gray-800">${n.title}</p><p class="text-xs text-gray-600 line-clamp-2">${n.message}</p><p class="text-[10px] text-gray-400 mt-1">${n.time.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p></div></div></div>`;
                 });
                 badge.classList.remove('hidden');
             }
         }
 
-        // --- AVAILABLE DONATIONS (RADIUS FILTER 10km) ---
         function loadAvailableDonations() {
             db.collection('donations').where('status', '==', 'Available').orderBy('createdAt', 'desc').onSnapshot(snap => {
                 const container = document.getElementById('donations-container');
                 if(!container) return;
                 container.innerHTML = '';
-                
                 let visibleCount = 0;
-                const myLat = userData.location?.lat;
-                const myLng = userData.location?.lng;
-
+                const myLat = userData.location?.lat; const myLng = userData.location?.lng;
                 if (!myLat) {
                     container.innerHTML = "<div class='col-span-full text-center py-10 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-white'><i class='fa-solid fa-location-dot text-4xl mb-2'></i><p class='font-bold'>Location Needed</p><p class='text-sm'>Please set your location in 'Details' to find nearby food.</p></div>";
                     return;
                 }
-
                 snap.forEach(doc => {
                     const d = doc.data();
                     const dist = getDistanceFromLatLonInKm(myLat, myLng, d.location?.lat, d.location?.lng);
-                    
                     if(dist <= 10) {
                         visibleCount++;
                         const distStr = dist < 1 ? "< 1 km" : dist.toFixed(1) + " km";
                         const imageHtml = d.imageUrl ? `<img src="${d.imageUrl}" class="w-full h-32 object-cover" alt="Food">` : `<div class="w-full h-32 bg-orange-100 flex items-center justify-center text-brand-orange"><i class="fa-solid fa-bowl-food text-4xl"></i></div>`;
-                        
-                        container.innerHTML += `
-                            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-orange-100 transform hover:-translate-y-1 transition duration-300 relative">
-                                <div class="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-xs font-bold backdrop-blur-sm z-10"><i class="fa-solid fa-location-arrow mr-1"></i>${distStr}</div>
-                                ${imageHtml}
-                                <div class="p-5">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h4 class="font-bold text-gray-800 text-lg">${d.foodName}</h4>
-                                        <span class="bg-orange-100 text-brand-orange text-xs font-bold px-2 py-1 rounded-full">${d.servings} Servings</span>
-                                    </div>
-                                    <div class="mb-4 text-sm text-gray-600 space-y-1">
-                                        <p class="font-bold"><i class="fa-solid fa-store mr-2 text-gray-400"></i> ${d.restaurantName}</p>
-                                        <p><i class="fa-solid fa-location-dot mr-2 text-gray-400"></i> ${d.restaurantAddress || 'Location N/A'}</p>
-                                    </div>
-                                    <button onclick="initiateClaim('${doc.id}', '${d.foodName}', '${d.servings}', '${d.restaurantName}')" class="w-full py-3.5 bg-brand-orange text-white font-bold rounded-xl hover:bg-orange-600 shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 text-base touch-manipulation">
-                                        <span>Claim Food</span> <i class="fa-solid fa-hand-holding-heart"></i>
-                                    </button>
-                                </div>
-                            </div>`;
+                        container.innerHTML += `<div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-orange-100 transform hover:-translate-y-1 transition duration-300 relative"><div class="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-xs font-bold backdrop-blur-sm z-10"><i class="fa-solid fa-location-arrow mr-1"></i>${distStr}</div>${imageHtml}<div class="p-5"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 text-lg">${d.foodName}</h4><span class="bg-orange-100 text-brand-orange text-xs font-bold px-2 py-1 rounded-full">${d.servings} Servings</span></div><div class="mb-4 text-sm text-gray-600 space-y-1"><p class="font-bold"><i class="fa-solid fa-store mr-2 text-gray-400"></i> ${d.restaurantName}</p><p><i class="fa-solid fa-location-dot mr-2 text-gray-400"></i> ${d.restaurantAddress || 'Location N/A'}</p></div><button onclick="initiateClaim('${doc.id}', '${d.foodName}', '${d.servings}', '${d.restaurantName}')" class="w-full py-3.5 bg-brand-orange text-white font-bold rounded-xl hover:bg-orange-600 shadow-md flex items-center justify-center gap-2 transition-all active:scale-95 text-base touch-manipulation"><span>Claim Food</span> <i class="fa-solid fa-hand-holding-heart"></i></button></div></div>`;
                     }
                 });
-
-                if(visibleCount === 0) {
-                    container.innerHTML = "<div class='col-span-full text-center py-10 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-white'><i class='fa-solid fa-utensils text-4xl mb-2'></i><p class='font-medium'>No available food found within 10km.</p></div>";
-                }
+                if(visibleCount === 0) container.innerHTML = "<div class='col-span-full text-center py-10 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-white'><i class='fa-solid fa-utensils text-4xl mb-2'></i><p class='font-medium'>No available food found within 10km.</p></div>";
             });
         }
         
-        // --- MY REQUESTS ---
         function loadMyRequests() {
              db.collection('requests').where('orphanageId', '==', currentUser.uid).where('status', '==', 'Pending').orderBy('createdAt', 'desc').onSnapshot(snap => {
                 const container = document.getElementById('my-requests-list');
@@ -679,7 +614,6 @@
              });
         }
 
-        // --- INCOMING DELIVERIES ---
         function loadIncomingDeliveries() {
             db.collection('donations').where('claimedBy', '==', currentUser.uid).where('status', '==', 'Claimed').onSnapshot(snap => {
                 const container = document.getElementById('incoming-deliveries-container');
@@ -693,35 +627,21 @@
             });
         }
 
-        // --- HISTORY (Modified for Notifications) ---
         function loadHistory() {
             db.collection('donations').where("claimedBy", "==", currentUser.uid).orderBy("createdAt", "desc").onSnapshot((donSnap) => {
                 db.collection('requests').where("orphanageId", "==", currentUser.uid).orderBy("createdAt", "desc").onSnapshot((reqSnap) => {
                     const recentList = document.getElementById('recent-list'); const historyBody = document.getElementById('history-table-body');
                     if (recentList) recentList.innerHTML = ""; if (historyBody) historyBody.innerHTML = "";
-                    
-                    let allItems = [];
-                    operationalNotifs = []; // Clear notifications to rebuild
-
+                    let allItems = []; operationalNotifs = []; 
                     donSnap.forEach(doc => { allItems.push({ type: 'Donation', data: doc.data(), date: doc.data().createdAt ? doc.data().createdAt.seconds : 0 }); });
                     reqSnap.forEach(doc => { 
                         const d = doc.data();
                         allItems.push({ type: 'Request', data: d, date: d.createdAt ? d.createdAt.seconds : 0 }); 
-                        
-                        // Check for Notification (Fulfilled Request)
                         if (d.status === 'Fulfilled') {
-                            operationalNotifs.push({
-                                type: 'fulfilled',
-                                title: 'Request Accepted',
-                                message: `${d.restaurantName || 'A restaurant'} accepted your request for ${d.itemNeeded}`,
-                                time: d.fulfilledAt ? new Date(d.fulfilledAt.seconds * 1000) : new Date()
-                            });
+                            operationalNotifs.push({ type: 'fulfilled', title: 'Request Accepted', message: `${d.restaurantName || 'A restaurant'} accepted your request for ${d.itemNeeded}`, time: d.fulfilledAt ? new Date(d.fulfilledAt.seconds * 1000) : new Date() });
                         }
                     });
-                    
-                    // Update Notifications UI
                     renderAllNotifs();
-
                     allItems.sort((a, b) => b.date - a.date);
                     totalReceived = 0; let count = 0;
                     if (allItems.length === 0) { if (recentList) recentList.innerHTML = "<p class='text-center text-gray-400 py-4'>No history yet.</p>"; if (historyBody) historyBody.innerHTML = "<tr><td colspan='6' class='text-center p-4 text-gray-400'>No history found.</td></tr>"; return; }
@@ -769,7 +689,6 @@
         function openReportModal(donationId) { reportDonationId = donationId; document.getElementById('report-reason-text').value = ''; const modal = document.getElementById('report-modal'); const content = document.getElementById('report-modal-content'); modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10); }
         function closeReportModal() { const modal = document.getElementById('report-modal'); const content = document.getElementById('report-modal-content'); modal.classList.add('opacity-0'); content.classList.remove('scale-100'); content.classList.add('scale-95'); setTimeout(() => { modal.classList.add('hidden'); reportDonationId = null; }, 300); }
 
-        // NEW: Initiate Profile Save
         function initiateSaveProfile(e) {
             e.preventDefault();
             const name = document.getElementById('detail-name').value;
@@ -787,6 +706,9 @@
             try { await db.collection('donations').doc(reportDonationId).update({ status: 'Issue', reportReason: reason, reportedAt: firebase.firestore.FieldValue.serverTimestamp() }); showToast("Report submitted."); closeReportModal(); } catch(e) { console.error(e); showToast("Error: " + e.message, 'error'); } finally { btn.innerHTML = originalText; btn.disabled = false; }
         }
 
+        // ============================================
+        //  UPDATED EXECUTE ACTION FOR FCM (CORRECTED)
+        // ============================================
         async function executeAction() {
             if (!pendingAction) return;
             closeConfirmModal();
@@ -815,12 +737,14 @@
                         status: 'Claimed', claimedBy: currentUser.uid, orphanageName: userData.name, orphanagePhone: userData.phone, orphanageAddress: userData.address, claimedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
+                    // [UPDATED] Send restaurantId so they get a Push Notification
                     await fetch(`${API_BASE}/api/claim-food`, {
                         method: "POST", headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
                             food: { name: donationData.foodName, quantity: donationData.servings },
                             restaurant: { name: donationData.restaurantName, email: donationData.restaurantEmail, phone: donationData.restaurantPhone, address: donationData.restaurantAddress, location: donationData.location },
-                            orphanage: { name: userData.name, email: currentUser.email, phone: userData.phone, address: userData.address, location: userData.location }
+                            orphanage: { name: userData.name, email: currentUser.email, phone: userData.phone, address: userData.address, location: userData.location },
+                            restaurantId: donationData.restaurantId // <--- CRITICAL FCM ADDITION
                         })
                     });
                     showToast("Donation claimed! Contact details sent by email 📧"); switchTab('overview');
@@ -833,12 +757,14 @@
 
                     await donationRef.update({ status: 'Completed', completedAt: firebase.firestore.FieldValue.serverTimestamp() });
 
+                    // [UPDATED] Send restaurantId so they get a Push Notification
                     await fetch(`${API_BASE}/api/confirm-receipt`, {
                         method: "POST", headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
                             food: { name: donationData.foodName, quantity: donationData.servings },
                             restaurant: { name: donationData.restaurantName, email: donationData.restaurantEmail },
-                            orphanage: { name: userData.name, email: currentUser.email }
+                            orphanage: { name: userData.name, email: currentUser.email },
+                            restaurantId: donationData.restaurantId // <--- CRITICAL FCM ADDITION
                         })
                     });
                     showToast("Order completed! Confirmation email sent 📧");
@@ -886,7 +812,6 @@
 
         let myChart; function updateChart(total) { const ctxElem = document.getElementById('motivationChart'); if (!ctxElem) return; const ctx = ctxElem.getContext('2d'); const avg = 500; if(myChart) myChart.destroy(); myChart = new Chart(ctx, { type: 'bar', data: { labels: ['City Avg.', 'You'], datasets: [{ label: 'Meals Received', data: [avg, total], backgroundColor: ['#E5E7EB', '#10B981'], borderRadius: 6, barThickness: 50 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false, grid: { display: false } }, x: { grid: { display: false } } } } }); }
         
-        // document.addEventListener('DOMContentLoaded', () => { switchTab('overview'); }); // Handled by fixed tab logic
         async function fetchAddressFromLatLng(lat, lng) {
           try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
