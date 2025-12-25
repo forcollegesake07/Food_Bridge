@@ -1,10 +1,26 @@
 const express = require("express");
 const cors = require("cors");
 const Brevo = require("@getbrevo/brevo");
+const admin = require("firebase-admin"); // [NEW] Import Firebase
+const path = require("path");
 
+/* ============================
+   FIREBASE SETUP [NEW]
+   Make sure 'service-account.json' is in the same folder
+============================ */
+try {
+  const serviceAccount = require("./service-account.json");
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+  console.log("✅ Firebase Admin Initialized");
+} catch (error) {
+  console.error("❌ Firebase Init Failed (Check service-account.json):", error.message);
+}
+
+const db = admin.firestore();
 const app = express();
 const PORT = process.env.PORT || 10000;
-const path = require("path");
 
 /* ============================
    MIDDLEWARE
@@ -18,6 +34,55 @@ app.use(
   })
 );
 console.log("BREVO KEY EXISTS:", !!process.env.BREVO_API_KEY);
+
+/* ============================
+   HELPER: PUSH NOTIFICATIONS [NEW]
+============================ */
+// 1. Send to a specific user (e.g., Restaurant)
+async function sendPushNotification(userId, title, body) {
+  try {
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (userDoc.exists && userDoc.data().fcmToken) {
+      const message = {
+        token: userDoc.data().fcmToken,
+        notification: { title, body }
+      };
+      await admin.messaging().send(message);
+      console.log(`📲 Notification sent to user: ${userId}`);
+    } else {
+      console.log(`⚠️ No FCM Token found for user: ${userId}`);
+    }
+  } catch (error) {
+    console.error("❌ Notification Error:", error.message);
+  }
+}
+
+// 2. Broadcast to all Orphanages
+async function broadcastToOrphanages(title, body) {
+  try {
+    // Find all users with role 'orphanage'
+    const snapshot = await db.collection("users").where("role", "==", "orphanage").get();
+    const tokens = [];
+    
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.fcmToken) tokens.push(data.fcmToken);
+    });
+
+    if (tokens.length > 0) {
+      // Send to multiple tokens
+      await admin.messaging().sendEachForMulticast({
+        tokens: tokens,
+        notification: { title, body }
+      });
+      console.log(`📢 Broadcast sent to ${tokens.length} orphanages`);
+    } else {
+      console.log("⚠️ No orphanages with registered tokens found.");
+    }
+  } catch (error) {
+    console.error("❌ Broadcast Error:", error.message);
+  }
+}
 
 /* ============================
    BREVO EMAIL SENDER (STABLE)
@@ -40,16 +105,38 @@ async function sendTemplateEmail({ to, templateId, params }) {
 }
 
 /* ============================
+   API: NOTIFY NEW DONATION [NEW]
+   Called by Restaurant Dashboard
+============================ */
+app.post("/api/notify-donation", async (req, res) => {
+  try {
+    const { foodName, restaurantName } = req.body;
+    
+    await broadcastToOrphanages(
+      "Food Available 🍲", 
+      `${restaurantName} just donated ${foodName}. Tap to claim!`
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Broadcast Route Error:", err);
+    res.status(500).json({ error: "Notification failed" });
+  }
+});
+
+/* ============================
    API: CLAIM FOOD
 ============================ */
 app.post("/api/claim-food", async (req, res) => {
   try {
-    const { restaurant, orphanage, food } = req.body;
+    // [UPDATED] Added restaurantId to destructure
+    const { restaurant, orphanage, food, restaurantId } = req.body;
 
     if (!restaurant || !orphanage || !food) {
       return res.status(400).json({ error: "Invalid request data" });
     }
 
+    // 1. Send Email (Existing Logic)
     await sendTemplateEmail({
       to: [
         { email: restaurant.email, name: restaurant.name },
@@ -57,37 +144,48 @@ app.post("/api/claim-food", async (req, res) => {
       ],
       templateId: 1,
       params: {
-  food_name: food.name,
-  food_quantity: food.quantity,
+        food_name: food.name,
+        food_quantity: food.quantity,
 
-  restaurant_name: restaurant.name,
-  restaurant_phone: restaurant.phone,
-  restaurant_address: restaurant.address,
-  restaurant_lat: restaurant.location?.lat,
-  restaurant_lng: restaurant.location?.lng,
+        restaurant_name: restaurant.name,
+        restaurant_phone: restaurant.phone,
+        restaurant_address: restaurant.address,
+        restaurant_lat: restaurant.location?.lat,
+        restaurant_lng: restaurant.location?.lng,
 
-  orphanage_name: orphanage.name,
-  orphanage_phone: orphanage.phone,
-  orphanage_address: orphanage.address,
-  orphanage_lat: orphanage.location?.lat,
-  orphanage_lng: orphanage.location?.lng
-}
-
+        orphanage_name: orphanage.name,
+        orphanage_phone: orphanage.phone,
+        orphanage_address: orphanage.address,
+        orphanage_lat: orphanage.location?.lat,
+        orphanage_lng: orphanage.location?.lng
+      }
     });
+
+    // 2. [NEW] Send Push Notification to Restaurant
+    if (restaurantId) {
+       await sendPushNotification(
+         restaurantId,
+         "Food Claimed! ✅",
+         `${orphanage.name} has claimed your ${food.name}. Check your email for details.`
+       );
+    }
 
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ BREVO ERROR:", err.response?.body || err);
-    res.status(500).json({ error: "Email failed" });
+    console.error("❌ CLAIM API ERROR:", err.response?.body || err);
+    res.status(500).json({ error: "Email/Notification failed" });
   }
 });
+
 /* ============================
    API: CONFIRM RECEIPT
 ============================ */
 app.post("/api/confirm-receipt", async (req, res) => {
   try {
-    const { restaurant, orphanage, food } = req.body;
+    // [UPDATED] Added restaurantId to destructure
+    const { restaurant, orphanage, food, restaurantId } = req.body;
 
+    // 1. Send Email (Existing Logic)
     await sendTemplateEmail({
       to: [
         { email: restaurant.email, name: restaurant.name },
@@ -97,15 +195,24 @@ app.post("/api/confirm-receipt", async (req, res) => {
       params: {
         food_name: food.name,
         food_quantity: food.quantity,
-         restaurant_name: restaurant.name,
+        restaurant_name: restaurant.name,
         orphanage_name: orphanage.name
       }
     });
 
+    // 2. [NEW] Send Push Notification to Restaurant
+    if (restaurantId) {
+        await sendPushNotification(
+          restaurantId,
+          "Receipt Confirmed 🏁",
+          `${orphanage.name} confirmed pickup of ${food.name}. Transaction complete.`
+        );
+     }
+
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ BREVO ERROR:", err.response?.body || err);
-    res.status(500).json({ error: "Email failed" });
+    console.error("❌ CONFIRM API ERROR:", err.response?.body || err);
+    res.status(500).json({ error: "Email/Notification failed" });
   }
 });
 
