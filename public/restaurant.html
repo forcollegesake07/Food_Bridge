@@ -460,7 +460,29 @@
             switchTab(initialTab, true);
         });
         // ============================================================
+        window.updateFCMToken = async function(token) {
+        if(currentUser) {
+            // Save token to Firestore User Profile
+            await db.collection('users').doc(currentUser.uid).update({ fcmToken: token });
+            console.log("FCM Token Updated via Android");
+        }
+    }
 
+    // 2. UPDATE initiateDonation FUNCTION (Send Notification)
+    async function executeAction() {
+        // ... existing donate logic ...
+        if (pendingAction.type === 'donate') {
+             // ... db.collection('donations').add code ...
+
+             // CALL BACKEND TO NOTIFY ORPHANAGES
+             fetch("https://your-backend-url.com/api/notify-donation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    foodName: name, 
+                    restaurantName: userData.name 
+                })
+             });
         // --- MAP LOGIC ---
         function initMap() {
             if (map) { map.invalidateSize(); return; } 
