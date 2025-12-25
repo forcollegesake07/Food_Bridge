@@ -1,26 +1,39 @@
 const express = require("express");
 const cors = require("cors");
 const Brevo = require("@getbrevo/brevo");
-const admin = require("firebase-admin"); // [NEW] Import Firebase
+const admin = require("firebase-admin"); 
 const path = require("path");
+const fs = require("fs"); // Used to check file existence
 
-/* ============================
-   FIREBASE SETUP [NEW]
-   Make sure 'service-account.json' is in the same folder
-============================ */
-try {
-  const serviceAccount = require("./service-account.json");
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
-  console.log("✅ Firebase Admin Initialized");
-} catch (error) {
-  console.error("❌ Firebase Init Failed (Check service-account.json):", error.message);
-}
-
-const db = admin.firestore();
 const app = express();
 const PORT = process.env.PORT || 10000;
+
+/* ============================
+   FIREBASE SETUP (ROBUST)
+   Prevents server crash if key is missing
+============================ */
+let db; // Define db globally so we can check if it exists later
+
+try {
+  // Check if the key file exists before trying to load it
+  if (fs.existsSync("./service-account.json")) {
+    const serviceAccount = require("./service-account.json");
+    
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    
+    db = admin.firestore(); // Initialize DB only if connection succeeds
+    console.log("✅ Firebase Admin Initialized Successfully");
+  } else {
+    throw new Error("service-account.json file not found.");
+  }
+} catch (error) {
+  console.error("❌ CRITICAL ERROR: Firebase Failed to Initialize.");
+  console.error("Reason:", error.message);
+  console.error("👉 ACTION REQUIRED: Add 'service-account.json' to Render 'Secret Files'.");
+  // We do NOT stop the server here. We let it run without Notifications.
+}
 
 /* ============================
    MIDDLEWARE
@@ -36,10 +49,12 @@ app.use(
 console.log("BREVO KEY EXISTS:", !!process.env.BREVO_API_KEY);
 
 /* ============================
-   HELPER: PUSH NOTIFICATIONS [NEW]
+   HELPER: PUSH NOTIFICATIONS
 ============================ */
 // 1. Send to a specific user (e.g., Restaurant)
 async function sendPushNotification(userId, title, body) {
+  if (!db) { console.log("⚠️ DB not connected, skipping notification."); return; }
+
   try {
     const userDoc = await db.collection("users").doc(userId).get();
     if (userDoc.exists && userDoc.data().fcmToken) {
@@ -59,8 +74,9 @@ async function sendPushNotification(userId, title, body) {
 
 // 2. Broadcast to all Orphanages
 async function broadcastToOrphanages(title, body) {
+  if (!db) { console.log("⚠️ DB not connected, skipping broadcast."); return; }
+
   try {
-    // Find all users with role 'orphanage'
     const snapshot = await db.collection("users").where("role", "==", "orphanage").get();
     const tokens = [];
     
@@ -70,7 +86,6 @@ async function broadcastToOrphanages(title, body) {
     });
 
     if (tokens.length > 0) {
-      // Send to multiple tokens
       await admin.messaging().sendEachForMulticast({
         tokens: tokens,
         notification: { title, body }
@@ -85,7 +100,7 @@ async function broadcastToOrphanages(title, body) {
 }
 
 /* ============================
-   BREVO EMAIL SENDER (STABLE)
+   BREVO EMAIL SENDER
 ============================ */
 async function sendTemplateEmail({ to, templateId, params }) {
   const api = new Brevo.TransactionalEmailsApi();
@@ -105,8 +120,7 @@ async function sendTemplateEmail({ to, templateId, params }) {
 }
 
 /* ============================
-   API: NOTIFY NEW DONATION [NEW]
-   Called by Restaurant Dashboard
+   API: NOTIFY NEW DONATION
 ============================ */
 app.post("/api/notify-donation", async (req, res) => {
   try {
@@ -129,14 +143,13 @@ app.post("/api/notify-donation", async (req, res) => {
 ============================ */
 app.post("/api/claim-food", async (req, res) => {
   try {
-    // [UPDATED] Added restaurantId to destructure
     const { restaurant, orphanage, food, restaurantId } = req.body;
 
     if (!restaurant || !orphanage || !food) {
       return res.status(400).json({ error: "Invalid request data" });
     }
 
-    // 1. Send Email (Existing Logic)
+    // 1. Send Email
     await sendTemplateEmail({
       to: [
         { email: restaurant.email, name: restaurant.name },
@@ -146,13 +159,11 @@ app.post("/api/claim-food", async (req, res) => {
       params: {
         food_name: food.name,
         food_quantity: food.quantity,
-
         restaurant_name: restaurant.name,
         restaurant_phone: restaurant.phone,
         restaurant_address: restaurant.address,
         restaurant_lat: restaurant.location?.lat,
         restaurant_lng: restaurant.location?.lng,
-
         orphanage_name: orphanage.name,
         orphanage_phone: orphanage.phone,
         orphanage_address: orphanage.address,
@@ -161,7 +172,7 @@ app.post("/api/claim-food", async (req, res) => {
       }
     });
 
-    // 2. [NEW] Send Push Notification to Restaurant
+    // 2. Send Push Notification
     if (restaurantId) {
        await sendPushNotification(
          restaurantId,
@@ -182,10 +193,9 @@ app.post("/api/claim-food", async (req, res) => {
 ============================ */
 app.post("/api/confirm-receipt", async (req, res) => {
   try {
-    // [UPDATED] Added restaurantId to destructure
     const { restaurant, orphanage, food, restaurantId } = req.body;
 
-    // 1. Send Email (Existing Logic)
+    // 1. Send Email
     await sendTemplateEmail({
       to: [
         { email: restaurant.email, name: restaurant.name },
@@ -200,7 +210,7 @@ app.post("/api/confirm-receipt", async (req, res) => {
       }
     });
 
-    // 2. [NEW] Send Push Notification to Restaurant
+    // 2. Send Push Notification
     if (restaurantId) {
         await sendPushNotification(
           restaurantId,
