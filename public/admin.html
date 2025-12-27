@@ -40,6 +40,12 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased overflow-hidden h-screen flex">
 
+    <!-- Loading Overlay -->
+    <div id="auth-loading" class="fixed inset-0 z-[60] bg-white flex flex-col items-center justify-center transition-opacity duration-300">
+        <div class="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+        <h2 class="text-xl font-bold text-slate-700 animate-pulse">Verifying Access...</h2>
+    </div>
+
     <!-- SIDEBAR -->
     <aside class="w-64 bg-white border-r border-slate-200 h-full flex-col hidden md:flex z-20 shadow-xl">
         <div class="p-6 border-b border-slate-100 flex items-center gap-3">
@@ -67,9 +73,6 @@
             <p class="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Management</p>
             <a href="#" onclick="showSection('broadcast')" id="nav-broadcast" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium">
                 <i class="fa-solid fa-bullhorn w-5"></i> Broadcast
-            </a>
-             <a href="#" onclick="showSection('settings')" id="nav-settings" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium">
-                <i class="fa-solid fa-cog w-5"></i> Settings
             </a>
         </nav>
 
@@ -218,6 +221,7 @@
                             <thead class="bg-slate-50 text-slate-700 font-semibold uppercase text-xs">
                                 <tr>
                                     <th class="px-6 py-4">Date</th>
+                                    <th class="px-6 py-4">Time</th>
                                     <th class="px-6 py-4">Type</th>
                                     <th class="px-6 py-4">Details</th>
                                     <th class="px-6 py-4">Status</th>
@@ -235,7 +239,7 @@
                     <h3 class="font-bold text-lg text-slate-700 mb-4">Reported Issues</h3>
                     <div id="reports-list" class="space-y-4">
                         <!-- JS populated -->
-                        <div class="text-center py-10 text-slate-400">No active issues found.</div>
+                        <div class="text-center py-10 text-slate-400">Loading reports...</div>
                     </div>
                 </div>
             </section>
@@ -253,6 +257,21 @@
                     
                     <div class="space-y-4">
                         <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Target Audience</label>
+                            <select id="broadcast-target" onchange="toggleBroadcastInput()" class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="all">All Users</option>
+                                <option value="restaurant">Restaurants Only</option>
+                                <option value="orphanage">Orphanages Only</option>
+                                <option value="specific">Specific User ID</option>
+                            </select>
+                        </div>
+
+                        <div id="broadcast-userid-container" class="hidden">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">User ID</label>
+                            <input type="text" id="broadcast-userid" class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Enter specific User ID">
+                        </div>
+
+                        <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Message Title</label>
                             <input type="text" id="broadcast-title" class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., System Maintenance">
                         </div>
@@ -266,16 +285,25 @@
                     </div>
                 </div>
             </section>
-
-             <!-- 6. SETTINGS SECTION -->
-             <section id="settings" class="hidden animate-fade-in space-y-6">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 max-w-2xl mx-auto">
-                    <h3 class="font-bold text-lg text-slate-700 mb-4">Admin Settings</h3>
-                    <p class="text-slate-500">Settings functionality coming soon.</p>
-                </div>
-            </section>
         </div>
     </main>
+
+    <!-- CONFIRMATION MODAL -->
+    <div id="confirm-modal" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full transform scale-95 transition-all duration-300">
+            <div class="text-center">
+                <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4 text-blue-600 text-xl">
+                    <i class="fa-solid fa-circle-question"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2" id="confirm-title">Confirm Action</h3>
+                <p class="text-sm text-gray-500 mb-6" id="confirm-message">Are you sure you want to proceed?</p>
+                <div class="flex gap-3">
+                    <button onclick="closeConfirmModal()" class="flex-1 py-2 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50">Cancel</button>
+                    <button id="confirm-btn-action" class="flex-1 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 shadow-md shadow-blue-200">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- USER DETAILS MODAL -->
     <div id="user-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
@@ -293,7 +321,6 @@
                 </div>
                 <h3 class="text-2xl font-bold text-gray-900" id="modal-user-name">Loading...</h3>
                 <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mt-2 bg-gray-100 text-gray-600" id="modal-user-role">User</span>
-                <!-- Added ID Display Here -->
                 <p class="text-xs text-gray-400 mt-2 font-mono select-all" id="modal-user-id">ID: ...</p>
             </div>
 
@@ -357,11 +384,22 @@
         // AUTH CHECK
         auth.onAuthStateChanged(async user => {
             if (user) {
-                const doc = await db.collection('users').doc(user.uid).get();
-                if (doc.exists && doc.data().role === 'admin' && !doc.data().isDisable) {
-                    initDashboard();
-                } else {
-                    window.location.href = 'index.html';
+                try {
+                    const doc = await db.collection('users').doc(user.uid).get();
+                    if (doc.exists && doc.data().role === 'admin' && !doc.data().isDisable) {
+                        document.getElementById('auth-loading').classList.add('opacity-0');
+                        setTimeout(() => document.getElementById('auth-loading').classList.add('hidden'), 300);
+                        initDashboard();
+                    } else {
+                        await auth.signOut();
+                        alert("Access Denied: You do not have administrator privileges or your account is disabled.");
+                        window.location.href = 'index.html';
+                    }
+                } catch (error) {
+                    console.error("Auth Error:", error);
+                    alert("An error occurred while verifying your credentials.");
+                    await auth.signOut();
+                    window.location.href = 'login.html';
                 }
             } else {
                 window.location.href = 'login.html';
@@ -385,8 +423,7 @@
                 'users': 'User Management',
                 'activity': 'Activity Logs',
                 'reports': 'Issues & Reports',
-                'broadcast': 'System Broadcast',
-                'settings': 'Admin Settings'
+                'broadcast': 'System Broadcast'
             };
             document.getElementById('page-title').innerText = titles[id];
         }
@@ -408,7 +445,14 @@
             let issuesCount = 0;
             donations.forEach(doc => {
                 const data = doc.data();
-                if(data.quantity) mealsCount += parseInt(data.quantity);
+                // FIX: Better number parsing for Quantity
+                let qty = 0;
+                if (data.quantity) {
+                    // Extract number from string like "50 meals" or use direct number
+                    const match = String(data.quantity).match(/\d+/);
+                    if (match) qty = parseInt(match[0]);
+                }
+                mealsCount += qty;
                 if(data.status === 'Issue') issuesCount++;
             });
 
@@ -434,8 +478,7 @@
             const donations = await db.collection('donations').get();
             const users = await db.collection('users').get();
             
-            // Process Data
-            let statusData = { 'Pending': 0, 'Accepted': 0, 'Completed': 0, 'Issue': 0 };
+            let statusData = { 'Pending': 0, 'Accepted': 0, 'Completed': 0, 'Issue': 0, 'Resolved': 0 };
             donations.forEach(doc => {
                 const s = doc.data().status || 'Pending';
                 if(statusData[s] !== undefined) statusData[s]++;
@@ -447,14 +490,13 @@
                 if(roleData[r] !== undefined) roleData[r]++;
             });
 
-            // Activity Chart
             new Chart(document.getElementById('activityChart'), {
                 type: 'line',
                 data: {
-                    labels: ['Pending', 'Accepted', 'Completed', 'Issues'],
+                    labels: ['Pending', 'Accepted', 'Completed', 'Issues', 'Resolved'],
                     datasets: [{
                         label: 'Donations',
-                        data: [statusData.Pending, statusData.Accepted, statusData.Completed, statusData.Issue],
+                        data: [statusData.Pending, statusData.Accepted, statusData.Completed, statusData.Issue, statusData.Resolved],
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         fill: true,
@@ -464,7 +506,6 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            // User Chart
             new Chart(document.getElementById('userChart'), {
                 type: 'doughnut',
                 data: {
@@ -517,7 +558,34 @@
             renderUsers(filtered);
         }
 
-        // --- MODAL FUNCTIONS (FIXED) ---
+        // --- CUSTOM CONFIRMATION MODAL ---
+        let confirmCallback = null;
+        function openConfirmModal(title, message, callback) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            confirmCallback = callback;
+            
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('div').classList.remove('scale-95'); modal.querySelector('div').classList.add('scale-100'); }, 10);
+            
+            document.getElementById('confirm-btn-action').onclick = function() {
+                if (confirmCallback) confirmCallback();
+                closeConfirmModal();
+            };
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.remove('scale-100');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            confirmCallback = null;
+        }
+
+
+        // --- USER MODAL FUNCTIONS ---
 
         async function openUserModal(userId) {
             if(!userId) return;
@@ -525,18 +593,14 @@
             const modal = document.getElementById('user-modal');
             const content = document.getElementById('user-modal-content');
             
-            // Reset text
             document.getElementById('modal-user-name').innerText = 'Loading...';
-            document.getElementById('modal-user-id').innerText = 'ID: ...'; // Reset ID
+            document.getElementById('modal-user-id').innerText = 'ID: ...';
             
-            // Hide buttons initially
             const btnDisable = document.getElementById('btn-disable-user');
             const btnVerify = document.getElementById('btn-verify-user');
-            
             btnDisable.className = 'hidden'; 
             btnVerify.className = 'hidden';
 
-            // Show Modal
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10);
 
@@ -548,7 +612,6 @@
                     const isVerified = !!data.isVerified;
 
                     document.getElementById('modal-user-name').innerText = data.name || 'Unknown User';
-                    // Populate User ID
                     document.getElementById('modal-user-id').innerText = 'ID: ' + userId;
                     document.getElementById('modal-user-email').innerText = data.email || 'No Email'; 
                     document.getElementById('modal-user-phone').innerText = data.phone || 'N/A';
@@ -565,32 +628,38 @@
                     if(isVerified) badge.classList.remove('hidden');
                     else badge.classList.add('hidden');
 
-                    // Setup Disable Button
+                    // Setup Disable Button with Custom Modal
                     btnDisable.classList.remove('hidden');
-                    // FIX: Re-enable the button so it's not stuck
                     btnDisable.disabled = false;
                     if (isDisabled) {
                         btnDisable.innerHTML = '<i class="fa-solid fa-lock-open"></i> Enable';
                         btnDisable.className = 'py-3.5 font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 bg-green-500 text-white hover:bg-green-600 touch-manipulation w-full';
-                        btnDisable.onclick = function() { toggleUserStatus(userId, false); };
+                        btnDisable.onclick = function() { 
+                            openConfirmModal("Enable Account", "Are you sure you want to re-enable this user account?", () => toggleUserStatus(userId, false)); 
+                        };
                     } else {
                         btnDisable.innerHTML = '<i class="fa-solid fa-ban"></i> Disable';
                         btnDisable.className = 'py-3.5 font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 bg-red-500 text-white hover:bg-red-600 touch-manipulation w-full';
-                        btnDisable.onclick = function() { toggleUserStatus(userId, true); };
+                        btnDisable.onclick = function() { 
+                            openConfirmModal("Disable Account", "This user will lose access to the platform. Are you sure?", () => toggleUserStatus(userId, true)); 
+                        };
                     }
 
-                    // Setup Verify Button
+                    // Setup Verify Button with Custom Modal
                     btnVerify.classList.remove('hidden');
-                    // FIX: Re-enable the button so it's not stuck
                     btnVerify.disabled = false;
                     if (isVerified) {
                         btnVerify.innerHTML = '<i class="fa-solid fa-xmark"></i> Un-Verify';
                         btnVerify.className = 'py-3.5 font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 text-gray-600 bg-gray-100 hover:bg-gray-200 border-gray-200 border w-full';
-                        btnVerify.onclick = function() { toggleVerification(userId, false); };
+                        btnVerify.onclick = function() { 
+                            openConfirmModal("Remove Verification", "Are you sure you want to remove the verified badge?", () => toggleVerification(userId, false)); 
+                        };
                     } else {
                         btnVerify.innerHTML = '<i class="fa-solid fa-check"></i> Verify';
                         btnVerify.className = 'py-3.5 font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 text-blue-600 bg-blue-50 hover:bg-blue-100 border-blue-200 border w-full';
-                        btnVerify.onclick = function() { toggleVerification(userId, true); };
+                        btnVerify.onclick = function() { 
+                            openConfirmModal("Verify User", "This will grant the user a verified badge. Confirm?", () => toggleVerification(userId, true)); 
+                        };
                     }
 
                 } else { document.getElementById('modal-user-name').innerText = 'User not found'; }
@@ -608,24 +677,21 @@
         }
 
         async function toggleUserStatus(uid, disable) {
-            if(!confirm(disable ? "Disable this account?" : "Enable this account?")) return;
             const btn = document.getElementById('btn-disable-user');
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
             try {
                 await db.collection('users').doc(uid).update({ isDisable: disable });
-                await loadUsers(); // Refresh list
-                openUserModal(uid); // Refresh modal
+                await loadUsers();
+                openUserModal(uid);
             } catch(e) { 
                 console.error(e); 
                 alert("Action failed"); 
-                // Re-enable if error
                 btn.disabled = false;
             }
         }
 
         async function toggleVerification(uid, verify) {
-            if(!confirm(verify ? "Verify this account?" : "Remove verification?")) return;
             const btn = document.getElementById('btn-verify-user');
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
@@ -643,74 +709,174 @@
 
         // 3. ACTIVITY LOG
         async function loadActivity() {
+            // Updated to fetch expanded details
             const donations = await db.collection('donations').orderBy('createdAt', 'desc').limit(20).get();
             const tbody = document.getElementById('activity-table-body');
             tbody.innerHTML = '';
             
-            donations.forEach(doc => {
+            for (const doc of donations.docs) {
                 const data = doc.data();
-                const date = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                
+                // Format Date & Time
+                let dateStr = 'N/A', timeStr = 'N/A';
+                if (data.createdAt) {
+                    const d = new Date(data.createdAt.seconds * 1000);
+                    dateStr = d.toLocaleDateString();
+                    timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+
+                // Get Donor Details (Address/Phone/Email)
+                let donorDetails = '<span class="text-xs text-gray-400">Loading...</span>';
+                let detailsHtml = '';
+
+                // Try to fetch donor info if donorId exists
+                if (data.donorId) {
+                    // Note: In a production app, we might want to cache these or duplicate data to avoid N+1 queries.
+                    // For admin dashboard with limit(20), this is acceptable.
+                    try {
+                        const userDoc = await db.collection('users').doc(data.donorId).get();
+                        if (userDoc.exists) {
+                            const u = userDoc.data();
+                            detailsHtml = `
+                                <div class="text-xs">
+                                    <div class="font-bold text-slate-700">${data.foodItem || 'Donation'}</div>
+                                    <div class="text-slate-500"><i class="fa-solid fa-envelope w-4"></i> ${u.email || 'N/A'}</div>
+                                    <div class="text-slate-500"><i class="fa-solid fa-phone w-4"></i> ${u.phone || 'N/A'}</div>
+                                    <div class="text-slate-500 truncate w-32" title="${u.address || ''}"><i class="fa-solid fa-location-dot w-4"></i> ${u.address || 'N/A'}</div>
+                                </div>
+                            `;
+                        }
+                    } catch(err) { console.error("Error fetching donor", err); }
+                }
+
+                if (!detailsHtml) {
+                    detailsHtml = `
+                        <div class="text-xs">
+                             <div class="font-bold text-slate-700">${data.foodItem || 'Donation'}</div>
+                             <div class="text-slate-500">Donor info unavailable</div>
+                        </div>
+                    `;
+                }
+
                 tbody.innerHTML += `
-                     <tr class="hover:bg-slate-50 transition">
-                        <td class="px-6 py-4 text-slate-500">${date}</td>
+                     <tr class="hover:bg-slate-50 transition border-b border-slate-50">
+                        <td class="px-6 py-4 text-slate-500 text-sm whitespace-nowrap">${dateStr}</td>
+                        <td class="px-6 py-4 text-slate-500 text-sm whitespace-nowrap">${timeStr}</td>
                         <td class="px-6 py-4 font-medium text-slate-800">Donation</td>
-                        <td class="px-6 py-4 truncate max-w-xs">${data.foodItem || 'Food Donation'}</td>
+                        <td class="px-6 py-4">${detailsHtml}</td>
                         <td class="px-6 py-4"><span class="px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">${data.status || 'Pending'}</span></td>
                     </tr>
                 `;
-            });
+            }
         }
 
         // 4. REPORTS
         async function loadReports() {
-            const issues = await db.collection('donations').where('status', '==', 'Issue').get();
-            const container = document.getElementById('reports-list');
+            // Changed logic to show Active Issues AND History (Resolved)
+            // Note: Requires an index in Firestore if data is large, but for 'in' query on small dataset it works.
+            // If 'in' query fails without index, fallback to just 'Issue' or client-side filtering.
             
-            if(issues.empty) {
-                container.innerHTML = '<div class="text-center py-10 text-slate-400">No active issues found.</div>';
-                return;
-            }
+            try {
+                // Fetch all docs that are either Issues or Resolved issues
+                // We assume 'Resolved' is the status for closed issues.
+                const snapshot = await db.collection('donations')
+                                       .where('status', 'in', ['Issue', 'Resolved'])
+                                       .get();
 
-            container.innerHTML = '';
-            issues.forEach(doc => {
-                const data = doc.data();
-                container.innerHTML += `
-                    <div class="bg-red-50 border border-red-100 rounded-xl p-4 flex justify-between items-center">
-                        <div>
-                            <h4 class="font-bold text-red-800">Issue in Donation #${doc.id.slice(0,5)}</h4>
-                            <p class="text-sm text-red-600 mt-1">Reported by ${data.donorName || 'Unknown'}</p>
+                const container = document.getElementById('reports-list');
+                
+                if(snapshot.empty) {
+                    container.innerHTML = '<div class="text-center py-10 text-slate-400">No reported issues found.</div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                
+                // Sort client side (Issues first)
+                const docs = snapshot.docs.sort((a, b) => {
+                    const sa = a.data().status;
+                    const sb = b.data().status;
+                    if (sa === 'Issue' && sb !== 'Issue') return -1;
+                    if (sa !== 'Issue' && sb === 'Issue') return 1;
+                    return 0;
+                });
+
+                docs.forEach(doc => {
+                    const data = doc.data();
+                    const isResolved = data.status === 'Resolved';
+                    
+                    const bgClass = isResolved ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100';
+                    const textClass = isResolved ? 'text-green-800' : 'text-red-800';
+                    const btnHtml = isResolved 
+                        ? `<span class="px-3 py-1 bg-white text-green-600 rounded-lg text-sm font-bold border border-green-200"><i class="fa-solid fa-check"></i> Resolved</span>`
+                        : `<button onclick="resolveIssue('${doc.id}')" class="bg-white text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-50">Resolve Issue</button>`;
+
+                    container.innerHTML += `
+                        <div class="${bgClass} border rounded-xl p-4 flex justify-between items-center transition-all hover:shadow-sm">
+                            <div>
+                                <h4 class="font-bold ${textClass} flex items-center gap-2">
+                                    ${isResolved ? '' : '<i class="fa-solid fa-triangle-exclamation"></i>'}
+                                    Issue in Donation #${doc.id.slice(0,5)}
+                                </h4>
+                                <p class="text-sm opacity-80 mt-1">Reported by ${data.donorName || 'Unknown'}</p>
+                                <p class="text-xs opacity-60 mt-1">Status: ${data.status}</p>
+                            </div>
+                            <div>${btnHtml}</div>
                         </div>
-                        <button onclick="resolveIssue('${doc.id}')" class="bg-white text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-50">Resolve</button>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            } catch(e) {
+                console.error("Error loading reports", e);
+                document.getElementById('reports-list').innerHTML = '<div class="text-center text-red-400">Error loading reports. Check console.</div>';
+            }
         }
 
         async function resolveIssue(id) {
-            if(!confirm("Mark this issue as resolved (Completed)?")) return;
-            try {
-                await db.collection('donations').doc(id).update({ status: 'Completed' });
-                loadReports();
-                loadStats();
-            } catch(e) { alert("Error resolving issue"); }
+            openConfirmModal("Resolve Issue", "Mark this issue as successfully resolved?", async () => {
+                try {
+                    // Update status to 'Resolved' instead of 'Completed' to keep it in history
+                    await db.collection('donations').doc(id).update({ status: 'Resolved' });
+                    loadReports();
+                    loadStats();
+                } catch(e) { alert("Error resolving issue"); }
+            });
         }
 
         // 5. BROADCAST
+        function toggleBroadcastInput() {
+            const type = document.getElementById('broadcast-target').value;
+            const container = document.getElementById('broadcast-userid-container');
+            if (type === 'specific') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
         async function sendBroadcast() {
+            const targetType = document.getElementById('broadcast-target').value;
+            const targetId = document.getElementById('broadcast-userid').value;
             const title = document.getElementById('broadcast-title').value;
             const msg = document.getElementById('broadcast-msg').value;
-            if(!title || !msg) return alert("Please fill all fields");
+
+            if(!title || !msg) return alert("Please fill title and message");
+            if(targetType === 'specific' && !targetId) return alert("Please enter a User ID");
 
             try {
                 await db.collection('notifications').add({
                     title: title,
                     message: msg,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    type: 'broadcast'
+                    type: 'broadcast',
+                    targetAudience: targetType, // 'all', 'restaurant', 'orphanage', 'specific'
+                    targetUserId: targetType === 'specific' ? targetId : null
                 });
+                
                 alert("Broadcast sent successfully!");
                 document.getElementById('broadcast-title').value = '';
                 document.getElementById('broadcast-msg').value = '';
+                if(targetType === 'specific') document.getElementById('broadcast-userid').value = '';
+                
             } catch(e) {
                 console.error(e);
                 alert("Error sending broadcast");
@@ -719,11 +885,15 @@
         
         // Export CSV
         function exportCSV() {
-             let csvContent = "data:text/csv;charset=utf-8,Date,Type,Details,Status\n";
+             let csvContent = "data:text/csv;charset=utf-8,Date,Time,Type,Details,Status\n";
              const rows = document.querySelectorAll("#activity-table-body tr");
              rows.forEach(row => {
                  let rowData = [];
-                 row.querySelectorAll("td").forEach(cell => rowData.push(cell.innerText));
+                 // Basic text extraction, removing newlines
+                 row.querySelectorAll("td").forEach(cell => {
+                     let text = cell.innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+                     rowData.push(`"${text}"`); // Quote to handle commas
+                 });
                  csvContent += rowData.join(",") + "\n";
              });
              const encodedUri = encodeURI(csvContent);
