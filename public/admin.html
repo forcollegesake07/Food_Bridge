@@ -2,746 +2,965 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - FoodBridge</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        /* Modern Sidebar Styles */
-        .sidebar-link { 
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-        .sidebar-link::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 3px;
-            background: #3b82f6;
-            transform: scaleY(0);
-            transition: transform 0.3s ease;
-            border-radius: 0 4px 4px 0;
-        }
-        .sidebar-link:hover::before { transform: scaleY(1); }
-        .sidebar-link.active { 
-            background: linear-gradient(90deg, #1e40af 0%, #1e3a8a 100%);
-            color: white !important;
-            box-shadow: 0 4px 20px -5px rgba(59, 130, 246, 0.4);
-        }
-        .sidebar-link.active i { color: #60a5fa !important; }
-        
-        /* Glass & Card Effects */
-        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); }
-        .stat-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.1); }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    <!-- Optimized Viewport: Disables user scaling for app-like feel -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Admin Dashboard | FoodBridge</title>
+    <!-- Favicon: Blue Shield/Admin Icon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%233B82F6' d='M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-27.4 153.3-51.4 187.8c-23.7 34.1-53.7 60.5-89.6 86.8c-12.7 9.3-27.2 18-42.3 26.6c-7.2 4.1-15.7 6.1-24.2 5.3c-10.6-.9-20.9-5.1-29.3-12.2c-15.8-13.4-32.9-28-49.8-43.2C84.7 322.9 14.2 249.2 0 139.5c-1.3-26.4 15.3-48.5 37.7-57.5L242.6 2.9C246.8 1 251.4 0 256 0z'/%3E%3C/svg%3E">
 
-        .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
                     colors: {
-                        slate: { 850: '#1e293b', 900: '#0f172a' }
-                    }
+                        brand: {
+                            blue: '#3B82F6', 
+                            dark: '#1E293B',
+                            light: '#EFF6FF' 
+                        }
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.3s ease-out' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } } }
                 }
             }
         }
     </script>
-</head>
-<body class="bg-slate-50 text-slate-800 antialiased overflow-hidden h-screen flex selection:bg-blue-100 selection:text-blue-900">
-
-    <!-- Loading Overlay -->
-    <div id="auth-loading" class="fixed inset-0 z-[60] bg-white flex flex-col items-center justify-center transition-opacity duration-300">
-        <div class="relative">
-            <div class="w-16 h-16 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
-            <div class="absolute inset-0 flex items-center justify-center">
-                <i class="fa-solid fa-bridge text-blue-600 text-xs"></i>
-            </div>
-        </div>
-        <h2 class="text-sm font-bold text-slate-500 mt-4 tracking-wider uppercase animate-pulse">Initializing Dashboard</h2>
-    </div>
-
-    <!-- MODERN DARK SIDEBAR -->
-    <aside class="w-72 bg-slate-900 h-full flex-col hidden md:flex z-20 shadow-2xl relative overflow-hidden">
-        <!-- Decoration -->
-        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-400"></div>
+    <style>
+        /* Mobile Performance Optimizations */
+        * { -webkit-tap-highlight-color: transparent; }
         
-        <div class="p-8 pb-6 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-900/50">
-                <i class="fa-solid fa-bridge"></i>
+        .fixed-bg-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background-image: linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2032&auto=format&fit=crop');
+            background-size: cover; background-position: center;
+            will-change: transform;
+        }
+
+        /* Smooth scrolling for iOS */
+        .smooth-scroll-touch { -webkit-overflow-scrolling: touch; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Prevent elastic bounce on iOS */
+        body { overscroll-behavior-y: none; }
+        
+        /* Prevent text resizing on orientation change */
+        html { -webkit-text-size-adjust: 100%; }
+
+        /* Fix mobile input zoom */
+        input, select, textarea { font-size: 16px; }
+
+        /* Hardware acceleration */
+        #sidebar, .transform-gpu { will-change: transform; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 h-screen flex flex-col md:flex-row overflow-hidden selection:bg-brand-blue selection:text-white">
+
+    <div class="fixed-bg-layer"></div>
+
+    <!-- MOBILE SIDEBAR BACKDROP -->
+    <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm transition-opacity duration-300"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="fixed md:relative w-72 bg-white/95 backdrop-blur-md border-r border-gray-200 flex flex-col z-40 shadow-2xl h-full flex-shrink-0 transition-transform duration-300 transform -translate-x-full md:translate-x-0 smooth-scroll-touch" id="sidebar">
+        <div class="p-6 md:p-8 flex items-center border-b border-gray-100">
+            <div class="bg-brand-blue/10 p-2.5 rounded-xl mr-3 shadow-sm">
+                <i class="fa-solid fa-shield-halved text-brand-blue text-2xl"></i>
             </div>
             <div>
-                <h1 class="text-xl font-bold text-white tracking-tight">FoodBridge</h1>
-                <p class="text-xs text-slate-400 font-medium">Admin Workspace</p>
+                <span class="font-bold text-xl text-brand-dark block leading-none tracking-tight">Food<span class="text-blue-500">Bridge</span></span>
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Admin Panel</span>
             </div>
         </div>
 
-        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
-            <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-2">Analytics</p>
-            
-            <a href="#" onclick="showSection('overview')" id="nav-overview" class="sidebar-link active flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-400 font-medium hover:bg-slate-800 hover:text-white group">
-                <i class="fa-solid fa-chart-pie fa-fw group-hover:scale-110 transition-transform"></i> <span>Overview</span>
-            </a>
-            <a href="#" onclick="showSection('activity')" id="nav-activity" class="sidebar-link flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-400 font-medium hover:bg-slate-800 hover:text-white group">
-                <i class="fa-solid fa-clock-rotate-left fa-fw group-hover:scale-110 transition-transform"></i> <span>Activity Logs</span>
-            </a>
-            
-            <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-6">Management</p>
-
-            <a href="#" onclick="showSection('users')" id="nav-users" class="sidebar-link flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-400 font-medium hover:bg-slate-800 hover:text-white group">
-                <i class="fa-solid fa-users fa-fw group-hover:scale-110 transition-transform"></i> <span>User Database</span>
-            </a>
-            <a href="#" onclick="showSection('reports')" id="nav-reports" class="sidebar-link flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-400 font-medium hover:bg-slate-800 hover:text-white group">
-                <div class="relative">
-                    <i class="fa-solid fa-circle-exclamation fa-fw group-hover:scale-110 transition-transform"></i>
-                    <span id="sidebar-badge-issues" class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full hidden"></span>
-                </div>
-                <span>Issues & Reports</span>
-            </a>
-            <a href="#" onclick="showSection('broadcast')" id="nav-broadcast" class="sidebar-link flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-400 font-medium hover:bg-slate-800 hover:text-white group">
-                <i class="fa-solid fa-bullhorn fa-fw group-hover:scale-110 transition-transform"></i> <span>Broadcast</span>
-            </a>
+        <nav class="flex-grow p-4 md:p-6 space-y-2 md:space-y-3 overflow-y-auto smooth-scroll-touch">
+            <button onclick="switchTab('overview')" id="btn-overview" class="w-full flex items-center px-5 py-3.5 text-sm font-semibold rounded-xl bg-brand-blue text-white shadow-md transition-all active:scale-95 touch-manipulation">
+                <i class="fa-solid fa-chart-line w-6 text-lg mr-3"></i> Overview
+            </button>
+            <button onclick="switchTab('users')" id="btn-users" class="w-full flex items-center px-5 py-3.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all active:scale-95 touch-manipulation">
+                <i class="fa-solid fa-users w-6 text-lg mr-3"></i> Users
+            </button>
+            <button onclick="switchTab('history')" id="btn-history" class="w-full flex items-center px-5 py-3.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all active:scale-95 touch-manipulation">
+                <i class="fa-solid fa-clock-rotate-left w-6 text-lg mr-3"></i> History Log
+            </button>
+            <button onclick="switchTab('reports')" id="btn-reports" class="w-full flex items-center px-5 py-3.5 text-sm font-semibold text-gray-500 hover:bg-red-50 hover:text-red-500 rounded-xl transition-all active:scale-95 touch-manipulation">
+                <i class="fa-solid fa-triangle-exclamation w-6 text-lg mr-3"></i> Reports
+            </button>
+            <!-- NEW FEATURE: BROADCAST -->
+            <button onclick="switchTab('broadcast')" id="btn-broadcast" class="w-full flex items-center px-5 py-3.5 text-sm font-semibold text-gray-500 hover:bg-blue-50 hover:text-blue-500 rounded-xl transition-all active:scale-95 touch-manipulation">
+                <i class="fa-solid fa-tower-broadcast w-6 text-lg mr-3"></i> Broadcast
+            </button>
         </nav>
 
-        <div class="p-4 border-t border-slate-800">
-            <button onclick="logout()" class="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-400 font-medium hover:bg-red-500/10 hover:text-red-300 transition-colors group">
-                <i class="fa-solid fa-right-from-bracket fa-fw group-hover:-translate-x-1 transition-transform"></i> Logout
+        <div class="p-6 border-t border-gray-100 bg-gray-50/50">
+            <div class="flex items-center gap-3 mb-5 px-1">
+                <div class="w-10 h-10 rounded-full bg-brand-dark text-white flex items-center justify-center font-bold shadow-md">A</div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-bold text-gray-800 truncate">Administrator</p>
+                    <p class="text-xs text-gray-500 truncate">System Control</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="w-full flex items-center justify-center px-4 py-3 text-sm font-bold text-red-500 bg-white border border-red-100 rounded-xl hover:bg-red-50 hover:border-red-200 transition-all shadow-sm active:scale-95 touch-manipulation">
+                <i class="fa-solid fa-right-from-bracket mr-2"></i> Log Out
             </button>
         </div>
     </aside>
 
     <!-- MOBILE HEADER -->
-    <div class="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md z-30 flex items-center justify-between px-4 border-b border-slate-200">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-lg">
-                <i class="fa-solid fa-bridge"></i>
-            </div>
-            <span class="font-bold text-lg text-slate-800">FoodBridge</span>
+    <div class="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/95 backdrop-blur shadow-md z-30 flex items-center justify-between px-4 transition-all">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-brand-blue text-xl"></i>
+            <span class="font-bold text-lg text-brand-dark">Food<span class="text-blue-500">Bridge</span></span>
         </div>
-        <button onclick="document.querySelector('aside').classList.toggle('hidden'); document.querySelector('aside').classList.toggle('absolute'); document.querySelector('aside').classList.toggle('h-full');" class="text-slate-600 p-2 rounded-lg hover:bg-slate-100">
+        <button onclick="toggleSidebar()" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition active:bg-gray-200 touch-manipulation">
             <i class="fa-solid fa-bars text-xl"></i>
         </button>
     </div>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 overflow-y-auto h-full w-full bg-slate-50/50 pt-16 md:pt-0 relative">
-        <!-- Header -->
-        <header class="bg-white/80 backdrop-blur-md sticky top-0 z-10 px-8 py-5 border-b border-slate-200/60 flex justify-between items-center">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-800 tracking-tight" id="page-title">Dashboard Overview</h2>
-                <p class="text-sm text-slate-500 font-medium">Welcome back, Administrator</p>
-            </div>
-            <div class="flex items-center gap-4">
-                <button class="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 flex items-center justify-center transition shadow-sm">
-                    <i class="fa-regular fa-bell"></i>
-                </button>
-                <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 flex items-center justify-center font-bold border border-blue-200 shadow-inner">A</div>
-            </div>
-        </header>
-
-        <div class="p-8 max-w-[1600px] mx-auto space-y-8">
-
-            <!-- SECTIONS -->
+    <main class="flex-grow overflow-y-auto p-4 pt-20 md:p-10 relative z-10 w-full smooth-scroll-touch" id="main-scroll-container">
+        
+        <!-- TAB: OVERVIEW -->
+        <div id="tab-overview" class="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in hidden">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md">Dashboard Overview</h1>
             
-            <!-- 1. OVERVIEW SECTION -->
-            <section id="overview" class="space-y-8 animate-fade-in">
-                <!-- Stats Grid - Improved Layout -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-                    <!-- Total Users -->
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 stat-card relative overflow-hidden group">
-                        <div class="absolute right-0 top-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                        <div class="relative z-10">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="p-3 bg-blue-100 rounded-xl text-blue-600"><i class="fa-solid fa-users text-lg"></i></div>
-                                <span class="text-xs font-bold text-green-500 bg-green-50 px-2 py-1 rounded-full">+12%</span>
-                            </div>
-                            <h3 class="text-3xl font-bold text-slate-800 mt-2" id="stat-users">0</h3>
-                            <p class="text-slate-500 text-sm font-medium">Total Users</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Meals Saved -->
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 stat-card relative overflow-hidden group">
-                        <div class="absolute right-0 top-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                        <div class="relative z-10">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="p-3 bg-green-100 rounded-xl text-green-600"><i class="fa-solid fa-bowl-food text-lg"></i></div>
-                            </div>
-                            <h3 class="text-3xl font-bold text-slate-800 mt-2" id="stat-meals">0</h3>
-                            <p class="text-slate-500 text-sm font-medium">Meals Saved</p>
-                        </div>
-                    </div>
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md border-l-4 border-blue-500">
+                    <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Users</p>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-brand-dark" id="stat-users">0</h3>
+                </div>
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md border-l-4 border-green-500">
+                    <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Meals Saved</p>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-brand-dark" id="stat-meals">0</h3>
+                </div>
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md border-l-4 border-orange-500">
+                    <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Pending Reports</p>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-brand-dark" id="stat-reports">0</h3>
+                </div>
+            </div>
 
-                    <!-- Total Donations -->
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 stat-card relative overflow-hidden group">
-                        <div class="absolute right-0 top-0 w-24 h-24 bg-purple-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                        <div class="relative z-10">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="p-3 bg-purple-100 rounded-xl text-purple-600"><i class="fa-solid fa-hand-holding-heart text-lg"></i></div>
-                            </div>
-                            <h3 class="text-3xl font-bold text-slate-800 mt-2" id="stat-donations">0</h3>
-                            <p class="text-slate-500 text-sm font-medium">Total Donations</p>
-                        </div>
+            <!-- Graphs Container -->
+            <div class="space-y-6">
+                <!-- Daily -->
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md">
+                    <h3 class="font-bold text-gray-800 text-lg mb-4">Daily Activity (Last 7 Days)</h3>
+                    <div class="h-64 w-full relative"><canvas id="dailyChart"></canvas></div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Monthly -->
+                    <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md">
+                        <h3 class="font-bold text-gray-800 text-lg mb-4">Monthly Trends (Last 12 Months)</h3>
+                        <div class="h-64 w-full relative"><canvas id="monthlyChart"></canvas></div>
                     </div>
-
-                    <!-- CO2 Impact (NEW) -->
-                    <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-5 rounded-2xl shadow-lg shadow-emerald-200 stat-card text-white relative overflow-hidden">
-                        <div class="absolute right-0 bottom-0 text-white/10 text-6xl -mb-2 -mr-2"><i class="fa-solid fa-leaf"></i></div>
-                        <div class="relative z-10">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="p-3 bg-white/20 backdrop-blur-sm rounded-xl text-white"><i class="fa-solid fa-leaf text-lg"></i></div>
-                            </div>
-                            <h3 class="text-3xl font-bold mt-2" id="stat-co2">0 <span class="text-lg font-medium opacity-80">kg</span></h3>
-                            <p class="text-emerald-100 text-sm font-medium">Est. CO2 Saved</p>
-                        </div>
-                    </div>
-
-                    <!-- Active Issues -->
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 stat-card relative overflow-hidden group">
-                        <div class="absolute right-0 top-0 w-24 h-24 bg-red-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                        <div class="relative z-10">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="p-3 bg-red-100 rounded-xl text-red-600"><i class="fa-solid fa-triangle-exclamation text-lg"></i></div>
-                            </div>
-                            <h3 class="text-3xl font-bold text-slate-800 mt-2" id="stat-issues">0</h3>
-                            <p class="text-slate-500 text-sm font-medium">Active Issues</p>
-                        </div>
+                    <!-- Lifetime -->
+                    <div class="bg-white rounded-2xl p-5 md:p-6 shadow-md">
+                        <h3 class="font-bold text-gray-800 text-lg mb-4">Lifetime Growth (Yearly)</h3>
+                        <div class="h-64 w-full relative"><canvas id="lifetimeChart"></canvas></div>
                     </div>
                 </div>
-
-                <!-- Charts Area -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="font-bold text-lg text-slate-800">Donation Trends</h3>
-                            <select class="text-sm border border-slate-200 rounded-lg px-3 py-1 text-slate-600 focus:outline-none">
-                                <option>Last 7 Days</option>
-                                <option>Last Month</option>
-                            </select>
-                        </div>
-                        <div class="h-72 relative w-full"><canvas id="activityChart"></canvas></div>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                        <h3 class="font-bold text-lg mb-6 text-slate-800">User Demographics</h3>
-                        <div class="h-64 relative w-full flex items-center justify-center"><canvas id="userChart"></canvas></div>
-                        <div class="mt-4 flex justify-center gap-4 text-xs text-slate-500">
-                            <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Restaurants</div>
-                            <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Orphanages</div>
-                            <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Volunteers</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 2. USERS SECTION -->
-            <section id="users" class="hidden animate-fade-in space-y-6">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between gap-4 items-center bg-slate-50/50">
-                        <h3 class="font-bold text-lg text-slate-800">User Database</h3>
-                        <div class="relative w-full md:w-auto">
-                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" id="user-search" onkeyup="filterUsers()" placeholder="Search by name, email..." class="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 w-full md:w-80 text-sm shadow-sm transition-all focus:border-blue-500">
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600">
-                            <thead class="bg-slate-50 text-slate-500 font-semibold uppercase text-xs tracking-wider">
-                                <tr>
-                                    <th class="px-6 py-4">User Details</th>
-                                    <th class="px-6 py-4">Role</th>
-                                    <th class="px-6 py-4">Status</th>
-                                    <th class="px-6 py-4">Verified</th>
-                                    <th class="px-6 py-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="users-table-body" class="divide-y divide-slate-100">
-                                <!-- JS Populated -->
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="p-4 border-t border-slate-100 flex justify-center bg-slate-50/30">
-                        <button onclick="loadUsers()" class="flex items-center gap-2 text-blue-600 text-sm font-bold hover:bg-blue-50 px-4 py-2 rounded-lg transition">
-                            <i class="fa-solid fa-rotate-right"></i> Refresh List
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3. ACTIVITY HISTORY -->
-            <section id="activity" class="hidden animate-fade-in space-y-6">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                        <h3 class="font-bold text-lg text-slate-800">Transaction History</h3>
-                        <button onclick="exportCSV()" class="flex items-center gap-2 text-sm bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg transition shadow-sm font-medium">
-                            <i class="fa-solid fa-download"></i> Export CSV
-                        </button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600">
-                            <thead class="bg-slate-50 text-slate-500 font-semibold uppercase text-xs tracking-wider">
-                                <tr>
-                                    <th class="px-6 py-4">Date & Time</th>
-                                    <th class="px-6 py-4">Transaction Details</th>
-                                    <th class="px-6 py-4">Item</th>
-                                    <th class="px-6 py-4">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="activity-table-body" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 4. REPORTS SECTION -->
-            <section id="reports" class="hidden animate-fade-in space-y-6">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden p-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="font-bold text-lg text-slate-800">Issue Tracker</h3>
-                        <span class="text-xs font-medium bg-slate-100 px-3 py-1 rounded-full text-slate-500">Live Feed</span>
-                    </div>
-                    <div id="reports-list" class="space-y-4 grid grid-cols-1 gap-6">
-                        <!-- JS populated -->
-                        <div class="text-center py-12">
-                            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-300">
-                                <i class="fa-solid fa-clipboard-check text-2xl"></i>
-                            </div>
-                            <p class="text-slate-500">No active issues found.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 5. BROADCAST SECTION -->
-            <section id="broadcast" class="hidden animate-fade-in space-y-6">
-                <div class="max-w-3xl mx-auto">
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-                        <div class="flex items-center gap-4 mb-8">
-                            <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-2xl shadow-sm">
-                                <i class="fa-solid fa-tower-broadcast"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-xl text-slate-800">System Broadcast</h3>
-                                <p class="text-slate-500 text-sm">Send urgent notifications to platform users.</p>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-5">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Target Audience</label>
-                                    <div class="relative">
-                                        <select id="broadcast-target" onchange="toggleBroadcastInput()" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:outline-none appearance-none bg-slate-50">
-                                            <option value="all">Everyone</option>
-                                            <option value="restaurant">Restaurants Only</option>
-                                            <option value="orphanage">Orphanages Only</option>
-                                            <option value="specific">Specific User ID</option>
-                                        </select>
-                                        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                                    </div>
-                                </div>
-                                <div id="broadcast-userid-container" class="hidden">
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Target User ID</label>
-                                    <input type="text" id="broadcast-userid" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:outline-none bg-slate-50" placeholder="Paste User UID">
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Subject</label>
-                                <input type="text" id="broadcast-title" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:outline-none font-medium" placeholder="e.g., Scheduled Maintenance">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Message Content</label>
-                                <textarea id="broadcast-msg" rows="5" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:outline-none resize-none" placeholder="Type your announcement here..."></textarea>
-                            </div>
-                            
-                            <div class="pt-2">
-                                <button onclick="sendBroadcast()" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transform active:scale-[0.99]">
-                                    <i class="fa-regular fa-paper-plane"></i> Send Broadcast
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            </div>
         </div>
+
+        <!-- TAB: USERS -->
+        <div id="tab-users" class="hidden max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md">User Management</h1>
+                <!-- EXPORT BUTTON -->
+                <button onclick="exportToCSV('users-table')" class="bg-white/90 backdrop-blur text-brand-dark hover:bg-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg transition flex items-center gap-2 active:scale-95">
+                    <i class="fa-solid fa-file-csv text-green-600 text-lg"></i> Export CSV
+                </button>
+            </div>
+            
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
+                <div class="overflow-x-auto smooth-scroll-touch">
+                    <table id="users-table" class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-4 font-bold tracking-wider">User Name</th>
+                                <th class="px-6 py-4 font-bold tracking-wider">Role</th>
+                                <th class="px-6 py-4 font-bold tracking-wider">Phone</th>
+                                <th class="px-6 py-4 font-bold tracking-wider">Address</th>
+                                <th class="px-6 py-4 font-bold tracking-wider">Status</th>
+                                <th class="px-6 py-4 font-bold tracking-wider text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: HISTORY LOG -->
+        <div id="tab-history" class="hidden max-w-7xl mx-auto space-y-8 animate-fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md">Activity Log</h1>
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center">
+                    <!-- Export Button -->
+                    <button onclick="exportActiveHistory()" class="bg-white/90 backdrop-blur text-brand-dark hover:bg-white px-4 py-2 rounded-xl font-bold text-xs shadow-lg transition flex items-center gap-2 active:scale-95 whitespace-nowrap h-10">
+                        <i class="fa-solid fa-file-csv text-green-600 text-lg"></i> Export
+                    </button>
+                    <!-- Search Input -->
+                    <div class="relative w-full sm:w-56">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="history-search" onkeyup="filterHistory()" placeholder="Filter by User..." class="pl-10 pr-4 py-2 rounded-xl border-none focus:ring-2 focus:ring-blue-500 shadow-md w-full text-base font-medium focus:outline-none h-10">
+                    </div>
+                    <!-- Toggle Buttons -->
+                    <div class="flex bg-white/20 backdrop-blur-md rounded-xl p-1 shadow-inner self-start sm:self-auto">
+                        <button onclick="switchHistoryMode('donations')" id="btn-hist-donations" class="px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-sm bg-white text-brand-blue active:scale-95 touch-manipulation">Donations</button>
+                        <button onclick="switchHistoryMode('requests')" id="btn-hist-requests" class="px-6 py-2 rounded-lg font-bold text-sm transition-all text-white hover:bg-white/10 active:scale-95 touch-manipulation">Requests</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DONATIONS TABLE -->
+            <div id="block-hist-donations" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
+                <div class="overflow-x-auto smooth-scroll-touch">
+                    <table id="donations-table" class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-4 py-3 font-bold">Date</th>
+                                <th class="px-4 py-3 font-bold">Time</th>
+                                <th class="px-4 py-3 font-bold">Restaurant</th>
+                                <th class="px-4 py-3 font-bold">Accepted By</th>
+                                <th class="px-4 py-3 font-bold">Item (Qty)</th>
+                                <th class="px-4 py-3 font-bold">Status</th>
+                                <th class="px-4 py-3 font-bold text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="donation-history-body" class="divide-y divide-gray-100">
+                            <tr><td colspan="7" class="text-center py-4 text-gray-400">Loading donations...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- REQUESTS TABLE -->
+            <div id="block-hist-requests" class="hidden bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
+                <div class="overflow-x-auto smooth-scroll-touch">
+                    <table id="requests-table" class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-4 py-3 font-bold">Date</th>
+                                <th class="px-4 py-3 font-bold">Time</th>
+                                <th class="px-4 py-3 font-bold">Orphanage</th>
+                                <th class="px-4 py-3 font-bold">Accepted By</th>
+                                <th class="px-4 py-3 font-bold">Item (Qty)</th>
+                                <th class="px-4 py-3 font-bold">Status</th>
+                                <th class="px-4 py-3 font-bold text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="request-history-body" class="divide-y divide-gray-100">
+                            <tr><td colspan="7" class="text-center py-4 text-gray-400">Loading requests...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: REPORTS -->
+        <div id="tab-reports" class="hidden max-w-7xl mx-auto space-y-8 animate-fade-in">
+            
+            <!-- Pending Reports Block -->
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md mb-4">Active Reports</h1>
+                <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
+                    <div class="overflow-x-auto smooth-scroll-touch">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Date</th>
+                                    <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Reporter (Orphanage)</th>
+                                    <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Against (Restaurant)</th>
+                                    <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Reason</th>
+                                    <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-table-body" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resolved History Block -->
+            <div>
+                <h1 class="text-2xl font-bold text-white drop-shadow-md mb-4 opacity-90">Resolved History</h1>
+                <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200 opacity-95">
+                    <div class="overflow-x-auto smooth-scroll-touch">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Date Resolved</th>
+                                    <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Parties</th>
+                                    <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Original Issue</th>
+                                    <th class="px-4 py-4 md:px-6 md:py-5 font-bold tracking-wider">Action Taken</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resolved-reports-body" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW TAB: BROADCAST -->
+        <div id="tab-broadcast" class="hidden max-w-4xl mx-auto space-y-6 animate-fade-in">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md">System Broadcast</h1>
+            <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-gray-200">
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Send Notification</h3>
+                    <p class="text-gray-500 text-sm">This message will appear on the dashboard of all selected users.</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Title</label>
+                        <input type="text" id="bc-title" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="e.g. System Maintenance">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Message</label>
+                        <textarea id="bc-message" rows="3" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Enter your announcement here..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Target Audience</label>
+                        <select id="bc-target" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            <option value="all">All Users</option>
+                            <option value="restaurant">Restaurants Only</option>
+                            <option value="orphanage">Orphanages Only</option>
+                        </select>
+                    </div>
+                    <button onclick="sendBroadcast()" id="btn-send-bc" class="w-full py-4 bg-brand-blue text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-all active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> Send Broadcast
+                    </button>
+                </div>
+            </div>
+
+            <!-- Previous Broadcasts (Mockup for now, or could link to DB) -->
+            <div class="bg-white/90 backdrop-blur rounded-2xl p-6 shadow-md">
+                <h4 class="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wide">Recent Broadcasts</h4>
+                <div id="broadcast-history" class="space-y-3">
+                    <div class="text-gray-400 text-center text-sm italic py-2">No recent broadcasts sent in this session.</div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
-    <!-- CONFIRMATION MODAL (Clean Design) -->
-    <div id="confirm-modal" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
-        <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full transform scale-95 transition-all duration-300 border border-white/20">
+    <!-- INVESTIGATE MODAL -->
+    <div id="investigate-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full transform scale-95 transition-all duration-300 transform-gpu" id="investigate-modal-content">
             <div class="text-center">
-                <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl shadow-sm">
-                    <i class="fa-solid fa-question"></i>
+                <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm">
+                    <i class="fa-solid fa-magnifying-glass"></i>
                 </div>
-                <h3 class="text-xl font-bold text-slate-800 mb-2" id="confirm-title">Confirm</h3>
-                <p class="text-slate-500 mb-8 leading-relaxed" id="confirm-message">Are you sure?</p>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="closeConfirmModal()" class="py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition">Cancel</button>
-                    <button id="confirm-btn-action" class="py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition">Confirm</button>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Investigate Report</h3>
+                <p class="text-gray-500 mb-6 text-sm">Review the issue and document your action.</p>
+                
+                <div class="text-left space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Reason of Issue</label>
+                        <input type="text" id="inv-reason" class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-base text-gray-700" placeholder="Reported reason..." readonly>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Action Taken</label>
+                        <textarea id="inv-action" rows="3" class="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-base" placeholder="e.g. User warned via email..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button onclick="closeInvestigateModal()" class="flex-1 py-3.5 text-gray-600 font-bold hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors text-base active:bg-gray-100 touch-manipulation">Cancel</button>
+                    <button onclick="submitInvestigation()" class="flex-1 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg transition-all text-base active:scale-95 touch-manipulation">Resolve</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM DELETE MODAL -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-sm w-full transform scale-95 transition-all duration-300 transform-gpu" id="confirm-modal-content">
+            <div class="text-center">
+                <div class="w-14 h-14 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Record?</h3>
+                <p class="text-gray-500 mb-6 text-sm">This action cannot be undone.</p>
+                <div class="flex gap-4">
+                    <button onclick="closeConfirmModal()" class="flex-1 py-3.5 text-gray-600 font-bold hover:bg-gray-50 rounded-xl border border-gray-200 transition-colors text-base active:bg-gray-100 touch-manipulation">Cancel</button>
+                    <button onclick="executeDelete()" class="flex-1 py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg transition-all text-base active:scale-95 touch-manipulation">Delete</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- USER DETAILS MODAL -->
-    <div id="user-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
-        <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full transform scale-95 transition-all duration-300 relative" id="user-modal-content">
-            <button onclick="closeUserModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition">
-                <i class="fa-solid fa-xmark text-lg"></i>
+    <div id="user-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full transform scale-95 transition-all duration-300 relative transform-gpu" id="user-modal-content">
+            <button onclick="closeUserModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition touch-manipulation">
+                <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             
-            <div class="text-center mb-8">
-                <div class="w-24 h-24 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full mx-auto flex items-center justify-center text-4xl text-blue-500 mb-4 shadow-inner relative border-4 border-white shadow-lg">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-brand-light rounded-full mx-auto flex items-center justify-center text-3xl text-brand-blue mb-3 shadow-inner relative">
                     <i class="fa-solid fa-user" id="modal-user-icon"></i>
-                    <div id="modal-verify-badge" class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md hidden">
+                    <!-- Verified Badge in Modal -->
+                    <div id="modal-verify-badge" class="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-md hidden">
                         <i class="fa-solid fa-circle-check text-blue-500 text-xl"></i>
                     </div>
                 </div>
-                <h3 class="text-2xl font-bold text-slate-800" id="modal-user-name">Loading...</h3>
-                <div class="flex items-center justify-center gap-2 mt-2">
-                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 capitalize" id="modal-user-role">User</span>
-                </div>
-                <p class="text-[10px] text-slate-400 mt-3 font-mono bg-slate-50 inline-block px-2 py-1 rounded select-all cursor-pointer hover:bg-slate-100" id="modal-user-id" title="Click to copy">ID: ...</p>
+                <h3 class="text-2xl font-bold text-gray-900" id="modal-user-name">Loading...</h3>
+                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mt-2 bg-gray-100 text-gray-600" id="modal-user-role">User</span>
             </div>
 
-            <div class="space-y-4 mb-8">
-                <div class="flex items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm mr-4 border border-slate-100">
-                        <i class="fa-solid fa-envelope"></i>
-                    </div>
-                    <div class="overflow-hidden">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Email</p>
-                        <p class="text-sm font-medium text-slate-700 truncate" id="modal-user-email">...</p>
-                    </div>
+            <div class="space-y-4 mb-6 bg-gray-50 p-5 rounded-xl border border-gray-100 text-sm">
+                <div class="flex justify-between border-b border-gray-200 pb-2">
+                    <span class="text-gray-500 font-medium">Email</span>
+                    <span class="font-bold text-gray-800" id="modal-user-email">...</span>
                 </div>
-
-                <div class="flex items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm mr-4 border border-slate-100">
-                        <i class="fa-solid fa-phone"></i>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Phone</p>
-                        <p class="text-sm font-medium text-slate-700" id="modal-user-phone">...</p>
-                    </div>
+                <div class="flex justify-between border-b border-gray-200 pb-2">
+                    <span class="text-gray-500 font-medium">Phone</span>
+                    <span class="font-bold text-gray-800" id="modal-user-phone">...</span>
                 </div>
-
-                <div class="flex items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm mr-4 border border-slate-100">
-                        <i class="fa-solid fa-location-dot"></i>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Address</p>
-                        <p class="text-sm font-medium text-slate-700" id="modal-user-address">...</p>
-                    </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500 font-medium">Address</span>
+                    <span class="font-bold text-gray-800 text-right w-1/2 truncate" id="modal-user-address">...</span>
                 </div>
-                
-                <div class="flex items-center justify-between px-1 pt-2 border-t border-slate-100">
-                    <span class="text-xs text-slate-500 font-bold uppercase tracking-wide">Status</span>
-                    <span class="font-bold text-green-500 flex items-center gap-1" id="modal-user-status"><span class="w-2 h-2 rounded-full bg-green-500"></span> Active</span>
+                <div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-200">
+                    <span class="text-gray-500 font-medium">Status</span>
+                    <span class="font-bold" id="modal-user-status">Active</span>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <button id="btn-verify-user" class="py-3.5 font-bold rounded-xl shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-slate-600 bg-white hover:bg-slate-50 border-slate-200 border">
-                   Loading...
+                <button id="btn-verify-user" class="py-3.5 font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 touch-manipulation border-2">
+                    <!-- Dynamic Text -->
                 </button>
-                <button id="btn-disable-user" class="py-3.5 font-bold rounded-xl shadow-lg shadow-red-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 bg-red-500 text-white hover:bg-red-600">
-                   Loading...
+                <button id="btn-disable-user" class="py-3.5 font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 touch-manipulation">
+                    <!-- Dynamic Text -->
                 </button>
             </div>
         </div>
     </div>
 
-
     <script>
-        // FIREBASE CONFIG
+        // --- KEEPING EXISTING CONFIG ---
         const firebaseConfig = { apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0", authDomain: "panel-9e1a6.firebaseapp.com", projectId: "panel-9e1a6", storageBucket: "panel-9e1a6.firebasestorage.app", messagingSenderId: "491001640513", appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
+
+        let dailyChart, monthlyChart, lifetimeChart;
+        let currentInvestigateId = null;
+        let currentDeleteId = null;
+        let currentDeleteCollection = null; 
         let currentModalUserId = null;
 
-        // AUTH CHECK
-        auth.onAuthStateChanged(async user => {
-            if (user) {
-                try {
-                    const doc = await db.collection('users').doc(user.uid).get();
-                    if (doc.exists && doc.data().role === 'admin' && !doc.data().isDisable) {
-                        document.getElementById('auth-loading').classList.add('opacity-0');
-                        setTimeout(() => document.getElementById('auth-loading').classList.add('hidden'), 300);
-                        initDashboard();
-                    } else {
-                        await auth.signOut();
-                        alert("Access Denied: You do not have administrator privileges.");
-                        window.location.href = 'index.html';
+        document.addEventListener('DOMContentLoaded', () => {
+            auth.onAuthStateChanged(async (user) => {
+                if(user) { 
+                    try {
+                        const doc = await db.collection('users').doc(user.uid).get();
+                        if (!doc.exists) {
+                            alert("User profile not found.");
+                            await auth.signOut();
+                            window.location.href = 'login';
+                            return;
+                        }
+
+                        const userData = doc.data();
+
+                        // Security Check
+                        if (userData.isDisable) {
+                            alert("Your account has been disabled.");
+                            await auth.signOut();
+                            window.location.href = 'login';
+                            return;
+                        }
+
+                        if (userData.role !== 'admin') {
+                            if (userData.role === 'restaurant') window.location.href = 'restaurant';
+                            else if (userData.role === 'orphanage') window.location.href = 'orphanages';
+                            else window.location.href = 'index';
+                            return;
+                        }
+
+                        // Authorized
+                        switchTab('overview');
+                        loadOverview();
+                        loadUsers();
+                        loadHistory();
+                        loadReports();
+
+                    } catch (error) {
+                        console.error("Auth Verification Error:", error);
+                        window.location.href = 'login';
                     }
-                } catch (error) {
-                    console.error("Auth Error:", error);
-                    window.location.href = 'login.html';
+                } else {
+                    window.location.href = 'login';
                 }
-            } else {
-                window.location.href = 'login.html';
-            }
+            });
         });
 
-        function logout() {
-            auth.signOut().then(() => window.location.href = 'index.html');
-        }
-
-        // NAVIGATION
-        function showSection(id) {
-            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-            
-            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('nav-' + id).classList.add('active');
-
-            const titles = {
-                'overview': 'Dashboard Overview',
-                'users': 'User Database',
-                'activity': 'Transaction Logs',
-                'reports': 'Issue Tracker',
-                'broadcast': 'System Broadcast'
-            };
-            document.getElementById('page-title').innerText = titles[id];
-        }
-
-        async function initDashboard() {
-            loadStats();
-            loadCharts();
-            loadUsers();
-            loadActivity();
-            loadReports();
-        }
-
-        // 1. STATS & CHARTS
-        async function loadStats() {
-            const users = await db.collection('users').get();
-            const donations = await db.collection('donations').get();
-            
-            let mealsCount = 0;
-            let issuesCount = 0;
-            donations.forEach(doc => {
-                const data = doc.data();
-                
-                // --- FIXED QUANTITY PARSING ---
-                let qty = 0;
-                const rawQty = data.quantity;
-                
-                if (typeof rawQty === 'number') {
-                    qty = rawQty;
-                } else if (typeof rawQty === 'string') {
-                    // Extract first number found in string
-                    const match = rawQty.match(/\d+/);
-                    if (match) {
-                        qty = parseInt(match[0]);
-                    }
-                }
-                
-                mealsCount += qty;
-                if(data.status === 'Issue') issuesCount++;
-            });
-
-            // Calculate Estimated CO2 Saved (0.3kg per meal)
-            const co2Saved = Math.round(mealsCount * 0.3);
-
-            animateValue("stat-users", 0, users.size, 1000);
-            animateValue("stat-meals", 0, mealsCount, 1500);
-            animateValue("stat-issues", 0, issuesCount, 800);
-            animateValue("stat-donations", 0, donations.size, 1000);
-            animateValue("stat-co2", 0, co2Saved, 2000); 
-            
-            // Sidebar Badge for Issues
-            const badge = document.getElementById('sidebar-badge-issues');
-            if(issuesCount > 0) {
-                badge.classList.remove('hidden');
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
             } else {
-                badge.classList.add('hidden');
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
             }
         }
 
-        function animateValue(id, start, end, duration) {
-            const obj = document.getElementById(id);
-            if(!obj) return;
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const val = Math.floor(progress * (end - start) + start);
-                // Preserve the unit if it exists in the inner HTML (hacky but works for CO2)
-                if(id === 'stat-co2') obj.innerHTML = `${val} <span class="text-lg font-medium opacity-80">kg</span>`;
-                else obj.innerHTML = val;
+        function switchTab(tab) {
+            ['overview', 'users', 'history', 'reports', 'broadcast'].forEach(t => {
+                const tabEl = document.getElementById('tab-' + t);
+                if(tabEl) tabEl.classList.add('hidden');
                 
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
+                const btn = document.getElementById('btn-' + t);
+                if(btn) btn.className = "w-full flex items-center px-5 py-3.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all active:scale-95 touch-manipulation";
+            });
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + tab);
+            activeBtn.className = "w-full flex items-center px-5 py-3.5 text-sm font-semibold rounded-xl bg-brand-blue text-white shadow-md transition-all active:scale-95 touch-manipulation";
+            if (window.innerWidth < 768) toggleSidebar();
         }
 
-        async function loadCharts() {
-            const donations = await db.collection('donations').get();
-            const users = await db.collection('users').get();
+        // --- EXPORT TO CSV FUNCTIONALITY ---
+        function exportToCSV(tableId) {
+            const table = document.getElementById(tableId);
+            const rows = table.querySelectorAll("tr");
+            let csv = [];
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = [], cols = rows[i].querySelectorAll("td, th");
+                
+                // Skip rows that are hidden (filtered out)
+                if(rows[i].style.display === 'none') continue;
+
+                for (let j = 0; j < cols.length; j++) {
+                    // Get clean text, remove standard HTML garbage
+                    let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/(\s\s)/gm, " ");
+                    // Escape double quotes
+                    data = data.replace(/"/g, '""');
+                    // Push escaped data
+                    row.push('"' + data + '"');
+                }
+                csv.push(row.join(","));
+            }
+
+            const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+            const downloadLink = document.createElement("a");
+            downloadLink.download = "foodbridge_data_" + new Date().toISOString().slice(0,10) + ".csv";
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        function exportActiveHistory() {
+            const isDonations = !document.getElementById('block-hist-donations').classList.contains('hidden');
+            exportToCSV(isDonations ? 'donations-table' : 'requests-table');
+        }
+
+        // --- BROADCAST FUNCTIONALITY ---
+        async function sendBroadcast() {
+            const title = document.getElementById('bc-title').value;
+            const message = document.getElementById('bc-message').value;
+            const target = document.getElementById('bc-target').value;
+            const btn = document.getElementById('btn-send-bc');
+
+            if(!title || !message) { alert("Please fill in all fields."); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+
+            try {
+                // We create a new collection 'notifications'
+                await db.collection('notifications').add({
+                    title: title,
+                    message: message,
+                    targetAudience: target, // 'all', 'restaurant', 'orphanage'
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    isRead: false
+                });
+
+                // Update UI log
+                const history = document.getElementById('broadcast-history');
+                const newItem = `<div class="p-3 bg-blue-50 border-l-4 border-blue-500 rounded-r-md text-sm animate-fade-in"><span class="font-bold block text-gray-800">${title}</span><span class="text-gray-600">${new Date().toLocaleTimeString()} - Target: ${target}</span></div>`;
+                if(history.innerHTML.includes("No recent")) history.innerHTML = newItem;
+                else history.innerHTML = newItem + history.innerHTML;
+
+                // Clear form
+                document.getElementById('bc-title').value = '';
+                document.getElementById('bc-message').value = '';
+                alert("Broadcast sent successfully!");
+
+            } catch(e) {
+                console.error("Broadcast Error:", e);
+                alert("Failed to send broadcast.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Broadcast';
+            }
+        }
+
+        // --- HISTORY TOGGLE LOGIC ---
+        function switchHistoryMode(mode) {
+            const donBlock = document.getElementById('block-hist-donations');
+            const reqBlock = document.getElementById('block-hist-requests');
+            const btnDon = document.getElementById('btn-hist-donations');
+            const btnReq = document.getElementById('btn-hist-requests');
+
+            if (mode === 'donations') {
+                donBlock.classList.remove('hidden');
+                reqBlock.classList.add('hidden');
+                
+                btnDon.className = "px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-sm bg-white text-brand-blue active:scale-95 touch-manipulation";
+                btnReq.className = "px-6 py-2 rounded-lg font-bold text-sm transition-all text-white hover:bg-white/10 active:scale-95 touch-manipulation";
+            } else {
+                donBlock.classList.add('hidden');
+                reqBlock.classList.remove('hidden');
+
+                btnReq.className = "px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-sm bg-white text-brand-blue active:scale-95 touch-manipulation";
+                btnDon.className = "px-6 py-2 rounded-lg font-bold text-sm transition-all text-white hover:bg-white/10 active:scale-95 touch-manipulation";
+            }
+            filterHistory();
+        }
+
+        function filterHistory() {
+            const input = document.getElementById('history-search');
+            const filter = input.value.toUpperCase();
+            const isDonations = !document.getElementById('block-hist-donations').classList.contains('hidden');
+            const tbodyId = isDonations ? 'donation-history-body' : 'request-history-body';
+            const tbody = document.getElementById(tbodyId);
+            const tr = tbody.getElementsByTagName('tr');
+
+            for (let i = 0; i < tr.length; i++) {
+                const tds = tr[i].getElementsByTagName('td');
+                if (tds.length < 4) continue;
+                const user1 = tds[2].textContent || tds[2].innerText;
+                const user2 = tds[3].textContent || tds[3].innerText;
+                if (user1.toUpperCase().indexOf(filter) > -1 || user2.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+
+        // --- OVERVIEW ---
+        async function loadOverview() {
+            const donationsSnap = await db.collection('donations').get();
+            const usersSnap = await db.collection('users').get();
+            const reportsSnap = await db.collection('donations').where('status', '==', 'Issue').get();
+
+            let totalMeals = 0;
+            const dailyData = Array(7).fill(0);
+            const monthlyData = Array(12).fill(0);
+            const yearlyData = {}; 
+            const today = new Date();
             
-            let statusData = { 'Pending': 0, 'Accepted': 0, 'Completed': 0, 'Issue': 0, 'Resolved': 0 };
-            donations.forEach(doc => {
-                const s = doc.data().status || 'Pending';
-                if(statusData[s] !== undefined) statusData[s]++;
-            });
+            donationsSnap.forEach(doc => {
+                const data = doc.data();
+                const meals = parseInt(data.servings || 0);
+                if(data.status !== 'Completed' && data.status !== 'Claimed') return; 
 
-            let roleData = { 'restaurant': 0, 'orphanage': 0, 'volunteer': 0 };
-            users.forEach(doc => {
-                const r = doc.data().role || 'user';
-                if(roleData[r] !== undefined) roleData[r]++;
-            });
-
-            new Chart(document.getElementById('activityChart'), {
-                type: 'line',
-                data: {
-                    labels: ['Pending', 'Accepted', 'Completed', 'Issues', 'Resolved'],
-                    datasets: [{
-                        label: 'Donations',
-                        data: [statusData.Pending, statusData.Accepted, statusData.Completed, statusData.Issue, statusData.Resolved],
-                        borderColor: '#3b82f6',
-                        backgroundColor: (ctx) => {
-                            const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 300);
-                            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-                            gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
-                            return gradient;
-                        },
-                        fill: true,
-                        tension: 0.4,
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#3b82f6',
-                        pointBorderWidth: 2
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                totalMeals += meals;
+                if (data.createdAt) {
+                    const date = new Date(data.createdAt.seconds * 1000);
+                    const diffTime = Math.abs(today - date);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays <= 7) { dailyData[7 - diffDays] += meals; }
+                    if (date.getFullYear() === today.getFullYear()) { monthlyData[date.getMonth()] += meals; }
+                    const year = date.getFullYear();
+                    yearlyData[year] = (yearlyData[year] || 0) + meals;
                 }
             });
 
-            new Chart(document.getElementById('userChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Restaurant', 'Orphanage', 'Volunteer'],
-                    datasets: [{
-                        data: [roleData.restaurant, roleData.orphanage, roleData.volunteer],
-                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
-                        borderWidth: 0,
-                        hoverOffset: 10
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
+            document.getElementById('stat-users').innerText = usersSnap.size;
+            document.getElementById('stat-meals').innerText = totalMeals.toLocaleString();
+            document.getElementById('stat-reports').innerText = reportsSnap.size;
+
+            renderCharts(dailyData, monthlyData, yearlyData);
+        }
+
+        function renderCharts(daily, monthly, yearlyObj) {
+            const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } };
+
+            if(dailyChart) dailyChart.destroy();
+            const last7Days = Array.from({length: 7}, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (6-i)); return d.toLocaleDateString('en-US', {weekday:'short'}); });
+            dailyChart = new Chart(document.getElementById('dailyChart'), { type: 'bar', data: { labels: last7Days, datasets: [{ label: 'Meals', data: daily, backgroundColor: '#3B82F6', borderRadius: 6 }] }, options: commonOptions });
+
+            if(monthlyChart) monthlyChart.destroy();
+            monthlyChart = new Chart(document.getElementById('monthlyChart'), { type: 'line', data: { labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], datasets: [{ label: 'Meals', data: monthly, borderColor: '#10B981', tension: 0.4, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' }] }, options: commonOptions });
+
+            if(lifetimeChart) lifetimeChart.destroy();
+            const years = Object.keys(yearlyObj).sort();
+            const yearData = years.map(y => yearlyObj[y]);
+            lifetimeChart = new Chart(document.getElementById('lifetimeChart'), { type: 'bar', data: { labels: years, datasets: [{ label: 'Total Meals', data: yearData, backgroundColor: '#F97316', borderRadius: 6, barThickness: 40 }] }, options: commonOptions });
+        }
+
+        // --- USERS ---
+        function loadUsers() {
+            db.collection('users').onSnapshot(snap => {
+                const tbody = document.getElementById('users-table-body');
+                tbody.innerHTML = '';
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const isDisabled = !!data.isDisable;
+                    const isVerified = !!data.isVerified;
+
+                    // Badges
+                    const statusBadge = isDisabled 
+                        ? `<span class="px-2 py-1 rounded-lg text-xs font-bold text-red-600 bg-red-50 border border-red-200">Disabled</span>` 
+                        : `<span class="px-2 py-1 rounded-lg text-xs font-bold text-green-600 bg-green-50 border border-green-200">Active</span>`;
+                    
+                    const verifyIcon = isVerified ? `<i class="fa-solid fa-circle-check text-blue-500 ml-1" title="Verified"></i>` : '';
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 font-bold text-gray-800">
+                                ${data.name || 'Unknown'} ${verifyIcon}
+                            </td>
+                             <td class="px-6 py-4 text-gray-500 capitalize">${data.role || 'User'}</td>
+                            <td class="px-6 py-4 text-gray-500">${data.phone || 'N/A'}</td>
+                            <td class="px-6 py-4 text-gray-500 truncate max-w-xs">${data.address || 'N/A'}</td>
+                            <td class="px-6 py-4">${statusBadge}</td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="openUserModal('${doc.id}')" class="text-xs text-brand-blue bg-blue-50 border-blue-200 border px-3 py-1.5 rounded-lg transition font-bold active:scale-95 touch-manipulation hover:bg-blue-100">
+                                    <i class="fa-solid fa-gear mr-1"></i> Manage
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
             });
         }
 
+        // --- HISTORY ---
+        function loadHistory() {
+            db.collection('donations').orderBy('createdAt', 'desc').limit(50).onSnapshot(snap => {
+                const tbody = document.getElementById('donation-history-body');
+                tbody.innerHTML = '';
+                if(snap.empty) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-400">No donations yet.</td></tr>`;
+                } else {
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        const dateObj = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
+                        const dateStr = dateObj.toLocaleDateString();
+                        const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        let statusColor = 'text-gray-500 bg-gray-100';
+                        if(data.status === 'Completed') statusColor = 'text-green-600 bg-green-50 border border-green-200';
+                        if(data.status === 'Claimed') statusColor = 'text-blue-600 bg-blue-50 border border-blue-200';
+                        if(data.status === 'Issue' || data.status === 'Resolved') statusColor = 'text-red-600 bg-red-50 border border-red-200';
 
-        // 2. USER MANAGEMENT
-        let allUsers = [];
-        async function loadUsers() {
-            const snap = await db.collection('users').get();
-            allUsers = [];
-            snap.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
-            renderUsers(allUsers);
+                        const restHtml = `<span onclick="openUserModal('${data.restaurantId}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${data.restaurantName || 'Unknown'}</span>`;
+                        const acceptorHtml = data.claimedBy ? `<span onclick="openUserModal('${data.claimedBy}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${data.orphanageName || 'Pending...'}</span>` : `<span class="text-gray-400 italic">Not claimed</span>`;
+
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-4 py-3 text-gray-500 text-sm">${dateStr}</td>
+                                <td class="px-4 py-3 text-gray-500 text-sm">${timeStr}</td>
+                                <td class="px-4 py-3 text-sm">${restHtml}</td>
+                                <td class="px-4 py-3 text-sm">${acceptorHtml}</td>
+                                <td class="px-4 py-3 font-medium text-gray-700 text-sm">${data.foodName} <span class="text-gray-400 font-normal">(${data.servings})</span></td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg text-xs font-bold ${statusColor}">${data.status}</span></td>
+                                <td class="px-4 py-3 text-center">
+                                    <button onclick="confirmDeleteHistory('${doc.id}', 'donations')" class="text-gray-400 hover:text-red-500 transition-colors active:scale-95 touch-manipulation">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    filterHistory();
+                }
+            });
+
+            db.collection('requests').orderBy('createdAt', 'desc').limit(50).onSnapshot(snap => {
+                const tbody = document.getElementById('request-history-body');
+                tbody.innerHTML = '';
+                if(snap.empty) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-400">No requests yet.</td></tr>`;
+                } else {
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        const dateObj = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
+                        const dateStr = dateObj.toLocaleDateString();
+                        const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        let statusColor = 'text-gray-500 bg-gray-100';
+                        if(data.status === 'Fulfilled') statusColor = 'text-green-600 bg-green-50 border border-green-200';
+                        if(data.status === 'Pending') statusColor = 'text-yellow-600 bg-yellow-50 border border-yellow-200';
+
+                        const orphHtml = `<span onclick="openUserModal('${data.orphanageId}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${data.orphanageName || 'Unknown'}</span>`;
+                        const acceptorHtml = data.fulfilledBy ? `<span onclick="openUserModal('${data.fulfilledBy}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${data.restaurantName || 'Pending...'}</span>` : `<span class="text-gray-400 italic">Not fulfilled</span>`;
+
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-4 py-3 text-gray-500 text-sm">${dateStr}</td>
+                                <td class="px-4 py-3 text-gray-500 text-sm">${timeStr}</td>
+                                <td class="px-4 py-3 text-sm">${orphHtml}</td>
+                                <td class="px-4 py-3 text-sm">${acceptorHtml}</td>
+                                <td class="px-4 py-3 font-medium text-gray-700 text-sm">${data.itemNeeded} <span class="text-gray-400 font-normal">(${data.quantity})</span></td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg text-xs font-bold ${statusColor}">${data.status}</span></td>
+                                <td class="px-4 py-3 text-center">
+                                    <button onclick="confirmDeleteHistory('${doc.id}', 'requests')" class="text-gray-400 hover:text-red-500 transition-colors active:scale-95 touch-manipulation">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    filterHistory();
+                }
+            });
         }
 
-        function renderUsers(users) {
-            const tbody = document.getElementById('users-table-body');
-            tbody.innerHTML = '';
-            users.forEach(u => {
-                const isVerified = u.isVerified ? '<i class="fa-solid fa-circle-check text-blue-500 ml-1"></i>' : '';
-                const statusClass = u.isDisable ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100';
-                const statusText = u.isDisable ? 'Disabled' : 'Active';
+        // --- REPORTS ---
+        function loadReports() {
+            db.collection('donations').onSnapshot(snap => {
+                const pendingTbody = document.getElementById('reports-table-body');
+                const resolvedTbody = document.getElementById('resolved-reports-body');
                 
-                tbody.innerHTML += `
-                    <tr class="hover:bg-blue-50/30 transition border-b border-slate-50 last:border-0 group">
-                        <td class="px-6 py-4">
-                            <div class="font-bold text-slate-800">${u.name || 'Unknown'} ${isVerified}</div>
-                            <div class="text-xs text-slate-400 font-mono">${u.email || 'No Email'}</div>
-                        </td>
-                        <td class="px-6 py-4"><span class="capitalize px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600">${u.role || 'user'}</span></td>
-                        <td class="px-6 py-4"><span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${statusClass}">${statusText}</span></td>
-                        <td class="px-6 py-4 text-slate-500 text-sm">${u.isVerified ? 'Yes' : 'No'}</td>
-                        <td class="px-6 py-4 text-right">
-                            <button onclick="openUserModal('${u.id}')" class="text-slate-400 hover:text-blue-600 transition bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50 w-8 h-8 rounded-lg flex items-center justify-center shadow-sm ml-auto">
-                                <i class="fa-solid fa-gear"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                pendingTbody.innerHTML = '';
+                resolvedTbody.innerHTML = '';
+                const pending = [];
+                const resolved = [];
+
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status === 'Issue') {
+                        pending.push({ id: doc.id, ...data });
+                    } else if (data.status === 'Resolved') {
+                        resolved.push({ id: doc.id, ...data });
+                    }
+                });
+
+                pending.sort((a, b) => (b.reportedAt?.seconds || 0) - (a.reportedAt?.seconds || 0));
+                resolved.sort((a, b) => (b.resolvedAt?.seconds || 0) - (a.resolvedAt?.seconds || 0));
+
+                if (pending.length === 0) pendingTbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-gray-400">No active issues.</td></tr>`;
+                if (resolved.length === 0) resolvedTbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-400">No resolved history.</td></tr>`;
+
+                pending.forEach(item => {
+                    const date = item.reportedAt ? new Date(item.reportedAt.seconds * 1000).toLocaleDateString() : '-';
+                    const reporterHtml = `<span onclick="openUserModal('${item.claimedBy}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${item.orphanageName}</span>`;
+                    const againstHtml = `<span onclick="openUserModal('${item.restaurantId}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline cursor-pointer transition">${item.restaurantName}</span>`;
+
+                    pendingTbody.innerHTML += `
+                        <tr class="hover:bg-red-50/30 transition-colors">
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-gray-500 text-sm">${date}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-sm">${reporterHtml}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-sm">${againstHtml}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-red-600 font-medium text-xs max-w-xs break-words">${item.reportReason || 'No reason provided'}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5">
+                                <button onclick="openInvestigateModal('${item.id}', '${item.reportReason}')" class="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-200 transition font-bold active:scale-95 touch-manipulation">Investigate</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                resolved.forEach(item => {
+                    const date = item.resolvedAt ? new Date(item.resolvedAt.seconds * 1000).toLocaleDateString() : '-';
+                    resolvedTbody.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-gray-500 text-sm">${date}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-sm">
+                                <span class="block font-bold text-gray-700">${item.orphanageName}</span>
+                                <span class="text-xs text-gray-400">vs</span>
+                                <span class="block font-bold text-gray-700">${item.restaurantName}</span>
+                            </td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-sm text-gray-600">${item.reportReason || '-'}</td>
+                            <td class="px-4 py-4 md:px-6 md:py-5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg p-2 max-w-xs break-words">${item.adminAction || '-'}</td>
+                        </tr>
+                    `;
+                });
             });
         }
 
-        function filterUsers() {
-            const term = document.getElementById('user-search').value.toLowerCase();
-            const filtered = allUsers.filter(u => (u.name || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term));
-            renderUsers(filtered);
+        // --- ACTIONS & MODALS ---
+        function openInvestigateModal(id, reason) {
+            currentInvestigateId = id;
+            document.getElementById('inv-reason').value = reason;
+            document.getElementById('inv-action').value = '';
+            
+            const modal = document.getElementById('investigate-modal');
+            const content = document.getElementById('investigate-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10);
         }
 
-        // --- CUSTOM CONFIRMATION MODAL ---
-        let confirmCallback = null;
-        function openConfirmModal(title, message, callback) {
-            document.getElementById('confirm-title').innerText = title;
-            document.getElementById('confirm-message').innerText = message;
-            confirmCallback = callback;
-            
+        function closeInvestigateModal() {
+            const modal = document.getElementById('investigate-modal');
+            const content = document.getElementById('investigate-modal-content');
+            modal.classList.add('opacity-0'); content.classList.remove('scale-100'); content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); currentInvestigateId = null; }, 300);
+        }
+
+        async function submitInvestigation() {
+            const action = document.getElementById('inv-action').value;
+            if(!action) { alert("Please enter the action taken."); return; }
+            try {
+                await db.collection('donations').doc(currentInvestigateId).update({
+                    status: 'Resolved',
+                    adminAction: action,
+                    resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeInvestigateModal();
+            } catch(e) { console.error(e); alert("Error resolving issue."); }
+        }
+
+        function confirmDeleteHistory(id, collection) {
+            currentDeleteId = id;
+            currentDeleteCollection = collection;
             const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
             modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('div').classList.remove('scale-95'); modal.querySelector('div').classList.add('scale-100'); }, 10);
-            
-            document.getElementById('confirm-btn-action').onclick = function() {
-                if (confirmCallback) confirmCallback();
-                closeConfirmModal();
-            };
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10);
         }
 
         function closeConfirmModal() {
             const modal = document.getElementById('confirm-modal');
-            modal.classList.add('opacity-0');
-            modal.querySelector('div').classList.remove('scale-100');
-            modal.querySelector('div').classList.add('scale-95');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-            confirmCallback = null;
+            const content = document.getElementById('confirm-modal-content');
+            modal.classList.add('opacity-0'); content.classList.remove('scale-100'); content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); currentDeleteId = null; currentDeleteCollection = null; }, 300);
         }
 
-
-        // --- USER MODAL FUNCTIONS ---
+        async function executeDelete() {
+            if(!currentDeleteCollection) return;
+            try {
+                await db.collection(currentDeleteCollection).doc(currentDeleteId).delete();
+                closeConfirmModal();
+            } catch(e) { console.error(e); alert("Error deleting record."); }
+        }
 
         async function openUserModal(userId) {
             if(!userId) return;
             currentModalUserId = userId;
             const modal = document.getElementById('user-modal');
             const content = document.getElementById('user-modal-content');
-            
             document.getElementById('modal-user-name').innerText = 'Loading...';
-            document.getElementById('modal-user-id').innerText = 'ID: ...';
-            
-            const btnDisable = document.getElementById('btn-disable-user');
-            const btnVerify = document.getElementById('btn-verify-user');
-            btnDisable.className = 'hidden'; 
-            btnVerify.className = 'hidden';
+            document.getElementById('btn-disable-user').className = 'hidden'; 
+            document.getElementById('btn-verify-user').className = 'hidden';
 
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10);
@@ -754,333 +973,96 @@
                     const isVerified = !!data.isVerified;
 
                     document.getElementById('modal-user-name').innerText = data.name || 'Unknown User';
-                    document.getElementById('modal-user-id').innerText = 'ID: ' + userId;
                     document.getElementById('modal-user-email').innerText = data.email || 'No Email'; 
                     document.getElementById('modal-user-phone').innerText = data.phone || 'N/A';
                     document.getElementById('modal-user-address').innerText = data.address || 'N/A';
                     
                     const roleEl = document.getElementById('modal-user-role');
-                    roleEl.innerText = data.role ? data.role : 'User';
+                    roleEl.innerText = data.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : 'User';
                     
                     const statusEl = document.getElementById('modal-user-status');
-                    statusEl.innerHTML = isDisabled ? '<span class="w-2 h-2 rounded-full bg-red-500"></span> Disabled' : '<span class="w-2 h-2 rounded-full bg-green-500"></span> Active';
-                    statusEl.className = isDisabled ? 'font-bold text-red-500 flex items-center gap-1' : 'font-bold text-green-500 flex items-center gap-1';
+                    statusEl.innerText = isDisabled ? 'Disabled' : 'Active';
+                    statusEl.className = isDisabled ? 'font-bold text-red-500' : 'font-bold text-green-500';
 
+                    // Verify Badge in Modal
                     const badge = document.getElementById('modal-verify-badge');
                     if(isVerified) badge.classList.remove('hidden');
                     else badge.classList.add('hidden');
 
-                    // Setup Disable Button
+                    // Setup Disable/Enable Button
+                    const btnDisable = document.getElementById('btn-disable-user');
                     btnDisable.classList.remove('hidden');
-                    btnDisable.disabled = false;
                     if (isDisabled) {
                         btnDisable.innerHTML = '<i class="fa-solid fa-lock-open"></i> Enable';
-                        btnDisable.className = 'py-3.5 font-bold rounded-xl shadow-lg shadow-green-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 bg-green-500 text-white hover:bg-green-600 w-full';
-                        btnDisable.onclick = function() { 
-                            openConfirmModal("Enable Account", "Restore access for this user?", () => toggleUserStatus(userId, false)); 
-                        };
+                        btnDisable.className = 'py-3.5 font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 bg-green-500 text-white hover:bg-green-600 touch-manipulation w-full';
+                        btnDisable.onclick = function() { toggleUserStatus(userId, false); };
                     } else {
                         btnDisable.innerHTML = '<i class="fa-solid fa-ban"></i> Disable';
-                        btnDisable.className = 'py-3.5 font-bold rounded-xl shadow-lg shadow-red-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2 bg-red-500 text-white hover:bg-red-600 w-full';
-                        btnDisable.onclick = function() { 
-                            openConfirmModal("Disable Account", "User will lose access to the platform.", () => toggleUserStatus(userId, true)); 
-                        };
+                        btnDisable.className = 'py-3.5 font-bold rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 bg-red-500 text-white hover:bg-red-600 touch-manipulation w-full';
+                        btnDisable.onclick = function() { toggleUserStatus(userId, true); };
                     }
 
                     // Setup Verify Button
+                    const btnVerify = document.getElementById('btn-verify-user');
                     btnVerify.classList.remove('hidden');
-                    btnVerify.disabled = false;
                     if (isVerified) {
-                        btnVerify.innerHTML = '<i class="fa-solid fa-xmark"></i> Revoke';
-                        btnVerify.className = 'py-3.5 font-bold rounded-xl shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-slate-600 bg-white hover:bg-slate-50 border-slate-200 border w-full';
-                        btnVerify.onclick = function() { 
-                            openConfirmModal("Revoke Verification", "Remove the verified badge?", () => toggleVerification(userId, false)); 
-                        };
+                        btnVerify.innerHTML = '<i class="fa-solid fa-xmark"></i> Un-Verify';
+                        btnVerify.className = 'py-3.5 font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 text-gray-600 bg-gray-100 hover:bg-gray-200 border-gray-200 border w-full';
+                        btnVerify.onclick = function() { toggleVerification(userId, false); };
                     } else {
                         btnVerify.innerHTML = '<i class="fa-solid fa-check"></i> Verify';
-                        btnVerify.className = 'py-3.5 font-bold rounded-xl shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-blue-600 bg-blue-50 hover:bg-blue-100 border-blue-200 border w-full';
-                        btnVerify.onclick = function() { 
-                            openConfirmModal("Verify User", "Grant verified status to this user?", () => toggleVerification(userId, true)); 
-                        };
+                        btnVerify.className = 'py-3.5 font-bold rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 text-blue-600 bg-blue-50 hover:bg-blue-100 border-blue-200 border w-full';
+                        btnVerify.onclick = function() { toggleVerification(userId, true); };
                     }
 
                 } else { document.getElementById('modal-user-name').innerText = 'User not found'; }
             } catch(e) { console.error(e); alert("Error fetching user details"); }
         }
 
+        async function toggleUserStatus(userId, disable) {
+            const btn = document.getElementById('btn-disable-user');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+
+            try {
+                await db.collection('users').doc(userId).update({ isDisable: disable });
+                await openUserModal(userId);
+                loadUsers(); 
+            } catch(e) {
+                console.error("Firebase Error:", e);
+                alert("Error updating status.");
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        async function toggleVerification(userId, verify) {
+            const btn = document.getElementById('btn-verify-user');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+
+            try {
+                await db.collection('users').doc(userId).update({ isVerified: verify });
+                await openUserModal(userId);
+                loadUsers();
+            } catch(e) {
+                console.error("Firebase Error:", e);
+                alert("Error updating verification.");
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
         function closeUserModal() {
             const modal = document.getElementById('user-modal');
             const content = document.getElementById('user-modal-content');
-            modal.classList.add('opacity-0');
-            content.classList.remove('scale-100');
-            content.classList.add('scale-95');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-            currentModalUserId = null;
+            modal.classList.add('opacity-0'); content.classList.remove('scale-100'); content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); currentModalUserId = null; }, 300);
         }
 
-        async function toggleUserStatus(uid, disable) {
-            const btn = document.getElementById('btn-disable-user');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
-            try {
-                await db.collection('users').doc(uid).update({ isDisable: disable });
-                await loadUsers();
-                openUserModal(uid);
-            } catch(e) { 
-                console.error(e); 
-                alert("Action failed"); 
-                btn.disabled = false;
-            }
-        }
-
-        async function toggleVerification(uid, verify) {
-            const btn = document.getElementById('btn-verify-user');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
-            try {
-                await db.collection('users').doc(uid).update({ isVerified: verify });
-                await loadUsers();
-                openUserModal(uid);
-            } catch(e) { 
-                console.error(e); 
-                alert("Action failed");
-                btn.disabled = false;
-            }
-        }
-
-
-        // 3. ACTIVITY LOG
-        async function loadActivity() {
-            const donations = await db.collection('donations').orderBy('createdAt', 'desc').limit(20).get();
-            const tbody = document.getElementById('activity-table-body');
-            tbody.innerHTML = '';
-            
-            for (const doc of donations.docs) {
-                const data = doc.data();
-                
-                let dateStr = 'N/A';
-                if (data.createdAt) {
-                    const d = new Date(data.createdAt.seconds * 1000);
-                    dateStr = `<div class="font-bold text-slate-700">${d.toLocaleDateString()}</div><div class="text-xs text-slate-400">${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
-                }
-
-                // Donor Link (FROM) - FIX: Fetch if name missing
-                let donorName = data.donorName;
-                let donorHtml = '<span class="text-slate-400 text-xs italic">Unknown</span>';
-                
-                // If donorName is missing but we have ID, try to fetch it (simplified for performance)
-                if (!donorName && data.donorId) {
-                    try {
-                        const uDoc = await db.collection('users').doc(data.donorId).get();
-                        if(uDoc.exists) donorName = uDoc.data().name;
-                    } catch(e) {}
-                }
-                
-                if (donorName || data.donorId) {
-                    const name = donorName || 'Donor';
-                    const id = data.donorId || '';
-                    donorHtml = `<button onclick="openUserModal('${id}')" class="font-bold text-blue-600 hover:text-blue-800 hover:underline text-left transition text-sm">${name}</button>`;
-                }
-
-                // Receiver Link (TO)
-                let receiverHtml = '<span class="text-slate-400 text-xs">-</span>';
-                const recId = data.receiverId || data.claimedBy;
-                const recName = data.receiverName || data.claimedByName;
-                
-                if (recId) {
-                     const rName = recName || 'Receiver';
-                     receiverHtml = `<button onclick="openUserModal('${recId}')" class="font-bold text-green-600 hover:text-green-800 hover:underline text-left transition text-sm">${rName}</button>`;
-                }
-
-                tbody.innerHTML += `
-                     <tr class="hover:bg-slate-50 transition border-b border-slate-50 group">
-                        <td class="px-6 py-4 whitespace-nowrap">${dateStr}</td>
-                        <td class="px-6 py-4">
-                            <div class="flex flex-col gap-1">
-                                <div class="flex items-center gap-2 text-xs">
-                                    <span class="font-bold text-slate-400 w-8">FROM</span>
-                                    ${donorHtml}
-                                </div>
-                                <div class="flex items-center gap-2 text-xs">
-                                    <span class="font-bold text-slate-400 w-8">TO</span>
-                                    ${receiverHtml}
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4">
-                             <span class="text-slate-700 font-medium text-sm bg-slate-100 px-2 py-1 rounded border border-slate-200">${data.foodItem || 'Food Packet'}</span>
-                        </td>
-                        <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100">${data.status || 'Pending'}</span></td>
-                    </tr>
-                `;
-            }
-        }
-
-        // 4. REPORTS
-        async function loadReports() {
-            try {
-                const snapshot = await db.collection('donations')
-                                       .where('status', 'in', ['Issue', 'Resolved'])
-                                       .get();
-
-                const container = document.getElementById('reports-list');
-                
-                if(snapshot.empty) {
-                    container.innerHTML = '<div class="text-center py-12"><div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-300"><i class="fa-solid fa-clipboard-check text-2xl"></i></div><p class="text-slate-500">No active issues found.</p></div>';
-                    return;
-                }
-
-                container.innerHTML = '';
-                const docs = snapshot.docs.sort((a, b) => {
-                    const sa = a.data().status;
-                    const sb = b.data().status;
-                    if (sa === 'Issue' && sb !== 'Issue') return -1;
-                    if (sa !== 'Issue' && sb === 'Issue') return 1;
-                    return 0;
-                });
-
-                docs.forEach(doc => {
-                    const data = doc.data();
-                    const isResolved = data.status === 'Resolved';
-                    
-                    const bgClass = isResolved ? 'bg-green-50/50 border-green-100' : 'bg-red-50/50 border-red-100 shadow-sm';
-                    const iconClass = isResolved ? 'text-green-500' : 'text-red-500';
-                    
-                    // Determine Parties
-                    const donorName = data.donorName || 'Unknown Donor';
-                    const receiverName = data.receiverName || data.claimedByName || 'Unknown Receiver';
-                    const reason = data.reportReason || data.issueDescription || data.description || 'No detailed reason provided.';
-                    const adminAction = data.adminAction || '';
-
-                    // Action Area
-                    let actionArea = '';
-                    if (isResolved) {
-                         actionArea = `<div class="mt-3 pt-3 border-t border-green-200/50 text-xs text-green-800"><span class="font-bold">Admin Action:</span> ${adminAction || 'Resolved without notes.'}</div>`;
-                    } else {
-                         actionArea = `
-                            <div class="mt-3 pt-3 border-t border-red-200/50">
-                                <textarea id="action-note-${doc.id}" class="w-full text-xs p-2 rounded border border-red-200 focus:outline-none focus:border-red-400 bg-white/80" rows="2" placeholder="Describe action taken..."></textarea>
-                                <div class="mt-2 text-right">
-                                    <button onclick="resolveIssue('${doc.id}')" class="bg-white text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-50 shadow-sm transition">Resolve & Save</button>
-                                </div>
-                            </div>
-                         `;
-                    }
-
-                    container.innerHTML += `
-                        <div class="${bgClass} border rounded-2xl p-5 transition-all hover:shadow-md">
-                            <div class="flex items-start gap-4">
-                                <div class="mt-1 ${iconClass} text-xl"><i class="fa-solid fa-circle-exclamation"></i></div>
-                                <div class="flex-1">
-                                    <div class="flex justify-between items-start">
-                                        <h4 class="font-bold text-slate-800 text-sm">Issue #${doc.id.slice(0,5)}</h4>
-                                        <span class="text-[10px] font-bold uppercase tracking-wider ${isResolved ? 'text-green-600' : 'text-red-600'}">${data.status}</span>
-                                    </div>
-                                    
-                                    <div class="mt-2 grid grid-cols-2 gap-2 text-xs">
-                                        <div class="bg-white/50 p-2 rounded border border-black/5">
-                                            <span class="block text-[10px] font-bold text-slate-400 uppercase">Restaurant (Donor)</span>
-                                            <span class="font-medium text-slate-700">${donorName}</span>
-                                        </div>
-                                        <div class="bg-white/50 p-2 rounded border border-black/5">
-                                            <span class="block text-[10px] font-bold text-slate-400 uppercase">Orphanage (Receiver)</span>
-                                            <span class="font-medium text-slate-700">${receiverName}</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-2">
-                                        <p class="text-xs text-slate-600"><span class="font-bold text-slate-500">Reason:</span> ${reason}</p>
-                                    </div>
-
-                                    ${actionArea}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            } catch(e) {
-                console.error("Error loading reports", e);
-            }
-        }
-
-        async function resolveIssue(id) {
-            const note = document.getElementById(`action-note-${id}`).value;
-            if(!note) return alert("Please enter a note about the action taken.");
-
-            openConfirmModal("Resolve Issue", "Mark this issue as resolved with the provided notes?", async () => {
-                try {
-                    await db.collection('donations').doc(id).update({ 
-                        status: 'Resolved',
-                        adminAction: note,
-                        resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    loadReports();
-                    loadStats();
-                } catch(e) { alert("Error resolving issue"); }
-            });
-        }
-
-        // 5. BROADCAST
-        function toggleBroadcastInput() {
-            const type = document.getElementById('broadcast-target').value;
-            const container = document.getElementById('broadcast-userid-container');
-            if (type === 'specific') {
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
-            }
-        }
-
-        async function sendBroadcast() {
-            const targetType = document.getElementById('broadcast-target').value;
-            const targetId = document.getElementById('broadcast-userid').value;
-            const title = document.getElementById('broadcast-title').value;
-            const msg = document.getElementById('broadcast-msg').value;
-
-            if(!title || !msg) return alert("Please fill title and message");
-            if(targetType === 'specific' && !targetId) return alert("Please enter a User ID");
-
-            try {
-                await db.collection('notifications').add({
-                    title: title,
-                    message: msg,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    type: 'broadcast',
-                    targetAudience: targetType, 
-                    targetUserId: targetType === 'specific' ? targetId : null
-                });
-                
-                alert("Broadcast sent successfully!");
-                document.getElementById('broadcast-title').value = '';
-                document.getElementById('broadcast-msg').value = '';
-                if(targetType === 'specific') document.getElementById('broadcast-userid').value = '';
-                
-            } catch(e) {
-                console.error(e);
-                alert("Error sending broadcast");
-            }
-        }
-        
-        // Export CSV
-        function exportCSV() {
-             let csvContent = "data:text/csv;charset=utf-8,Date,Time,Type,Details,Status\n";
-             const rows = document.querySelectorAll("#activity-table-body tr");
-             rows.forEach(row => {
-                 let rowData = [];
-                 row.querySelectorAll("td").forEach(cell => {
-                     let text = cell.innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
-                     rowData.push(`"${text}"`);
-                 });
-                 csvContent += rowData.join(",") + "\n";
-             });
-             const encodedUri = encodeURI(csvContent);
-             const link = document.createElement("a");
-             link.setAttribute("href", encodedUri);
-             link.setAttribute("download", "activity_log.csv");
-             document.body.appendChild(link);
-             link.click();
-        }
-
+        function logout() { auth.signOut().then(() => window.location.href = 'https://foodbridge.qzz.io/index'); }
     </script>
 </body>
 </html>
