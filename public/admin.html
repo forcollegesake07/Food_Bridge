@@ -323,7 +323,7 @@
             <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-gray-200">
                 <div class="mb-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-2">Send Notification</h3>
-                    <p class="text-gray-500 text-sm">This message will appear on the dashboard of all selected users.</p>
+                    <p class="text-gray-500 text-sm">This message will appear on the dashboard of selected users.</p>
                 </div>
                 
                 <div class="space-y-4">
@@ -337,12 +337,21 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Target Audience</label>
-                        <select id="bc-target" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
+                        <select id="bc-target" onchange="toggleSingleUserField()" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
                             <option value="all">All Users</option>
                             <option value="restaurant">Restaurants Only</option>
                             <option value="orphanage">Orphanages Only</option>
+                            <option value="single">Specific User (by ID)</option>
                         </select>
                     </div>
+                    
+                    <!-- Hidden field for Single User ID -->
+                    <div id="bc-specific-user-container" class="hidden animate-fade-in">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">User ID</label>
+                        <input type="text" id="bc-user-id" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Paste the User ID here...">
+                        <p class="text-xs text-gray-400 mt-1 ml-1">You can find User IDs in the "Users" tab (click 'Manage').</p>
+                    </div>
+
                     <button onclick="sendBroadcast()" id="btn-send-bc" class="w-full py-4 bg-brand-blue text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-all active:scale-95 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-paper-plane"></i> Send Broadcast
                     </button>
@@ -579,36 +588,63 @@
         }
 
         // --- BROADCAST FUNCTIONALITY ---
+        function toggleSingleUserField() {
+            const target = document.getElementById('bc-target').value;
+            const container = document.getElementById('bc-specific-user-container');
+            if (target === 'single') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
         async function sendBroadcast() {
             const title = document.getElementById('bc-title').value;
             const message = document.getElementById('bc-message').value;
             const target = document.getElementById('bc-target').value;
+            const userId = document.getElementById('bc-user-id').value.trim();
             const btn = document.getElementById('btn-send-bc');
 
-            if(!title || !message) { alert("Please fill in all fields."); return; }
+            if(!title || !message) { alert("Please fill in title and message."); return; }
+            
+            // Validate User ID if "Specific User" is selected
+            if(target === 'single' && !userId) {
+                alert("Please enter a User ID.");
+                return;
+            }
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
 
             try {
-                // We create a new collection 'notifications'
-                await db.collection('notifications').add({
+                const notificationData = {
                     title: title,
                     message: message,
-                    targetAudience: target, // 'all', 'restaurant', 'orphanage'
+                    targetAudience: target, // 'all', 'restaurant', 'orphanage', 'single'
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     isRead: false
-                });
+                };
+
+                // Add specific user ID if applicable
+                if (target === 'single') {
+                    notificationData.targetUserId = userId;
+                }
+
+                await db.collection('notifications').add(notificationData);
 
                 // Update UI log
                 const history = document.getElementById('broadcast-history');
-                const newItem = `<div class="p-3 bg-blue-50 border-l-4 border-blue-500 rounded-r-md text-sm animate-fade-in"><span class="font-bold block text-gray-800">${title}</span><span class="text-gray-600">${new Date().toLocaleTimeString()} - Target: ${target}</span></div>`;
+                const targetText = target === 'single' ? `User: ${userId}` : target;
+                const newItem = `<div class="p-3 bg-blue-50 border-l-4 border-blue-500 rounded-r-md text-sm animate-fade-in"><span class="font-bold block text-gray-800">${title}</span><span class="text-gray-600">${new Date().toLocaleTimeString()} - Target: ${targetText}</span></div>`;
+                
                 if(history.innerHTML.includes("No recent")) history.innerHTML = newItem;
                 else history.innerHTML = newItem + history.innerHTML;
 
                 // Clear form
                 document.getElementById('bc-title').value = '';
                 document.getElementById('bc-message').value = '';
+                document.getElementById('bc-user-id').value = '';
+                
                 alert("Broadcast sent successfully!");
 
             } catch(e) {
