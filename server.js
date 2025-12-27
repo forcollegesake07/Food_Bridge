@@ -81,7 +81,7 @@ app.post('/api/send-custom-mail', upload.array('attachments'), async (req, res) 
 
         await transporter.sendMail({
             // Uses your verified sender email from env vars, or defaults to the hardcoded one
-            from: process.env.SENDER_EMAIL || "noreply@foodbridge.qzz.io", 
+            from: process.env.SENDER_EMAIL || "admin@foodbridge.qzz.io", 
             to: to,
             subject: subject,
             text: text,
