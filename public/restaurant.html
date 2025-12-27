@@ -236,6 +236,7 @@
                             <i class="fa-solid fa-bell text-xl"></i>
                             <span id="notif-badge" class="absolute top-2 right-2.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white hidden animate-pulse"></span>
                         </button>
+                        <!-- Updated Notification Dropdown -->
                         <div id="notif-dropdown" class="hidden absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl overflow-hidden z-50 border border-gray-100 origin-top-right transition-all transform scale-95 opacity-0">
                             <div class="p-3 border-b border-gray-100 bg-gray-50 font-bold text-gray-700 text-sm flex justify-between items-center">
                                 <span>Notifications</span>
@@ -300,6 +301,7 @@
         </div>
     </main>
 
+    <!-- CONFIRM MODAL -->
     <div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
         <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-sm w-full transform scale-95 transition-all duration-300 transform-gpu" id="confirm-modal-content">
             <div class="text-center">
@@ -316,7 +318,11 @@
         </div>
     </div>
 
+    <!-- TOAST NOTIFICATION -->
     <div id="toast" class="fixed bottom-6 right-6 left-6 md:left-auto bg-brand-dark text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-4 z-50"><i class="fa-solid fa-circle-check text-green-400 text-lg"></i><p class="text-sm" id="toast-message">Success</p></div>
+
+    <!-- IN-APP NOTIFICATION CONTAINER -->
+    <div id="notification-container" class="fixed top-4 right-4 z-[100] space-y-3 w-full max-w-sm px-4 md:px-0 pointer-events-none"></div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0", authDomain: "panel-9e1a6.firebaseapp.com", projectId: "panel-9e1a6", storageBucket: "panel-9e1a6.firebasestorage.app", messagingSenderId: "491001640513", appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0" };
@@ -327,7 +333,6 @@
         let broadcastNotifs = [];
         let operationalNotifs = [];
         
-        // Map Variables
         let map, marker;
         let currentLat = 0, currentLng = 0;
 
@@ -352,14 +357,21 @@
                     if(document.getElementById('detail-phone')) document.getElementById('detail-phone').value = userData.phone || "";
                     if(document.getElementById('detail-address')) document.getElementById('detail-address').value = userData.address || "";
                     
-                    // Initialize Coords if exist
                     if(userData.location) { currentLat = userData.location.lat; currentLng = userData.location.lng; }
+
+                    // Self-healing: Ensure userId field exists for broadcasts
+                    if(!userData.userId) {
+                        await db.collection('users').doc(user.uid).update({ userId: user.uid });
+                    }
+
+                    // START BROADCAST LISTENER
+                    listenForBroadcasts(user.uid, userData.role);
 
                     document.getElementById('tab-overview').classList.remove('hidden');
                     loadData();
                     loadUrgentRequests(); 
                     loadActivePickups();
-                    loadBroadcasts();
+                    loadBroadcasts(); // Only for list population
                 } else {
                     userData = { name: "New Restaurant", phone: "", address: "" };
                     await db.collection('users').doc(user.uid).set(userData);
@@ -371,6 +383,50 @@
                 }
             } else { window.location.href = 'https://foodbridge.qzz.io/login'; }
         });
+
+        // --- NEW BROADCAST LISTENER ---
+        function listenForBroadcasts(userId, role) {
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000); 
+            
+            db.collection('notifications')
+                .where('createdAt', '>', oneHourAgo)
+                .onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === 'added') {
+                            const note = change.doc.data();
+                            const isForAll = note.targetAudience === 'all';
+                            const isForRole = note.targetAudience === role;
+                            const isForMe = note.targetAudience === 'specific' && note.targetUserId === userId;
+
+                            if (isForAll || isForRole || isForMe) {
+                                showInAppNotification(note.title, note.message);
+                            }
+                        }
+                    });
+                });
+        }
+
+        function showInAppNotification(title, message) {
+            const container = document.getElementById('notification-container');
+            if(!container) return;
+            const el = document.createElement('div');
+            el.className = "bg-white border-l-4 border-blue-500 rounded-lg p-4 shadow-2xl transform translate-x-full transition-transform duration-300 pointer-events-auto flex items-start gap-3 w-full";
+            el.innerHTML = `
+                <div class="text-blue-500 mt-1 flex-shrink-0"><i class="fa-solid fa-bell"></i></div>
+                <div class="flex-grow">
+                    <h4 class="font-bold text-gray-800 text-sm">${title}</h4>
+                    <p class="text-gray-600 text-xs mt-1 leading-relaxed">${message}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600 flex-shrink-0"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            container.appendChild(el);
+            
+            requestAnimationFrame(() => el.classList.remove('translate-x-full'));
+            setTimeout(() => {
+                el.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => el.remove(), 300);
+            }, 6000); 
+        }
 
         // Fixed Toggle Logic
         function toggleSidebar() {
@@ -386,59 +442,27 @@
             }
         }
 
-        // ============================================================
-        //  FIXED TAB LOGIC (Supports Android Back Button)
-        // ============================================================
         window.currentTab = "overview"; 
 
         function switchTab(tab, fromPopState = false) {
-            // 1. Push history only when user clicks (not when pressing Back)
-            if (!fromPopState) {
-                // This creates a "browser history" entry that Android can see
-                history.pushState({ tab }, "", "#" + tab);
-            }
-
-            // 2. Hide all tabs
-            document.querySelectorAll('[id^="tab-"]').forEach(el => {
-                el.style.display = 'none'; // Hide content
-                el.classList.add('hidden'); // Ensure hidden class is added
-            });
-
-            // 3. Show selected tab
+            if (!fromPopState) history.pushState({ tab }, "", "#" + tab);
+            document.querySelectorAll('[id^="tab-"]').forEach(el => { el.style.display = 'none'; el.classList.add('hidden'); });
             const active = document.getElementById('tab-' + tab);
-            if (active) {
-                active.style.display = 'block';
-                active.classList.remove('hidden');
-            }
-
-            // 4. Update Button Styles (Optional but good for sidebar)
-            // (You can add your button styling logic here if needed)
-
+            if (active) { active.style.display = 'block'; active.classList.remove('hidden'); }
             window.currentTab = tab;
-
-            // 5. Initialize Map if switching to Details
             if (tab === 'details') { setTimeout(initMap, 200); }
         }
 
-        // Listen for Browser/Android Back Button
         window.addEventListener("popstate", function (e) {
-            if (e.state && e.state.tab) {
-                switchTab(e.state.tab, true);
-            } else {
-                // If history is empty, default to overview
-                switchTab("overview", true);
-            }
+            if (e.state && e.state.tab) switchTab(e.state.tab, true);
+            else switchTab("overview", true);
         });
 
-        // Default tab on first load
         document.addEventListener("DOMContentLoaded", function () {
-            // Check URL hash (e.g. #alerts) or default to overview
             const initialTab = location.hash.replace("#", "") || "overview";
             switchTab(initialTab, true);
         });
-        // ============================================================
 
-        // --- MAP LOGIC ---
         function initMap() {
             if (map) { map.invalidateSize(); return; } 
             const lat = currentLat || 20.5937;
@@ -466,7 +490,6 @@
             }
         }
 
-        // --- DISTANCE CALCULATION (Haversine) ---
         function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
             if(!lat1 || !lon1 || !lat2 || !lon2) return 99999; 
             var R = 6371; 
@@ -480,22 +503,24 @@
 
         function deg2rad(deg) { return deg * (Math.PI/180); }
 
-        // --- NOTIFICATIONS LOGIC ---
         function loadBroadcasts() {
             db.collection('notifications')
-              .where('targetAudience', 'in', ['all', 'restaurant'])
+              .where('targetAudience', 'in', ['all', 'restaurant', 'specific']) // Include specific
               .orderBy('createdAt', 'desc')
               .limit(10)
               .onSnapshot(snap => {
                   broadcastNotifs = [];
                   snap.forEach(doc => {
                       const d = doc.data();
-                      broadcastNotifs.push({
-                          type: 'broadcast',
-                          title: d.title || 'System Broadcast',
-                          message: d.message,
-                          time: d.createdAt ? new Date(d.createdAt.seconds * 1000) : new Date()
-                      });
+                      // Logic for Dropdown List
+                      if(d.targetAudience === 'all' || d.targetAudience === 'restaurant' || (d.targetAudience === 'specific' && d.targetUserId === currentUser.uid)) {
+                          broadcastNotifs.push({
+                              type: 'broadcast',
+                              title: d.title || 'System Broadcast',
+                              message: d.message,
+                              time: d.createdAt ? new Date(d.createdAt.seconds * 1000) : new Date()
+                          });
+                      }
                   });
                   renderAllNotifs();
               });
@@ -535,7 +560,6 @@
             }
         }
 
-        // --- URGENT REQUESTS LOGIC (With Radius Filter 15km) ---
         function loadUrgentRequests() {
             db.collection('requests').where('status', '==', 'Pending').orderBy('createdAt', 'desc').onSnapshot(snap => {
                 const container = document.getElementById('requests-container');
@@ -683,7 +707,6 @@
                     docCount++; 
                     totalMeals += parseInt(data.servings || 0);
                     
-                    // Fixed Date/Time Parsing
                     const dateObj = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
                     const dateStr = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
                     const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -701,17 +724,13 @@
                     if(data.status === 'Resolved') statusBadge = `<span class="text-teal-600 bg-teal-50 px-2 py-1 rounded-lg text-xs font-bold border border-teal-100">Resolved</span>`;
                     
                     const recipient = data.orphanageName || '-';
-                    let contactInfo = '-'; 
-                    if(data.status === 'Claimed' || data.status === 'Completed') { 
-                        contactInfo = `<div class="text-xs text-gray-500 space-y-0.5"><p><i class="fa-solid fa-phone text-brand-orange mr-1"></i> ${data.orphanagePhone || 'N/A'}</p><p><i class="fa-solid fa-location-dot text-brand-orange mr-1"></i> ${data.orphanageAddress || 'N/A'}</p></div>`; 
-                    }
                     
                     // Recent Activity
                     if (docCount <= 5 && recentList) { 
                         recentList.innerHTML += `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-gray-400 shadow-sm border border-gray-100"><i class="fa-solid fa-utensils"></i></div><div><h4 class="font-bold text-gray-800 text-sm">${data.foodName}</h4><p class="text-xs text-gray-500">${data.servings} Servings • ${dateStr}</p></div></div><div class="flex items-center">${statusBadge}</div></div>`; 
                     }
                     
-                    // History Table (FIXED: Added Time, Type, Removed Action)
+                    // History Table
                     if (historyBody) { 
                         historyBody.innerHTML += `
                         <tr class="hover:bg-gray-50 transition-colors">
