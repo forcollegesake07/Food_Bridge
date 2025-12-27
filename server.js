@@ -74,6 +74,7 @@ async function sendPushNotification(targetUserId, title, body) {
         console.log(`📲 Notification sent to user: ${targetUserId}`);
       } else {
         console.log(`⚠️ No FCM Token found for user: ${targetUserId}`);
+        console.log("DEBUG: Available fields:", Object.keys(userData)); // DEBUG: Print available fields
       }
     } else {
       // Fallback: Try checking if the targetUserId is actually the document ID itself
@@ -91,6 +92,7 @@ async function sendPushNotification(targetUserId, title, body) {
             console.log(`📲 Notification sent to user (via Doc ID): ${targetUserId}`);
           } else {
              console.log(`⚠️ No FCM Token found for user (via Doc ID): ${targetUserId}`);
+             console.log("DEBUG: Available fields:", Object.keys(userData)); // DEBUG: Print available fields
           }
       } else {
           console.log(`❌ User completely not found by userId field OR Doc ID: ${targetUserId}`);
