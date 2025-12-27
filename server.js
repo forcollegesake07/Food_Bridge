@@ -61,7 +61,6 @@ console.log("BREVO KEY EXISTS:", !!process.env.BREVO_API_KEY);
 const transporter = nodemailer.createTransport({
     host: "smtp-relay.brevo.com",
     port: 587,
-   secure: true,
     auth: {
         // Render will read these from your Environment Variables
         user: process.env.SMTP_USER, 
