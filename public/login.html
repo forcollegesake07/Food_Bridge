@@ -16,6 +16,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script> <!-- Added Messaging SDK -->
 
     <script>
         tailwind.config = {
@@ -199,6 +200,19 @@
         const firebaseConfig = { apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0", authDomain: "panel-9e1a6.firebaseapp.com", projectId: "panel-9e1a6", storageBucket: "panel-9e1a6.firebasestorage.app", messagingSenderId: "491001640513", appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore(); 
+        let messaging;
+
+        // Initialize Firebase Messaging (FCM)
+        try {
+            if (firebase.messaging.isSupported()) {
+                messaging = firebase.messaging();
+                console.log("Firebase Messaging initialized.");
+            } else {
+                console.warn("Firebase Messaging is not supported in this browser.");
+            }
+        } catch (e) {
+            console.error("Messaging Init Error:", e);
+        }
         
         let pendingGoogleUser = null;
         let isSigningUp = false; // CRITICAL FIX: Flag to prevent auto-logout race condition during signup
@@ -207,6 +221,28 @@
             const urlParams = new URLSearchParams(window.location.search); 
             if (urlParams.get('mode') === 'signup') toggleView('signup'); 
         });
+
+        // --- FCM TOKEN HANDLER ---
+        async function requestNotificationPermission(userId) {
+            if (!messaging) return;
+            try {
+                // Request Permission
+                await Notification.requestPermission();
+                
+                // Get Token
+                const token = await messaging.getToken({ vapidKey: "YOUR_PUBLIC_VAPID_KEY_HERE" }); // Optional: Add VAPID Key if needed, otherwise it uses default from config
+                
+                if (token) {
+                    console.log("FCM Token:", token);
+                    // Save Token to User Profile
+                    await db.collection('users').doc(userId).update({ fcmToken: token });
+                } else {
+                    console.warn("No registration token available. Request permission to generate one.");
+                }
+            } catch (err) {
+                console.error("An error occurred while retrieving token. ", err);
+            }
+        }
 
         // --- AUTO LOGIN LOGIC ---
         auth.onAuthStateChanged(async (user) => {
@@ -236,6 +272,9 @@
                         if (!userData.userId) {
                             await db.collection('users').doc(user.uid).update({ userId: user.uid });
                         }
+
+                        // [NEW] Register for Notifications on Login
+                        requestNotificationPermission(user.uid);
 
                         if (userData.isDisable) {
                             auth.signOut();
@@ -341,6 +380,9 @@
                         await db.collection('users').doc(user.uid).update({ userId: user.uid });
                     }
 
+                    // [NEW] Register for Notifications on Login
+                    requestNotificationPermission(user.uid);
+
                     if (userData.isDisable === true) { 
                         showMessage("Your account has been disabled by Admin.", "error"); 
                         await firebase.auth().signOut(); 
@@ -380,7 +422,11 @@
                     isDisable: false,
                     isVerified: true, 
                     createdAt: firebase.firestore.FieldValue.serverTimestamp() 
-                }); 
+                });
+                
+                // [NEW] Register for Notifications
+                requestNotificationPermission(pendingGoogleUser.uid);
+
                 document.getElementById('google-role-modal').classList.add('hidden'); 
                 showMessage("Account setup complete!", "success"); 
                 performRedirect(role); 
@@ -470,6 +516,9 @@
                     if (!userData.userId) {
                         await db.collection('users').doc(user.uid).update({ userId: user.uid });
                     }
+
+                    // [NEW] Register for Notifications on Login
+                    requestNotificationPermission(user.uid);
 
                     if (userData.isDisable === true) { 
                         showMessage("Your account has been disabled by Admin.", "error"); 
