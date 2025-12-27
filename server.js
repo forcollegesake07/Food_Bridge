@@ -57,11 +57,13 @@ async function sendPushNotification(targetUserId, title, body) {
 
   try {
     // UPDATED QUERY: Query by the 'userId' field instead of document ID directly
+    console.log(`🔎 Searching for user with userId: ${targetUserId}`);
     const userQuery = await db.collection("users").where("userId", "==", targetUserId).limit(1).get();
     
     if (!userQuery.empty) {
       const userDoc = userQuery.docs[0];
       const userData = userDoc.data();
+      console.log(`✅ User found. Data has fcmToken? ${!!userData.fcmToken}`);
 
       if (userData.fcmToken) {
         const message = {
@@ -75,16 +77,23 @@ async function sendPushNotification(targetUserId, title, body) {
       }
     } else {
       // Fallback: Try checking if the targetUserId is actually the document ID itself
+      console.log(`⚠️ User not found by userId field. Trying Doc ID lookup for: ${targetUserId}`);
       const docRef = await db.collection("users").doc(targetUserId).get();
-      if(docRef.exists && docRef.data().fcmToken) {
-          const message = {
-            token: docRef.data().fcmToken,
-            notification: { title, body }
-          };
-          await admin.messaging().send(message);
-          console.log(`📲 Notification sent to user (via Doc ID): ${targetUserId}`);
+      if(docRef.exists) {
+          const userData = docRef.data();
+          console.log(`✅ User found by Doc ID. Data has fcmToken? ${!!userData.fcmToken}`);
+          if (userData.fcmToken) {
+            const message = {
+                token: userData.fcmToken,
+                notification: { title, body }
+            };
+            await admin.messaging().send(message);
+            console.log(`📲 Notification sent to user (via Doc ID): ${targetUserId}`);
+          } else {
+             console.log(`⚠️ No FCM Token found for user (via Doc ID): ${targetUserId}`);
+          }
       } else {
-          console.log(`⚠️ User not found by userId field OR Doc ID: ${targetUserId}`);
+          console.log(`❌ User completely not found by userId field OR Doc ID: ${targetUserId}`);
       }
     }
   } catch (error) {
@@ -111,6 +120,8 @@ async function broadcastToRole(role, title, body) {
       const data = doc.data();
       if (data.fcmToken) tokens.push(data.fcmToken);
     });
+
+    console.log(`Found ${tokens.length} tokens for role: ${role}`);
 
     if (tokens.length > 0) {
       // Send in batches of 500 (Firebase limit)
