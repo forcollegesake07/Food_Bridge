@@ -372,7 +372,11 @@
         </div>
     </div>
 
+    <!-- TOAST NOTIFICATION -->
     <div id="toast" class="fixed bottom-6 right-6 left-6 md:left-auto bg-brand-dark text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-4 z-50"><i class="fa-solid fa-circle-check text-green-400 text-lg"></i><p class="text-sm" id="toast-message">Success</p></div>
+
+    <!-- IN-APP NOTIFICATION CONTAINER -->
+    <div id="notification-container" class="fixed top-4 right-4 z-[100] space-y-3 w-full max-w-sm px-4 md:px-0 pointer-events-none"></div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0", authDomain: "panel-9e1a6.firebaseapp.com", projectId: "panel-9e1a6", storageBucket: "panel-9e1a6.firebasestorage.app", messagingSenderId: "491001640513", appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0" };
@@ -408,6 +412,14 @@
                     // Init Lat/Lng
                     if(userData.location) { currentLat = userData.location.lat; currentLng = userData.location.lng; }
 
+                    // Self-healing: Ensure userId field exists
+                    if(!userData.userId) {
+                        await db.collection('users').doc(user.uid).update({ userId: user.uid });
+                    }
+
+                    // START BROADCAST LISTENER
+                    listenForBroadcasts(user.uid, userData.role);
+
                     document.getElementById('tab-overview').classList.remove('hidden');
                     loadBroadcasts(); 
                     loadHistory();
@@ -428,6 +440,50 @@
             } else { window.location.href = 'https://foodbridge.qzz.io/login'; }
         });
 
+        // --- NEW BROADCAST LISTENER ---
+        function listenForBroadcasts(userId, role) {
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000); 
+            
+            db.collection('notifications')
+                .where('createdAt', '>', oneHourAgo)
+                .onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === 'added') {
+                            const note = change.doc.data();
+                            const isForAll = note.targetAudience === 'all';
+                            const isForRole = note.targetAudience === role;
+                            const isForMe = note.targetAudience === 'specific' && note.targetUserId === userId;
+
+                            if (isForAll || isForRole || isForMe) {
+                                showInAppNotification(note.title, note.message);
+                            }
+                        }
+                    });
+                });
+        }
+
+        function showInAppNotification(title, message) {
+            const container = document.getElementById('notification-container');
+            if(!container) return;
+            const el = document.createElement('div');
+            el.className = "bg-white border-l-4 border-green-500 rounded-lg p-4 shadow-2xl transform translate-x-full transition-transform duration-300 pointer-events-auto flex items-start gap-3 w-full";
+            el.innerHTML = `
+                <div class="text-green-500 mt-1 flex-shrink-0"><i class="fa-solid fa-bell"></i></div>
+                <div class="flex-grow">
+                    <h4 class="font-bold text-gray-800 text-sm">${title}</h4>
+                    <p class="text-gray-600 text-xs mt-1 leading-relaxed">${message}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600 flex-shrink-0"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            container.appendChild(el);
+            
+            requestAnimationFrame(() => el.classList.remove('translate-x-full'));
+            setTimeout(() => {
+                el.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => el.remove(), 300);
+            }, 6000); 
+        }
+
         function updateUIWithUserData() {
             const sideName = document.getElementById('sidebar-name'); if (sideName) sideName.innerText = userData.name || "Orphanage";
             const sideId = document.getElementById('sidebar-id'); if (sideId) sideId.innerText = "ID: " + currentUser.uid.slice(0, 6);
@@ -436,14 +492,7 @@
             if(document.getElementById('detail-address')) document.getElementById('detail-address').value = userData.address || "";
         }
 
-        // [NEW] Function called by Android App to update FCM Token
-        window.updateFCMToken = async function(token) {
-            if(currentUser) {
-                await db.collection('users').doc(currentUser.uid).update({ fcmToken: token });
-                console.log("FCM Token Updated");
-            }
-        }
-
+        // Fixed Toggle Logic
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
@@ -531,7 +580,11 @@
 
         // --- NOTIFICATIONS LOGIC ---
         function loadBroadcasts() {
-            db.collection('notifications').where('targetAudience', 'in', ['all', 'orphanage']).orderBy('createdAt', 'desc').limit(10).onSnapshot(snap => {
+            db.collection('notifications')
+              .where('targetAudience', 'in', ['all', 'orphanage'])
+              .orderBy('createdAt', 'desc')
+              .limit(10)
+              .onSnapshot(snap => {
                   broadcastNotifs = [];
                   snap.forEach(doc => {
                       const d = doc.data();
@@ -570,7 +623,7 @@
                     let iconClass = 'fa-circle-info'; let iconColor = 'text-blue-500';
                     if(n.type === 'broadcast') { iconClass = 'fa-tower-broadcast'; iconColor = 'text-brand-orange'; }
                     if(n.type === 'fulfilled') { iconClass = 'fa-circle-check'; iconColor = 'text-green-500'; }
-                    list.innerHTML += `<div class="p-3 border-b border-gray-50 hover:bg-gray-50 transition"><div class="flex items-start gap-3"><div class="mt-1 ${iconColor}"><i class="fa-solid ${iconClass}"></i></div><div><p class="text-xs font-bold text-gray-800">${n.title}</p><p class="text-xs text-gray-600 line-clamp-2">${n.message}</p><p class="text-[10px] text-gray-400 mt-1">${n.time.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p></div></div></div>`;
+                    list.innerHTML += `<div class="p-3 border-b border-gray-50 hover:bg-gray-50 transition"><div class="flex items-start gap-3"><div class="mt-1 ${iconColor}"><i class="fa-solid ${iconClass}"></i></div><div><p class="text-xs font-bold text-gray-800">${n.title || 'Notification'}</p><p class="text-xs text-gray-600 line-clamp-2">${n.message}</p><p class="text-[10px] text-gray-400 mt-1">${n.time.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p></div></div></div>`;
                 });
                 badge.classList.remove('hidden');
             }
@@ -651,13 +704,13 @@
                         const dateStr = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }); const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                         if(isDonation && (data.status === 'Completed' || data.status === 'Claimed')) { totalReceived += parseInt(data.servings || 0); }
                         let statusBadge = '';
-                        if (data.status === 'Available') statusBadge = `<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">Available</span>`;
-                        else if (data.status === 'Claimed') statusBadge = `<span class="bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-1 rounded text-xs font-bold">On Way</span>`;
-                        else if (data.status === 'Completed') statusBadge = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Received</span>`;
-                        else if (data.status === 'Pending') statusBadge = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-bold">Pending</span>`;
-                        else if (data.status === 'Fulfilled') statusBadge = `<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">Fulfilled</span>`;
-                        else if (data.status === 'Issue') statusBadge = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Reported</span>`;
-                        else if (data.status === 'Resolved') statusBadge = `<span class="bg-teal-100 text-teal-700 border border-teal-200 px-2 py-1 rounded text-xs font-bold">Resolved</span>`;
+                        if (data.status === 'Available') statusBadge = `<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-lg text-xs font-bold border border-gray-100">Available</span>`;
+                        else if (data.status === 'Claimed') statusBadge = `<span class="bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-1 rounded-lg text-xs font-bold">On Way</span>`;
+                        else if (data.status === 'Completed') statusBadge = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded-lg text-xs font-bold border border-green-100">Received</span>`;
+                        else if (data.status === 'Pending') statusBadge = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg text-xs font-bold border border-yellow-100">Pending</span>`;
+                        else if (data.status === 'Fulfilled') statusBadge = `<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-bold border border-blue-100">Fulfilled</span>`;
+                        else if (data.status === 'Issue') statusBadge = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded-lg text-xs font-bold border border-red-100">Reported</span>`;
+                        else if (data.status === 'Resolved') statusBadge = `<span class="bg-teal-100 text-teal-700 border border-teal-200 px-2 py-1 rounded-lg text-xs font-bold">Resolved</span>`;
                         const name = isDonation ? data.foodName : data.itemNeeded; const qty = isDonation ? data.servings : data.quantity; const source = isDonation ? (data.restaurantName || '-') : 'Broadcast';
                         if (count < 5 && recentList) { const icon = isDonation ? 'fa-box-open' : 'fa-bullhorn'; recentList.innerHTML += `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-gray-400 shadow-sm border border-gray-100"><i class="fa-solid ${icon}"></i></div><div><h4 class="font-bold text-gray-800 text-sm">${name}</h4><p class="text-xs text-gray-500">${qty} Qty • ${dateStr}</p></div></div>${statusBadge}</div>`; }
                         if (historyBody) { historyBody.innerHTML += `<tr class="hover:bg-gray-50 transition-colors"><td class="px-4 py-3 text-gray-500 text-sm">${dateStr}</td><td class="px-4 py-3 text-gray-500 text-sm">${timeStr}</td><td class="px-4 py-3 font-bold text-xs uppercase text-gray-400">${item.type}</td><td class="px-4 py-3 font-bold text-gray-800 text-sm">${name} <span class="text-gray-400 font-normal">(${qty})</span></td><td class="px-4 py-3">${statusBadge}</td><td class="px-4 py-3 text-gray-500 text-sm font-medium">${source}</td></tr>`; }
