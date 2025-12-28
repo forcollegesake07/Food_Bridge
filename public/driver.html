@@ -806,11 +806,51 @@ async function fetchAddressFromLatLng(lat, lng) {
     try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`); const data = await res.json(); if(data.display_name) document.getElementById("detail-address").value = data.display_name; } catch(e){}
 }
 
+// FIXED SIDEBAR SWITCHING LOGIC
 function switchTab(tab) {
-    ['jobs', 'active', 'history', 'details'].forEach(t => { document.getElementById('tab-'+t).classList.add('hidden'); document.getElementById('btn-'+t).classList.remove('bg-brand-blue','text-white'); document.getElementById('btn-'+t).classList.add('text-gray-500'); });
-    document.getElementById('tab-'+tab).classList.remove('hidden'); document.getElementById('btn-'+tab).classList.add('bg-brand-blue','text-white');
-    if(tab === 'details') setTimeout(initLocationMap, 200);
-    if(tab === 'active' && routeMap) setTimeout(() => routeMap.invalidateSize(), 200);
+    // 1. Hide all tab contents
+    ['jobs', 'active', 'history', 'details'].forEach(t => {
+        const content = document.getElementById('tab-' + t);
+        if (content) content.classList.add('hidden');
+    });
+
+    // 2. Update Sidebar Buttons (Robust Class Reset)
+    const buttons = ['jobs', 'active', 'history', 'details'];
+    buttons.forEach(b => {
+        const btn = document.getElementById('btn-' + b);
+        if (btn) {
+            // Remove ACTIVE classes
+            btn.classList.remove('bg-brand-blue', 'text-white', 'shadow-md');
+            
+            // Remove INACTIVE/HOVER classes (Clean slate)
+            btn.classList.remove('text-gray-500', 'hover:bg-blue-50', 'hover:text-brand-blue', 'hover:bg-gray-50', 'hover:text-gray-900');
+
+            if (b === tab) {
+                // Apply ACTIVE style
+                btn.classList.add('bg-brand-blue', 'text-white', 'shadow-md');
+            } else {
+                // Apply INACTIVE style
+                btn.classList.add('text-gray-500');
+                
+                // Specific hover for 'Current Delivery' vs others
+                if (b === 'active') {
+                    btn.classList.add('hover:bg-blue-50', 'hover:text-brand-blue');
+                } else {
+                    btn.classList.add('hover:bg-gray-50', 'hover:text-gray-900');
+                }
+            }
+        }
+    });
+
+    // 3. Show selected tab content
+    const activeContent = document.getElementById('tab-' + tab);
+    if (activeContent) activeContent.classList.remove('hidden');
+
+    // 4. Handle Map Resizing
+    if (tab === 'details') { setTimeout(initLocationMap, 200); }
+    if (tab === 'active' && typeof routeMap !== 'undefined' && routeMap) { 
+        setTimeout(() => routeMap.invalidateSize(), 200); 
+    }
 }
 
 // Helpers
