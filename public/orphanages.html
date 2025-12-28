@@ -411,6 +411,47 @@
     <div id="toast" class="fixed bottom-6 right-6 left-6 md:left-auto bg-brand-dark text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 flex items-center gap-4 z-50"><i class="fa-solid fa-circle-check text-green-400 text-lg"></i><p class="text-sm" id="toast-message">Success</p></div>
     <!-- NOTIFICATIONS -->
     <div id="notification-container" class="fixed top-4 right-4 z-[100] space-y-3 w-full max-w-sm px-4 md:px-0 pointer-events-none"></div>
+    <div id="chat-modal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+    <div id="chat-container" class="bg-gray-50 w-full sm:w-[400px] h-[85vh] sm:h-[600px] sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col transform translate-y-full sm:translate-y-10 transition-transform duration-300 pointer-events-auto overflow-hidden border border-gray-200">
+        
+        <div class="bg-white p-4 border-b border-gray-200 flex justify-between items-center shadow-sm z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-brand-light text-brand-orange flex items-center justify-center font-bold text-lg shadow-inner border border-orange-100">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-800 text-base leading-tight" id="chat-header-name">Chat</h3>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <p class="text-xs text-gray-500 font-medium">Online</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="closeChatModal()" class="w-8 h-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-500 transition active:scale-95">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div id="chat-messages" class="flex-grow overflow-y-auto p-4 space-y-3 bg-gray-50 scroll-smooth">
+            <div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-50 space-y-2">
+                <i class="fa-solid fa-comments text-4xl"></i>
+                <p class="text-sm">Start the conversation</p>
+            </div>
+        </div>
+
+        <div class="p-3 bg-white border-t border-gray-200">
+            <form onsubmit="sendChatMessage(event)" class="relative flex items-end gap-2">
+                <div class="relative flex-grow">
+                    <input type="text" id="chat-input" class="w-full pl-4 pr-10 py-3 bg-gray-100 border-0 rounded-2xl focus:ring-2 focus:ring-brand-orange focus:bg-white transition-all outline-none text-sm font-medium" placeholder="Type a message..." autocomplete="off">
+                    <button type="button" class="absolute right-3 bottom-3 text-gray-400 hover:text-gray-600 transition"><i class="fa-solid fa-paperclip"></i></button>
+                </div>
+                <button type="submit" class="bg-brand-orange text-white w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg hover:bg-orange-600 active:scale-95 transition-all">
+                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0", authDomain: "panel-9e1a6.firebaseapp.com", projectId: "panel-9e1a6", storageBucket: "panel-9e1a6.firebasestorage.app", messagingSenderId: "491001640513", appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0" };
@@ -579,14 +620,63 @@
         }
 
         function loadIncomingDeliveries() {
-            db.collection('donations').where('claimedBy', '==', currentUser.uid).where('status', '==', 'Claimed').onSnapshot(snap => {
-                const container = document.getElementById('incoming-deliveries-container'); if(!container) return; container.innerHTML = '';
-                if(snap.empty) { container.innerHTML = `<div class="bg-green-50 border border-green-100 rounded-xl p-4 text-center text-green-700 text-sm">No incoming deliveries. Request food or claim a donation!</div>`; return; }
-                snap.forEach(doc => {
-                    const d = doc.data(); container.innerHTML += `<div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-green-500 relative"><h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center"><i class="fa-solid fa-truck-fast text-green-500 mr-2"></i> On The Way</h3><div class="grid md:grid-cols-2 gap-4 mb-4"><div><p class="text-xs text-gray-500 uppercase">Incoming Item</p><p class="font-bold text-gray-800">${d.foodName}</p></div><div><p class="text-xs text-gray-500 uppercase">Quantity</p><p class="font-bold text-gray-800">${d.servings} Servings</p></div><div class="md:col-span-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p class="text-xs text-gray-500 uppercase mb-1">Donor</p><p class="font-bold text-gray-800 flex items-center"><i class="fa-solid fa-store text-brand-orange mr-2"></i> ${d.restaurantName}</p><p class="text-sm text-gray-600 mt-1"><i class="fa-solid fa-phone text-gray-400 mr-2"></i> ${d.restaurantPhone || 'N/A'}</p><p class="text-sm text-gray-600 mt-1"><i class="fa-solid fa-location-dot text-gray-400 mr-2"></i> ${d.restaurantAddress || 'N/A'}</p></div></div><div class="flex gap-3"><button onclick="openReportModal('${doc.id}')" class="flex-1 py-3.5 text-red-500 font-bold hover:bg-red-50 rounded-xl border border-red-100 transition-colors text-sm flex items-center justify-center active:scale-95 touch-manipulation"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Report</button><button onclick="confirmReceipt('${doc.id}', '${d.foodName}')" class="flex-[2] py-4 bg-brand-green text-white font-bold rounded-xl hover:bg-green-600 shadow-md transition-all active:scale-95 text-base flex items-center justify-center touch-manipulation"><i class="fa-solid fa-check-circle mr-2"></i> Confirm Receipt</button></div></div>`;
-                });
-            });
+    db.collection('donations').where('claimedBy', '==', currentUser.uid).where('status', '==', 'Claimed').onSnapshot(snap => {
+        const container = document.getElementById('incoming-deliveries-container'); 
+        if(!container) return; 
+        container.innerHTML = '';
+        
+        if(snap.empty) { 
+            container.innerHTML = `<div class="bg-green-50 border border-green-100 rounded-xl p-4 text-center text-green-700 text-sm">No incoming deliveries. Request food or claim a donation!</div>`; 
+            return; 
         }
+
+        snap.forEach(doc => {
+            const d = doc.data(); 
+            container.innerHTML += `
+            <div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-green-500 relative">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fa-solid fa-truck-fast text-green-500 mr-2"></i> On The Way
+                </h3>
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Incoming Item</p>
+                        <p class="font-bold text-gray-800">${d.foodName}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Quantity</p>
+                        <p class="font-bold text-gray-800">${d.servings} Servings</p>
+                    </div>
+                    <div class="md:col-span-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        <p class="text-xs text-gray-500 uppercase mb-1">Donor</p>
+                        <p class="font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-store text-brand-orange mr-2"></i> ${d.restaurantName}
+                        </p>
+                        <p class="text-sm text-gray-600 mt-1">
+                            <i class="fa-solid fa-phone text-gray-400 mr-2"></i> ${d.restaurantPhone || 'N/A'}
+                        </p>
+                        <p class="text-sm text-gray-600 mt-1">
+                            <i class="fa-solid fa-location-dot text-gray-400 mr-2"></i> ${d.restaurantAddress || 'N/A'}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="openChat('${d.restaurantId}', '${d.restaurantName}')" class="w-14 h-12 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition active:scale-95 shadow-sm border border-blue-100">
+                        <i class="fa-solid fa-comment-dots text-xl"></i>
+                    </button>
+
+                    <button onclick="openReportModal('${doc.id}')" class="w-14 h-12 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition active:scale-95 shadow-sm border border-red-100">
+                        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                    </button>
+                    
+                    <button onclick="confirmReceipt('${doc.id}', '${d.foodName}')" class="flex-1 py-4 bg-brand-green text-white font-bold rounded-xl hover:bg-green-600 shadow-md transition-all active:scale-95 text-base flex items-center justify-center touch-manipulation">
+                        <i class="fa-solid fa-check-circle mr-2"></i> Confirm Receipt
+                    </button>
+                </div>
+            </div>`;
+        });
+    });
+}
 
         function loadHistory() {
             db.collection('donations').where("claimedBy", "==", currentUser.uid).orderBy("createdAt", "desc").onSnapshot((donSnap) => {
@@ -774,6 +864,123 @@
         function logout() { auth.signOut().then(() => { window.location.href = 'https://foodbridge.qzz.io/login'; }); }
         async function fetchAddressFromLatLng(lat, lng) { try { const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`); const data = await res.json(); if (data && data.display_name) { document.getElementById("detail-address").value = data.display_name; } } catch (err) { console.error("Address fetch failed", err); } }
         let myChart; function updateChart(total) { const ctxElem = document.getElementById('motivationChart'); if (!ctxElem) return; const ctx = ctxElem.getContext('2d'); if(myChart) myChart.destroy(); myChart = new Chart(ctx, { type: 'bar', data: { labels: ['City Avg.', 'You'], datasets: [{ label: 'Meals Received', data: [500, total], backgroundColor: ['#E5E7EB', '#10B981'], borderRadius: 6, barThickness: 50 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false, grid: { display: false } }, x: { grid: { display: false } } } } }); }
+    /* =========================================
+   IN-APP CHAT LOGIC (Real-time Firestore)
+   ========================================= */
+let chatListener = null;
+let currentChatId = null;
+let currentReceiverId = null;
+
+// 1. Open Chat Modal & Setup Listener
+function openChat(receiverId, receiverName) {
+    if (!currentUser) return;
+    
+    currentReceiverId = receiverId;
+    document.getElementById('chat-header-name').innerText = receiverName;
+    document.getElementById('chat-messages').innerHTML = '<div class="flex justify-center mt-10"><i class="fa-solid fa-circle-notch fa-spin text-brand-orange"></i></div>';
+
+    // Generate unique Chat ID (sort UIDs to ensure same ID for both users)
+    const uids = [currentUser.uid, receiverId].sort();
+    currentChatId = `${uids[0]}_${uids[1]}`;
+
+    // UI Animation to Open
+    const modal = document.getElementById('chat-modal');
+    const container = document.getElementById('chat-container');
+    modal.classList.remove('hidden', 'pointer-events-none');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        container.classList.remove('translate-y-full', 'sm:translate-y-10');
+    }, 10);
+
+    // Listen for Messages
+    if (chatListener) chatListener(); // Unsubscribe previous
+    const messagesRef = db.collection('chats').doc(currentChatId).collection('messages').orderBy('timestamp', 'asc');
+
+    chatListener = messagesRef.onSnapshot(snapshot => {
+        const chatBox = document.getElementById('chat-messages');
+        chatBox.innerHTML = ''; // Clear loading
+
+        if (snapshot.empty) {
+            chatBox.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 space-y-2"><i class="fa-solid fa-comments text-3xl opacity-20"></i><p class="text-xs">Say Hi to ${receiverName} 👋</p></div>`;
+            return;
+        }
+
+        let lastSender = '';
+        snapshot.forEach(doc => {
+            const msg = doc.data();
+            const isMe = msg.senderId === currentUser.uid;
+            
+            // Check if we need to group messages visually
+            const isSequence = lastSender === msg.senderId;
+            lastSender = msg.senderId;
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex w-full ${isMe ? 'justify-end' : 'justify-start'} ${isSequence ? 'mt-1' : 'mt-3'}`;
+            
+            // Style based on sender
+            const bubbleClass = isMe 
+                ? 'bg-brand-orange text-white rounded-l-2xl rounded-tr-2xl rounded-br-sm' 
+                : 'bg-white text-gray-800 border border-gray-100 shadow-sm rounded-r-2xl rounded-tl-2xl rounded-bl-sm';
+
+            msgDiv.innerHTML = `
+                <div class="max-w-[75%] px-4 py-2 text-sm ${bubbleClass} relative group">
+                    <p>${msg.text}</p>
+                    <span class="text-[10px] opacity-70 ${isMe ? 'text-orange-100' : 'text-gray-400'} block text-right mt-1">
+                        ${msg.timestamp ? new Date(msg.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...'}
+                    </span>
+                </div>
+            `;
+            chatBox.appendChild(msgDiv);
+        });
+        
+        // Auto-scroll to bottom
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+}
+
+// 2. Close Chat
+function closeChatModal() {
+    const modal = document.getElementById('chat-modal');
+    const container = document.getElementById('chat-container');
+    
+    container.classList.add('translate-y-full', 'sm:translate-y-10');
+    modal.classList.add('opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden', 'pointer-events-none');
+        if (chatListener) chatListener(); // Stop listening to save data
+        chatListener = null;
+    }, 300);
+}
+
+// 3. Send Message
+async function sendChatMessage(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || !currentChatId) return;
+
+    input.value = ''; // Clear input immediately for UX
+
+    try {
+        // Add message to subcollection
+        await db.collection('chats').doc(currentChatId).collection('messages').add({
+            text: text,
+            senderId: currentUser.uid,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Update main chat doc (for "Last Message" lists in future)
+        await db.collection('chats').doc(currentChatId).set({
+            participants: [currentUser.uid, currentReceiverId],
+            lastMessage: text,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+    } catch (err) {
+        console.error("Chat Error:", err);
+    }
+}
     </script>
 </body>
 </html>
