@@ -413,6 +413,7 @@ function loadAvailableJobs() {
 }
 
 // --- 2. LOAD ACTIVE JOB (With Navigation & Chat) ---
+// 2. LOAD ACTIVE JOB (Updated: Lat/Lng Nav & No Complete Button)
 function loadActiveJob() {
     db.collection('donations')
         .where('deliveryStatus', 'in', ['Assigned', 'PickedUp'])
@@ -420,6 +421,8 @@ function loadActiveJob() {
         .limit(1)
         .onSnapshot(snap => {
             const container = document.getElementById('active-job-card');
+            
+            // If no active job, show default state
             if (snap.empty) {
                 container.innerHTML = `<div class="text-center p-10"><p class="text-gray-500">No active delivery.</p></div>`;
                 return;
@@ -429,31 +432,45 @@ function loadActiveJob() {
             const d = doc.data();
             const isPickedUp = d.deliveryStatus === 'PickedUp';
             
+            // --- COORDINATES (Fallback to default if missing) ---
             const restLoc = d.location || { lat: 20.5937, lng: 78.9629 };
-            const orphLoc = { lat: restLoc.lat + 0.02, lng: restLoc.lng + 0.02 };
+            // Simulating Orphanage location offset if not in DB (Replace with d.orphanageLocation if available)
+            const orphLoc = { lat: restLoc.lat + 0.02, lng: restLoc.lng + 0.02 }; 
 
-            // --- FIXED NAVIGATION LOGIC ---
-            // Use exact address if available, otherwise coordinates
-            let destination = "";
-            let navLabel = "";
+            // --- 1. NAVIGATION LOGIC (Lat/Lng Only) ---
+            let destLat, destLng, navLabel;
 
             if (!isPickedUp) {
-                destination = d.restaurantAddress || `${restLoc.lat},${restLoc.lng}`;
+                // Phase 1: Go to Restaurant
+                destLat = restLoc.lat;
+                destLng = restLoc.lng;
                 navLabel = "Navigate to Restaurant";
             } else {
-                destination = d.orphanageAddress || `${orphLoc.lat},${orphLoc.lng}`;
+                // Phase 2: Go to Orphanage
+                destLat = orphLoc.lat;
+                destLng = orphLoc.lng;
                 navLabel = "Navigate to Orphanage";
             }
             
-            // Standard Google Maps Direction URL
-            const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+            // Google Maps URL using ONLY Coordinates
+            const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`;
 
-            // --- ACTION BUTTON ---
-            let actionButton = "";
+            // --- 2. ACTION BUTTONS ---
+            let actionHtml = "";
+            
             if (!isPickedUp) {
-                actionButton = `<button onclick="openScanner('${doc.id}')" class="flex-1 py-3 bg-brand-orange text-white font-bold rounded-xl shadow-md hover:bg-orange-600 transition flex items-center justify-center gap-2 text-sm"><i class="fa-solid fa-qrcode"></i> Scan Pickup</button>`;
+                // STEP 1: Driver needs to Pickup (Scan QR)
+                actionHtml = `
+                    <button onclick="openScanner('${doc.id}')" class="flex-1 py-3 bg-brand-orange text-white font-bold rounded-xl shadow-md hover:bg-orange-600 transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-qrcode"></i> Scan Pickup
+                    </button>`;
             } else {
-                actionButton = `<button onclick="updateStatus('${doc.id}', 'Completed')" class="flex-1 py-3 bg-brand-green text-white font-bold rounded-xl shadow-md hover:bg-green-600 transition flex items-center justify-center gap-2 text-sm"><i class="fa-solid fa-check"></i> Complete</button>`;
+                // STEP 2: Driver has picked up. Waiting for Orphanage to Confirm.
+                // "Complete" button is REMOVED.
+                actionHtml = `
+                    <div class="flex-1 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl border border-gray-200 flex items-center justify-center gap-2 text-sm cursor-wait">
+                        <i class="fa-solid fa-hourglass-half animate-pulse"></i> Wait for Confirmation
+                    </div>`;
             }
 
             container.innerHTML = `
@@ -472,17 +489,18 @@ function loadActiveJob() {
                                 <a href="${navUrl}" target="_blank" class="flex-1 py-3 bg-white border-2 border-blue-600 text-blue-600 font-bold rounded-xl shadow-sm hover:bg-blue-50 flex items-center justify-center gap-2 text-sm no-underline">
                                     <i class="fa-solid fa-diamond-turn-right"></i> ${navLabel}
                                 </a>
-                                ${actionButton}
+                                
+                                ${actionHtml}
                             </div>
 
                             <div class="space-y-4">
                                 <div class="flex items-start gap-3">
                                     <div class="flex flex-col items-center"><div class="w-3 h-3 rounded-full bg-brand-orange"></div><div class="w-0.5 h-full bg-gray-200 min-h-[30px]"></div></div>
-                                    <div><p class="text-xs text-gray-400 uppercase font-bold">Pickup</p><p class="font-bold text-gray-800">${d.restaurantName}</p><p class="text-xs text-gray-500">${d.restaurantAddress}</p></div>
+                                    <div><p class="text-xs text-gray-400 uppercase font-bold">Pickup</p><p class="font-bold text-gray-800">${d.restaurantName}</p></div>
                                 </div>
                                 <div class="flex items-start gap-3">
                                     <div class="flex flex-col items-center"><div class="w-3 h-3 rounded-full bg-brand-green"></div></div>
-                                    <div><p class="text-xs text-gray-400 uppercase font-bold">Dropoff</p><p class="font-bold text-gray-800">${d.orphanageName}</p><p class="text-xs text-gray-500">${d.orphanageAddress}</p></div>
+                                    <div><p class="text-xs text-gray-400 uppercase font-bold">Dropoff</p><p class="font-bold text-gray-800">${d.orphanageName}</p></div>
                                 </div>
                             </div>
                         </div>
@@ -490,6 +508,7 @@ function loadActiveJob() {
                 </div>
             `;
 
+            // Initialize Map
             setTimeout(() => {
                 if(routeMap) { routeMap.remove(); }
                 routeMap = L.map('route-map-container').setView([restLoc.lat, restLoc.lng], 13);
