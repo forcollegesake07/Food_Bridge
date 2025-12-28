@@ -17,6 +17,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
+    <!-- QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -354,6 +357,18 @@
         </div>
     </div>
     
+    <!-- SCANNER MODAL -->
+    <div id="scanner-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm relative transform scale-95 transition-all duration-300 transform-gpu">
+             <button onclick="closeScannerModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition touch-manipulation z-10 w-8 h-8 flex items-center justify-center">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Scan Verification QR</h3>
+            <div id="reader" class="w-full rounded-xl overflow-hidden bg-black"></div>
+            <p class="text-center text-sm text-gray-500 mt-4">Scan the QR code on the bill to confirm receipt.</p>
+        </div>
+    </div>
+    
     <!-- REPORT MODAL -->
     <div id="report-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
         <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-sm w-full transform scale-95 transition-all duration-300 transform-gpu" id="report-modal-content">
@@ -386,6 +401,8 @@
         let pendingAction = null; let reportDonationId = null;
         const API_BASE = "https://food-bridge-fzvr.onrender.com";
         
+        let html5QrcodeScanner = null;
+
         // Notifications
         let broadcastNotifs = [];
         let operationalNotifs = [];
@@ -764,7 +781,66 @@
             showConfirmModal("Claim Donation", `Claim ${servings} servings of ${foodName} from ${restName}?`, 'claim');
         }
 
-        function confirmReceipt(donationId, foodName) { pendingAction = { type: 'receive', data: { donationId, foodName } }; showConfirmModal("Confirm Receipt", `Have you received the ${foodName}? This will mark the order as complete.`, 'receive'); }
+        // --- UPDATED CONFIRM RECEIPT (QR CODE SCAN) ---
+        function confirmReceipt(donationId, foodName) { 
+            pendingAction = { type: 'receive', data: { donationId, foodName } }; 
+            // Instead of showing the text modal, open the scanner
+            openScannerModal();
+        }
+
+        // --- SCANNER MODAL LOGIC ---
+        function openScannerModal() {
+            const modal = document.getElementById('scanner-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { 
+                modal.classList.remove('opacity-0'); 
+                modal.querySelector('div').classList.remove('scale-95'); 
+                modal.querySelector('div').classList.add('scale-100'); 
+            }, 10);
+
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            }
+        }
+
+        function closeScannerModal() {
+            const modal = document.getElementById('scanner-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.remove('scale-100');
+            modal.querySelector('div').classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if(html5QrcodeScanner) {
+                    html5QrcodeScanner.clear().catch(error => console.error("Failed to clear scanner", error));
+                    html5QrcodeScanner = null;
+                }
+            }, 300);
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            if (pendingAction && pendingAction.type === 'receive') {
+                if (decodedText === pendingAction.data.donationId) {
+                    // Match found
+                    if(html5QrcodeScanner) {
+                        html5QrcodeScanner.clear().then(() => {
+                            html5QrcodeScanner = null;
+                            const modal = document.getElementById('scanner-modal');
+                            modal.classList.add('hidden'); // Hide immediately
+                            executeAction(); // Process the receipt logic
+                        });
+                    }
+                } else {
+                    showToast("Wrong QR Code! Please scan the bill for " + pendingAction.data.foodName, 'error');
+                }
+            }
+        }
+
+        function onScanFailure(error) {
+            // Quiet failure for scanning loop
+        }
+
         function confirmDeleteRequest(reqId) { pendingAction = { type: 'deleteRequest', data: { reqId } }; showConfirmModal("Delete Request", "Are you sure you want to delete this request?", 'deleteRequest'); }
         function openReportModal(donationId) { reportDonationId = donationId; document.getElementById('report-reason-text').value = ''; const modal = document.getElementById('report-modal'); const content = document.getElementById('report-modal-content'); modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10); }
         function closeReportModal() { const modal = document.getElementById('report-modal'); const content = document.getElementById('report-modal-content'); modal.classList.add('opacity-0'); content.classList.remove('scale-100'); content.classList.add('scale-95'); setTimeout(() => { modal.classList.add('hidden'); reportDonationId = null; }, 300); }
