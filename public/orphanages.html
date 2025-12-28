@@ -944,14 +944,22 @@ let chatAttachmentBase64 = null; // Store base64 string
 
 // 1. Open Chat Modal & Setup Listener
 // --- UPDATED CHAT FUNCTION (Shared Room) ---
-function openChat(chatId, title) { // Changed params from (receiverId, name) to (chatId, title)
+/* =========================================
+   ADVANCED CHAT LOGIC (For Driver)
+   ========================================= */
+
+let chatListener = null;
+let currentChatId = null;
+let chatAttachmentBase64 = null; // Store image data
+
+// 1. OPEN CHAT
+function openChat(chatId, title) {
     if (!currentUser) return;
     
     document.getElementById('chat-header-name').innerText = title;
-    document.getElementById('chat-messages').innerHTML = '<div class="flex justify-center mt-10"><i class="fa-solid fa-circle-notch fa-spin text-brand-orange"></i></div>';
+    currentChatId = chatId;
     
-    currentChatId = chatId; // Use Donation ID directly as Chat ID
-
+    // Show Modal
     const modal = document.getElementById('chat-modal');
     const container = document.getElementById('chat-container');
     modal.classList.remove('hidden', 'pointer-events-none');
@@ -960,55 +968,110 @@ function openChat(chatId, title) { // Changed params from (receiverId, name) to 
         container.classList.remove('translate-y-full', 'sm:translate-y-10');
     }, 10);
 
+    // Reset UI
+    clearChatAttachment();
+    document.getElementById('chat-messages').innerHTML = '<div class="flex justify-center mt-10"><i class="fa-solid fa-circle-notch fa-spin text-blue-500"></i></div>';
+
+    // Start Listener
     if (chatListener) chatListener();
     
-    // Listen to messages in this Donation Room
     const messagesRef = db.collection('chats').doc(currentChatId).collection('messages').orderBy('timestamp', 'asc');
 
     chatListener = messagesRef.onSnapshot(snapshot => {
         const chatBox = document.getElementById('chat-messages');
-        chatBox.innerHTML = ''; 
+        chatBox.innerHTML = '';
 
         if (snapshot.empty) {
-            chatBox.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 space-y-2"><i class="fa-solid fa-comments text-3xl opacity-20"></i><p class="text-xs">Group chat for this order.</p></div>`;
+            chatBox.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 space-y-2"><i class="fa-solid fa-comments text-3xl opacity-20"></i><p class="text-xs">Start coordinating...</p></div>`;
             return;
         }
 
-        // ... (rest of the render logic remains the same) ...
-        let lastSender = '';
         snapshot.forEach(doc => {
             const msg = doc.data();
             const isMe = msg.senderId === currentUser.uid;
             
-            // ... (keep your existing message rendering code) ...
-            // Simplified for brevity in this response:
             const msgDiv = document.createElement('div');
-            msgDiv.className = `flex w-full ${isMe ? 'justify-end' : 'justify-start'} mt-2`;
-            const bubbleClass = isMe ? 'bg-brand-orange text-white rounded-l-2xl rounded-tr-2xl' : 'bg-white text-gray-800 border border-gray-100 rounded-r-2xl rounded-tl-2xl';
-            msgDiv.innerHTML = `<div class="max-w-[75%] px-4 py-2 text-sm ${bubbleClass} shadow-sm"><p>${msg.text || (msg.attachment ? '📷 Image' : '')}</p></div>`;
+            msgDiv.className = `flex w-full ${isMe ? 'justify-end' : 'justify-start'} mt-3`;
+            
+            // Driver uses BLUE bubbles
+            const bubbleClass = isMe 
+                ? 'bg-brand-blue text-white rounded-l-2xl rounded-tr-2xl' 
+                : 'bg-white text-gray-800 border border-gray-100 rounded-r-2xl rounded-tl-2xl';
+
+            // Show Name if it's not me
+            const nameLabel = !isMe ? `<p class="text-[10px] text-gray-400 ml-1 mb-1 font-bold">${msg.senderName || 'Partner'}</p>` : '';
+            
+            // Handle Image
+            let contentHtml = msg.text ? `<p>${msg.text}</p>` : '';
+            if (msg.attachment) {
+                contentHtml = `<img src="${msg.attachment}" class="rounded-lg mb-1 max-w-full h-auto cursor-pointer border border-black/10" onclick="window.open(this.src)">` + contentHtml;
+            }
+
+            msgDiv.innerHTML = `
+                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]">
+                    ${nameLabel}
+                    <div class="px-4 py-2 text-sm ${bubbleClass} shadow-sm relative group">
+                        ${contentHtml}
+                        <span class="text-[10px] opacity-70 ${isMe ? 'text-blue-100' : 'text-gray-400'} block text-right mt-1">
+                            ${msg.timestamp ? new Date(msg.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...'}
+                        </span>
+                    </div>
+                </div>
+            `;
             chatBox.appendChild(msgDiv);
         });
         chatBox.scrollTop = chatBox.scrollHeight;
     });
 }
 
-// 2. Handle File Selection
+// 2. SEND MESSAGE
+async function sendChatMessage(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+
+    if ((!text && !chatAttachmentBase64) || !currentChatId) return;
+
+    const textToSend = text;
+    const imageToSend = chatAttachmentBase64;
+    
+    // Clear UI immediately
+    input.value = '';
+    clearChatAttachment();
+
+    try {
+        await db.collection('chats').doc(currentChatId).collection('messages').add({
+            text: textToSend,
+            attachment: imageToSend || null,
+            senderId: currentUser.uid,
+            senderName: userData.name || 'Volunteer', // Shows 'Volunteer' or User Name
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // Update room metadata
+        await db.collection('chats').doc(currentChatId).set({
+            lastMessage: imageToSend ? '📷 Image' : textToSend,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+    } catch (err) {
+        console.error("Chat Error:", err);
+        alert("Message failed. If sending an image, make sure it's under 1MB.");
+    }
+}
+
+// 3. FILE HANDLING
 function handleChatFileSelect(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        
-        // Simple size check (Max 1MB for Firestore safety)
-        if (file.size > 1048576) {
-            alert("File is too large! Please select an image under 1MB.");
-            input.value = ''; // Reset
+        if (file.size > 1048576) { // 1MB Limit
+            alert("Image too large (Max 1MB).");
+            input.value = '';
             return;
         }
-
         const reader = new FileReader();
         reader.onload = function(e) {
             chatAttachmentBase64 = e.target.result;
-            
-            // Show Preview
             document.getElementById('chat-preview-img').src = chatAttachmentBase64;
             document.getElementById('chat-file-size').innerText = (file.size / 1024).toFixed(1) + " KB";
             document.getElementById('chat-attachment-preview').classList.remove('hidden');
@@ -1017,48 +1080,11 @@ function handleChatFileSelect(input) {
     }
 }
 
-// 3. Clear Attachment
 function clearChatAttachment() {
     chatAttachmentBase64 = null;
     document.getElementById('chat-file-input').value = '';
     document.getElementById('chat-attachment-preview').classList.add('hidden');
     document.getElementById('chat-preview-img').src = '';
-}
-
-// 4. Send Message (Text + Attachment)
-async function sendChatMessage(e) {
-    e.preventDefault();
-    const input = document.getElementById('chat-input');
-    const text = input.value.trim();
-
-    // Don't send if both text and attachment are empty
-    if ((!text && !chatAttachmentBase64) || !currentChatId) return;
-
-    // Temporary vars to clear UI immediately
-    const textToSend = text;
-    const attachmentToSend = chatAttachmentBase64;
-
-    input.value = ''; 
-    clearChatAttachment(); // Clear preview immediately for UX
-
-    try {
-        await db.collection('chats').doc(currentChatId).collection('messages').add({
-            text: textToSend,
-            attachment: attachmentToSend || null, // Save Base64 to Firestore
-            senderId: currentUser.uid,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        await db.collection('chats').doc(currentChatId).set({
-            participants: [currentUser.uid, currentReceiverId],
-            lastMessage: attachmentToSend ? '📷 Image' : textToSend,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-
-    } catch (err) {
-        console.error("Chat Error:", err);
-        alert("Failed to send message. If attaching an image, ensure it is under 1MB.");
-    }
 }
 
 function closeChatModal() {
