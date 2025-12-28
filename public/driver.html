@@ -414,6 +414,8 @@ function loadAvailableJobs() {
 
 // --- 2. LOAD ACTIVE JOB (With Navigation & Chat) ---
 // 2. LOAD ACTIVE JOB (Updated: Lat/Lng Nav & No Complete Button)
+// 2. LOAD ACTIVE JOB (Updated with Phone Numbers)
+// 2. LOAD ACTIVE JOB (Fixed: Proper Google Maps Coordinates Redirection)
 function loadActiveJob() {
     db.collection('donations')
         .where('deliveryStatus', 'in', ['Assigned', 'PickedUp'])
@@ -422,7 +424,7 @@ function loadActiveJob() {
         .onSnapshot(snap => {
             const container = document.getElementById('active-job-card');
             
-            // If no active job, show default state
+            // Handle no active job
             if (snap.empty) {
                 container.innerHTML = `<div class="text-center p-10"><p class="text-gray-500">No active delivery.</p></div>`;
                 return;
@@ -432,12 +434,16 @@ function loadActiveJob() {
             const d = doc.data();
             const isPickedUp = d.deliveryStatus === 'PickedUp';
             
-            // --- COORDINATES (Fallback to default if missing) ---
-            const restLoc = d.location || { lat: 20.5937, lng: 78.9629 };
-            // Simulating Orphanage location offset if not in DB (Replace with d.orphanageLocation if available)
-            const orphLoc = { lat: restLoc.lat + 0.02, lng: restLoc.lng + 0.02 }; 
+            // --- LOCATION HANDLING ---
+            // 1. Restaurant Location (Stored in donation doc)
+            const restLoc = d.location || { lat: 20.5937, lng: 78.9629 }; 
+            
+            // 2. Orphanage Location 
+            // (If not stored on donation, we simulate a nearby point or use Restaurant loc as fallback to prevent crash)
+            // Ideally, your 'claim' logic should save orphanageLocation to the donation doc.
+            const orphLoc = d.orphanageLocation || { lat: restLoc.lat + 0.02, lng: restLoc.lng + 0.02 };
 
-            // --- 1. NAVIGATION LOGIC (Lat/Lng Only) ---
+            // --- NAVIGATION LOGIC (Lat/Lng) ---
             let destLat, destLng, navLabel;
 
             if (!isPickedUp) {
@@ -452,22 +458,20 @@ function loadActiveJob() {
                 navLabel = "Navigate to Orphanage";
             }
             
-            // Google Maps URL using ONLY Coordinates
+            // FIXED URL: Uses official Google Maps Directions API with coordinates
             const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`;
 
-            // --- 2. ACTION BUTTONS ---
-            let actionHtml = "";
-            
+            // --- ACTION BUTTONS ---
+            let actionButton = "";
             if (!isPickedUp) {
-                // STEP 1: Driver needs to Pickup (Scan QR)
-                actionHtml = `
+                // Step 1: Scan to Pickup
+                actionButton = `
                     <button onclick="openScanner('${doc.id}')" class="flex-1 py-3 bg-brand-orange text-white font-bold rounded-xl shadow-md hover:bg-orange-600 transition flex items-center justify-center gap-2 text-sm">
                         <i class="fa-solid fa-qrcode"></i> Scan Pickup
                     </button>`;
             } else {
-                // STEP 2: Driver has picked up. Waiting for Orphanage to Confirm.
-                // "Complete" button is REMOVED.
-                actionHtml = `
+                // Step 2: Waiting for Confirmation (No Complete Button for Driver)
+                actionButton = `
                     <div class="flex-1 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl border border-gray-200 flex items-center justify-center gap-2 text-sm cursor-wait">
                         <i class="fa-solid fa-hourglass-half animate-pulse"></i> Wait for Confirmation
                     </div>`;
@@ -490,17 +494,27 @@ function loadActiveJob() {
                                     <i class="fa-solid fa-diamond-turn-right"></i> ${navLabel}
                                 </a>
                                 
-                                ${actionHtml}
+                                ${actionButton}
                             </div>
 
                             <div class="space-y-4">
                                 <div class="flex items-start gap-3">
                                     <div class="flex flex-col items-center"><div class="w-3 h-3 rounded-full bg-brand-orange"></div><div class="w-0.5 h-full bg-gray-200 min-h-[30px]"></div></div>
-                                    <div><p class="text-xs text-gray-400 uppercase font-bold">Pickup</p><p class="font-bold text-gray-800">${d.restaurantName}</p></div>
+                                    <div>
+                                        <p class="text-xs text-gray-400 uppercase font-bold">Pickup</p>
+                                        <p class="font-bold text-gray-800">${d.restaurantName}</p>
+                                        <p class="text-xs text-gray-500">${d.restaurantAddress}</p>
+                                        <a href="tel:${d.restaurantPhone}" class="text-xs text-blue-600 font-bold block mt-1 hover:underline"><i class="fa-solid fa-phone"></i> ${d.restaurantPhone || 'N/A'}</a>
+                                    </div>
                                 </div>
                                 <div class="flex items-start gap-3">
                                     <div class="flex flex-col items-center"><div class="w-3 h-3 rounded-full bg-brand-green"></div></div>
-                                    <div><p class="text-xs text-gray-400 uppercase font-bold">Dropoff</p><p class="font-bold text-gray-800">${d.orphanageName}</p></div>
+                                    <div>
+                                        <p class="text-xs text-gray-400 uppercase font-bold">Dropoff</p>
+                                        <p class="font-bold text-gray-800">${d.orphanageName}</p>
+                                        <p class="text-xs text-gray-500">${d.orphanageAddress}</p>
+                                        <a href="tel:${d.orphanagePhone}" class="text-xs text-blue-600 font-bold block mt-1 hover:underline"><i class="fa-solid fa-phone"></i> ${d.orphanagePhone || 'N/A'}</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -513,11 +527,20 @@ function loadActiveJob() {
                 if(routeMap) { routeMap.remove(); }
                 routeMap = L.map('route-map-container').setView([restLoc.lat, restLoc.lng], 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(routeMap);
-                L.marker([restLoc.lat, restLoc.lng]).addTo(routeMap).bindPopup("Pickup");
-                L.marker([orphLoc.lat, orphLoc.lng]).addTo(routeMap).bindPopup("Dropoff");
-                L.polyline([[restLoc.lat, restLoc.lng], [orphLoc.lat, orphLoc.lng]], {color: 'blue'}).addTo(routeMap);
+                
+                // Add Markers
+                L.marker([restLoc.lat, restLoc.lng]).addTo(routeMap).bindPopup("Pickup: " + d.restaurantName);
+                L.marker([orphLoc.lat, orphLoc.lng]).addTo(routeMap).bindPopup("Dropoff: " + d.orphanageName);
+                
+                // Draw Line
+                L.polyline([[restLoc.lat, restLoc.lng], [orphLoc.lat, orphLoc.lng]], {color: 'blue', weight: 4, opacity: 0.7}).addTo(routeMap);
+                
+                // Fit bounds to show both points
+                const bounds = L.latLngBounds([restLoc.lat, restLoc.lng], [orphLoc.lat, orphLoc.lng]);
+                routeMap.fitBounds(bounds, {padding: [50, 50]});
+                
                 routeMap.invalidateSize();
-            }, 200);
+            }, 300);
         });
 }
 
