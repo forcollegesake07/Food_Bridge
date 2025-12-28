@@ -61,8 +61,29 @@
         /* Print Styles */
         @media print {
             body * { visibility: hidden; }
-            #printable-bill, #printable-bill * { visibility: visible; }
-            #printable-bill { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; border: none; }
+            #printable-bill, #printable-bill * { 
+                visibility: visible; 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+                color-adjust: exact !important;
+            }
+            #printable-bill { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                margin: 0; 
+                padding: 20px; 
+                border: none; 
+                background-color: #f9fafb !important; /* Ensure bg color prints */
+            }
+            /* Explicitly force colors for print */
+            .text-brand-orange { color: #F97316 !important; }
+            .text-brand-green { color: #10B981 !important; }
+            .text-brand-dark { color: #1F2937 !important; }
+            .bg-brand-orange { background-color: #F97316 !important; }
+            .bg-white { background-color: #ffffff !important; }
+            .bg-gray-50 { background-color: #f9fafb !important; }
         }
     </style>
 </head>
@@ -356,29 +377,29 @@
                         <!-- Restaurant Section -->
                         <div class="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
                             <p class="text-[10px] text-brand-orange font-bold uppercase mb-1">From (Restaurant)</p>
-                            <p class="font-bold text-gray-800 truncate" id="bill-rest-name">...</p>
+                            <p class="font-bold text-gray-800 break-words" id="bill-rest-name">...</p>
                             <p class="text-xs text-gray-500" id="bill-rest-phone">...</p>
                         </div>
 
                         <!-- Orphanage Section -->
                         <div class="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
                             <p class="text-[10px] text-brand-green font-bold uppercase mb-1">To (Orphanage)</p>
-                            <p class="font-bold text-gray-800 truncate" id="bill-orph-name">...</p>
+                            <p class="font-bold text-gray-800 break-words" id="bill-orph-name">...</p>
                             <p class="text-xs text-gray-500" id="bill-orph-phone">...</p>
                         </div>
 
                         <!-- Item Section -->
                         <div class="flex justify-between border-t border-gray-200 pt-2 mt-2">
-                             <span class="font-medium text-gray-600">Item</span>
-                             <span class="font-bold text-gray-900 truncate max-w-[120px]" id="bill-item">...</span>
+                             <span class="font-medium text-gray-600 whitespace-nowrap mr-2">Item</span>
+                             <span class="font-bold text-gray-900 break-words text-right" id="bill-item">...</span>
                         </div>
                         <div class="flex justify-between">
                              <span class="font-medium text-gray-600">Quantity</span>
                              <span class="font-bold text-gray-900" id="bill-qty">...</span>
                         </div>
-                        <div class="flex justify-between text-xs text-gray-400">
-                             <span>Donation ID</span>
-                             <span class="font-mono truncate max-w-[100px]" id="bill-id">...</span>
+                        <div class="flex flex-col border-t border-gray-100 pt-2 mt-2">
+                             <span class="text-xs text-gray-400 mb-1">Donation ID</span>
+                             <span class="font-mono text-xs text-gray-500 break-all" id="bill-id">...</span>
                         </div>
                     </div>
 
@@ -430,6 +451,7 @@
                         return;
                     }
                     
+                    const navUser = document.getElementById('nav-username'); if (navUser) navUser.innerText = userData.name || "Restaurant";
                     const sbName = document.getElementById('sidebar-name'); if (sbName) sbName.innerText = userData.name || "Restaurant";
                     const sbId = document.getElementById('sidebar-id'); if (sbId) sbId.innerText = "ID: " + user.uid.slice(0, 6);
                     if(document.getElementById('detail-name')) document.getElementById('detail-name').value = userData.name || "";
@@ -803,7 +825,7 @@
             document.getElementById('bill-orph-phone').innerText = orphPhone;
             document.getElementById('bill-item').innerText = item;
             document.getElementById('bill-qty').innerText = qty + " Servings";
-            document.getElementById('bill-id').innerText = docId.slice(0, 8) + "...";
+            document.getElementById('bill-id').innerText = docId;
 
             // Generate QR
             document.getElementById('qrcode').innerHTML = "";
@@ -841,7 +863,7 @@
             printWindow.document.write('<html><head><title>FoodBridge Receipt</title>');
             printWindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
             printWindow.document.write('</head><body class="p-8 flex items-center justify-center bg-gray-100">');
-            printWindow.document.write('<div class="bg-white p-6 rounded-xl border border-gray-300 w-full max-w-sm shadow-sm">');
+            printWindow.document.write('<div class="bg-white p-6 rounded-xl border border-gray-300 w-full max-w-sm shadow-sm" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">');
             printWindow.document.write(printContent);
             printWindow.document.write('</div></body></html>');
             printWindow.document.close();
