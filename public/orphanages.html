@@ -79,10 +79,11 @@
         #qr-video-container {
             position: relative;
             width: 100%;
-            height: 300px;
+            height: 350px; /* Taller for better view */
             overflow: hidden;
-            border-radius: 1rem;
             background: #000;
+            border-bottom-left-radius: 1.5rem;
+            border-bottom-right-radius: 1.5rem;
         }
         #qr-video-container video {
             width: 100%;
@@ -99,41 +100,44 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            background: rgba(0, 0, 0, 0.3); /* Slight dimming */
         }
         .scan-frame {
-            width: 250px;
-            height: 250px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 12px;
-            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
+            width: 260px;
+            height: 260px;
             position: relative;
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.6); /* Darkens outside the frame */
+            border-radius: 20px;
         }
         .scan-corner {
             position: absolute;
-            width: 20px;
-            height: 20px;
+            width: 40px;
+            height: 40px;
             border-color: #10B981; /* brand-green */
             border-style: solid;
+            border-width: 5px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); /* Glowing corners */
         }
-        .tl { top: -2px; left: -2px; border-width: 4px 0 0 4px; border-radius: 4px 0 0 0; }
-        .tr { top: -2px; right: -2px; border-width: 4px 4px 0 0; border-radius: 0 4px 0 0; }
-        .bl { bottom: -2px; left: -2px; border-width: 0 0 4px 4px; border-radius: 0 0 0 4px; }
-        .br { bottom: -2px; right: -2px; border-width: 0 4px 4px 0; border-radius: 0 0 4px 0; }
+        .tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-top-left-radius: 16px; }
+        .tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-top-right-radius: 16px; }
+        .bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-bottom-left-radius: 16px; }
+        .br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-bottom-right-radius: 16px; }
         
         .scan-line {
             position: absolute;
             width: 100%;
-            height: 2px;
-            background: #10B981;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #10B981, transparent);
             top: 0;
-            animation: scanMove 2s infinite linear;
-            box-shadow: 0 0 4px #10B981;
+            animation: scanMove 2.5s infinite ease-in-out;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
         }
         @keyframes scanMove {
-            0% { top: 0; opacity: 0; }
+            0% { top: 10%; opacity: 0; }
             10% { opacity: 1; }
             90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
+            100% { top: 90%; opacity: 0; }
         }
     </style>
 </head>
@@ -420,38 +424,57 @@
     
     <!-- SCANNER MODAL (UPDATED UI) -->
     <div id="scanner-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-300 px-4">
-        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-sm relative transform scale-95 transition-all duration-300 transform-gpu flex flex-col">
+        <div class="bg-white rounded-[2rem] shadow-2xl overflow-hidden w-full max-w-sm relative transform scale-95 transition-all duration-300 transform-gpu flex flex-col border border-gray-100/20">
             
             <!-- Header -->
-            <div class="bg-white p-4 flex items-center justify-between border-b border-gray-100 z-10">
-                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-qrcode text-brand-green"></i> Verify Receipt
-                </h3>
-                <button onclick="closeScannerModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition touch-manipulation">
-                    <i class="fa-solid fa-xmark"></i>
+            <div class="bg-white p-5 flex items-center justify-between border-b border-gray-100 z-10 relative">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2 tracking-tight">
+                        <span class="w-8 h-8 rounded-full bg-green-100 text-brand-green flex items-center justify-center text-sm"><i class="fa-solid fa-qrcode"></i></span>
+                        Verify Receipt
+                    </h3>
+                    <p class="text-xs text-gray-400 mt-0.5 ml-1">Scan QR from restaurant bill</p>
+                </div>
+                <button onclick="closeScannerModal()" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-800 transition active:scale-95 touch-manipulation border border-gray-100">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
             <!-- Scanner Viewport -->
-            <div class="relative bg-black h-80 w-full overflow-hidden" id="qr-video-container">
+            <div class="relative bg-black h-96 w-full overflow-hidden" id="qr-video-container">
                 <div id="reader" class="w-full h-full object-cover"></div>
                 
                 <!-- Overlay Guide -->
-                <div class="scan-overlay">
-                    <div class="scan-frame">
-                        <div class="scan-corner tl"></div>
-                        <div class="scan-corner tr"></div>
-                        <div class="scan-corner bl"></div>
-                        <div class="scan-corner br"></div>
-                        <div class="scan-line"></div>
+                <div class="scan-overlay absolute inset-0 pointer-events-none flex items-center justify-center">
+                    <!-- Darkened Background with transparent center -->
+                    <div class="absolute inset-0 bg-black/50 mask-image-scan"></div>
+                    
+                    <!-- The Frame -->
+                    <div class="scan-frame relative z-10 w-64 h-64">
+                        <!-- Corners -->
+                        <div class="absolute top-0 left-0 w-8 h-8 border-l-4 border-t-4 border-brand-green rounded-tl-xl shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                        <div class="absolute top-0 right-0 w-8 h-8 border-r-4 border-t-4 border-brand-green rounded-tr-xl shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                        <div class="absolute bottom-0 left-0 w-8 h-8 border-l-4 border-b-4 border-brand-green rounded-bl-xl shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                        <div class="absolute bottom-0 right-0 w-8 h-8 border-r-4 border-b-4 border-brand-green rounded-br-xl shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                        
+                        <!-- Animated Line -->
+                        <div class="absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-brand-green to-transparent opacity-80 shadow-[0_0_15px_#10B981] animate-scan-line"></div>
+                        
+                        <!-- Pulsing Center Helper -->
+                        <div class="absolute inset-0 flex items-center justify-center opacity-30">
+                            <i class="fa-solid fa-plus text-white text-4xl"></i>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Instructions -->
-            <div class="p-5 text-center bg-white">
-                <p class="font-bold text-gray-800 mb-1">Scan QR Code</p>
-                <p class="text-xs text-gray-500">Align the QR code from the bill within the frame to confirm receipt.</p>
+            <!-- Status Footer -->
+            <div class="p-6 bg-white border-t border-gray-100 text-center relative z-10">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-brand-green rounded-full text-xs font-bold mb-2 animate-pulse">
+                    <div class="w-2 h-2 bg-brand-green rounded-full"></div>
+                    Camera Active
+                </div>
+                <p class="text-sm text-gray-500 font-medium">Align the QR code within the frame to automatically confirm receipt.</p>
             </div>
         </div>
     </div>
