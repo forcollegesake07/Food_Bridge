@@ -10,7 +10,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#F97316">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/7541/7541900.png">
 
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('SW registered: ', reg.scope))
+                .catch(err => console.log('SW registration failed: ', err));
+        });
+    }
+</script>
     <script>
         tailwind.config = {
             theme: {
