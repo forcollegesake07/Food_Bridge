@@ -309,6 +309,7 @@ let html5QrCode = null;
 let pendingScanDocId = null;
 let chatListener = null;
 let currentChatId = null;
+let chatAttachmentBase64 = null; // Store image data
 
 // --- AUTH CHECK ---
 auth.onAuthStateChanged(async (user) => {
@@ -576,10 +577,6 @@ function onScanSuccess(decodedText) {
 /* =========================================
    ADVANCED CHAT LOGIC (For Driver)
    ========================================= */
-
-let chatListener = null;
-let currentChatId = null;
-let chatAttachmentBase64 = null; // Store image data
 
 // 1. OPEN CHAT
 function openChat(chatId, title) {
