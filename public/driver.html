@@ -397,14 +397,23 @@ function loadActiveJob() {
             const restLoc = d.location || { lat: 20.5937, lng: 78.9629 };
             const orphLoc = { lat: restLoc.lat + 0.02, lng: restLoc.lng + 0.02 };
 
-            // NAVIGATION LOGIC (Google Maps App Link)
-            const destLat = isPickedUp ? orphLoc.lat : restLoc.lat;
-            const destLng = isPickedUp ? orphLoc.lng : restLoc.lng;
-            const query = isPickedUp ? (d.orphanageAddress || `${destLat},${destLng}`) : (d.restaurantAddress || `${destLat},${destLng}`);
-            const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`;
-            const navLabel = isPickedUp ? "Navigate to Orphanage" : "Navigate to Restaurant";
+            // --- FIXED NAVIGATION LOGIC ---
+            // Use exact address if available, otherwise coordinates
+            let destination = "";
+            let navLabel = "";
 
-            // ACTION BUTTON (Scan vs Complete)
+            if (!isPickedUp) {
+                destination = d.restaurantAddress || `${restLoc.lat},${restLoc.lng}`;
+                navLabel = "Navigate to Restaurant";
+            } else {
+                destination = d.orphanageAddress || `${orphLoc.lat},${orphLoc.lng}`;
+                navLabel = "Navigate to Orphanage";
+            }
+            
+            // Standard Google Maps Direction URL
+            const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+
+            // --- ACTION BUTTON ---
             let actionButton = "";
             if (!isPickedUp) {
                 actionButton = `<button onclick="openScanner('${doc.id}')" class="flex-1 py-3 bg-brand-orange text-white font-bold rounded-xl shadow-md hover:bg-orange-600 transition flex items-center justify-center gap-2 text-sm"><i class="fa-solid fa-qrcode"></i> Scan Pickup</button>`;
@@ -428,7 +437,6 @@ function loadActiveJob() {
                                 <a href="${navUrl}" target="_blank" class="flex-1 py-3 bg-white border-2 border-blue-600 text-blue-600 font-bold rounded-xl shadow-sm hover:bg-blue-50 flex items-center justify-center gap-2 text-sm no-underline">
                                     <i class="fa-solid fa-diamond-turn-right"></i> ${navLabel}
                                 </a>
-                                
                                 ${actionButton}
                             </div>
 
@@ -447,7 +455,6 @@ function loadActiveJob() {
                 </div>
             `;
 
-            // Initialize Map
             setTimeout(() => {
                 if(routeMap) { routeMap.remove(); }
                 routeMap = L.map('route-map-container').setView([restLoc.lat, restLoc.lng], 13);
@@ -546,34 +553,61 @@ function openChat(chatId, title) {
     }, 10);
 
     if (chatListener) chatListener();
+    
     const messagesRef = db.collection('chats').doc(currentChatId).collection('messages').orderBy('timestamp', 'asc');
 
     chatListener = messagesRef.onSnapshot(snapshot => {
         const chatBox = document.getElementById('chat-messages');
         chatBox.innerHTML = '';
-        if (snapshot.empty) { chatBox.innerHTML = `<div class="text-center text-gray-400 mt-10 text-xs">Start coordinating...</div>`; return; }
+        
+        if (snapshot.empty) { 
+            chatBox.innerHTML = `<div class="text-center text-gray-400 mt-10 text-xs">Start coordinating...</div>`; 
+            return; 
+        }
         
         snapshot.forEach(doc => {
             const msg = doc.data();
             const isMe = msg.senderId === currentUser.uid;
+            
             const msgDiv = document.createElement('div');
-            msgDiv.className = `flex w-full ${isMe ? 'justify-end' : 'justify-start'} mt-2`;
-            const bubbleClass = isMe ? 'bg-brand-blue text-white rounded-l-2xl rounded-tr-2xl' : 'bg-white text-gray-800 border border-gray-100 rounded-r-2xl rounded-tl-2xl';
-            msgDiv.innerHTML = `<div class="max-w-[75%] px-4 py-2 text-sm ${bubbleClass} shadow-sm"><p>${msg.text}</p></div>`;
+            msgDiv.className = `flex w-full ${isMe ? 'justify-end' : 'justify-start'} mt-3`;
+            
+            // Bubble Styles
+            const bubbleClass = isMe 
+                ? 'bg-brand-blue text-white rounded-l-2xl rounded-tr-2xl' 
+                : 'bg-white text-gray-800 border border-gray-100 rounded-r-2xl rounded-tl-2xl';
+
+            // Name Label (Only show for others)
+            const nameLabel = !isMe 
+                ? `<p class="text-[10px] text-gray-400 ml-1 mb-1 font-bold">${msg.senderName || 'User'}</p>` 
+                : '';
+
+            msgDiv.innerHTML = `
+                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]">
+                    ${nameLabel}
+                    <div class="px-4 py-2 text-sm ${bubbleClass} shadow-sm">
+                        <p>${msg.text}</p>
+                    </div>
+                </div>
+            `;
             chatBox.appendChild(msgDiv);
         });
         chatBox.scrollTop = chatBox.scrollHeight;
     });
 }
-
 function sendChatMessage(e) {
     e.preventDefault();
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
     if (!text || !currentChatId) return;
+    
     input.value = '';
+    
     db.collection('chats').doc(currentChatId).collection('messages').add({
-        text: text, senderId: currentUser.uid, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        text: text,
+        senderId: currentUser.uid,
+        senderName: userData.name || 'Volunteer', // <--- ADDED NAME HERE
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 }
 
