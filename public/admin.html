@@ -38,6 +38,13 @@
                 }
             }
         }
+        if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('SW registered: ', reg.scope))
+                .catch(err => console.log('SW registration failed: ', err));
+        });
+    }
     </script>
     <style>
         /* Mobile Performance Optimizations */
@@ -1268,13 +1275,7 @@ function closeChatModal() {
         chatListener = null;
     }, 300);
 }
-if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(reg => console.log('SW registered: ', reg.scope))
-                .catch(err => console.log('SW registration failed: ', err));
-        });
-    }
+        
         function logout() { auth.signOut().then(() => window.location.href = 'https://foodbridge.qzz.io/index'); }
     </script>
 </body>
