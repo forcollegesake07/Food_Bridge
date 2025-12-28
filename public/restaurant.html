@@ -57,6 +57,13 @@
         
         /* Hardware Acceleration */
         .transform-gpu { will-change: transform; transform: translateZ(0); }
+        
+        /* Print Styles */
+        @media print {
+            body * { visibility: hidden; }
+            #printable-bill, #printable-bill * { visibility: visible; }
+            #printable-bill { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; border: none; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 h-screen flex flex-col md:flex-row overflow-hidden selection:bg-brand-orange selection:text-white">
@@ -134,6 +141,7 @@
                 </button>
             </div>
 
+            <!-- ACTIVE PICKUPS / CLAIMED ITEMS -->
             <div id="scheduled-pickups-container" class="space-y-4"></div>
 
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
@@ -303,6 +311,7 @@
         </div>
     </main>
 
+    <!-- CONFIRM MODAL -->
     <div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4">
         <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-sm w-full transform scale-95 transition-all duration-300 transform-gpu" id="confirm-modal-content">
             <div class="text-center">
@@ -324,27 +333,63 @@
         <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full transform scale-95 transition-all duration-300 transform-gpu" id="bill-modal-content">
             <div class="text-center">
                 <div class="w-16 h-16 bg-green-100 text-brand-green rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm">
-                    <i class="fa-solid fa-check"></i>
+                    <i class="fa-solid fa-receipt"></i>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-1">Donation Successful!</h3>
-                <p class="text-gray-500 text-sm mb-6">Here is your verification bill.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-1">Receipt & Verification</h3>
+                <p class="text-gray-500 text-sm mb-6">Orphanage must scan this code.</p>
                 
                 <!-- Bill Area -->
-                <div id="printable-bill" class="bg-gray-50 p-4 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-left">
-                    <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
-                        <span class="font-bold text-brand-orange">FoodBridge Receipt</span>
-                        <span class="text-xs text-gray-400" id="bill-date">--/--/--</span>
+                <div id="printable-bill" class="bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-left relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-brand-orange opacity-10 rounded-bl-full"></div>
+                    
+                    <div class="text-center border-b-2 border-gray-200 pb-3 mb-3">
+                        <span class="font-extrabold text-xl text-brand-dark block">Food<span class="text-brand-green">Bridge</span></span>
+                        <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Digital Donation Receipt</span>
                     </div>
-                    <div class="space-y-1 mb-4 text-sm">
-                        <p class="flex justify-between"><span class="text-gray-500">Restaurant:</span> <span class="font-bold text-gray-800 truncate w-32 text-right" id="bill-rest">...</span></p>
-                        <p class="flex justify-between"><span class="text-gray-500">Item:</span> <span class="font-bold text-gray-800 truncate w-32 text-right" id="bill-item">...</span></p>
-                        <p class="flex justify-between"><span class="text-gray-500">Quantity:</span> <span class="font-bold text-gray-800" id="bill-qty">...</span></p>
-                        <p class="flex justify-between"><span class="text-gray-500">ID:</span> <span class="font-mono text-xs text-gray-400" id="bill-id">...</span></p>
+
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-gray-400">DATE</span>
+                        <span class="text-sm font-bold text-gray-800" id="bill-date">--/--/--</span>
                     </div>
-                    <div class="flex justify-center bg-white p-2 rounded-lg border border-gray-200">
-                        <div id="qrcode"></div>
+
+                    <div class="space-y-3 mb-4 text-sm">
+                        <!-- Restaurant Section -->
+                        <div class="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                            <p class="text-[10px] text-brand-orange font-bold uppercase mb-1">From (Restaurant)</p>
+                            <p class="font-bold text-gray-800 truncate" id="bill-rest-name">...</p>
+                            <p class="text-xs text-gray-500" id="bill-rest-phone">...</p>
+                        </div>
+
+                        <!-- Orphanage Section -->
+                        <div class="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                            <p class="text-[10px] text-brand-green font-bold uppercase mb-1">To (Orphanage)</p>
+                            <p class="font-bold text-gray-800 truncate" id="bill-orph-name">...</p>
+                            <p class="text-xs text-gray-500" id="bill-orph-phone">...</p>
+                        </div>
+
+                        <!-- Item Section -->
+                        <div class="flex justify-between border-t border-gray-200 pt-2 mt-2">
+                             <span class="font-medium text-gray-600">Item</span>
+                             <span class="font-bold text-gray-900 truncate max-w-[120px]" id="bill-item">...</span>
+                        </div>
+                        <div class="flex justify-between">
+                             <span class="font-medium text-gray-600">Quantity</span>
+                             <span class="font-bold text-gray-900" id="bill-qty">...</span>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-400">
+                             <span>Donation ID</span>
+                             <span class="font-mono truncate max-w-[100px]" id="bill-id">...</span>
+                        </div>
                     </div>
-                    <p class="text-[10px] text-center text-gray-400 mt-2 uppercase tracking-wider">Scan upon pickup to confirm</p>
+
+                    <div class="flex flex-col items-center justify-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                        <div id="qrcode" class="mb-1"></div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Scan to Verify</p>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-[10px] text-gray-400 italic">Thank you for making a difference.</p>
+                    </div>
                 </div>
 
                 <div class="flex gap-4">
@@ -385,7 +430,6 @@
                         return;
                     }
                     
-                    const navUser = document.getElementById('nav-username'); if (navUser) navUser.innerText = userData.name || "Restaurant";
                     const sbName = document.getElementById('sidebar-name'); if (sbName) sbName.innerText = userData.name || "Restaurant";
                     const sbId = document.getElementById('sidebar-id'); if (sbId) sbId.innerText = "ID: " + user.uid.slice(0, 6);
                     if(document.getElementById('detail-name')) document.getElementById('detail-name').value = userData.name || "";
@@ -417,7 +461,6 @@
             } else { window.location.href = 'https://foodbridge.qzz.io/login'; }
         });
 
-        // --- NEW BROADCAST LISTENER ---
         function listenForBroadcasts(userId, role) {
             const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000); 
             
@@ -480,21 +523,16 @@
             if (!fromPopState) history.pushState({ tab }, "", "#" + tab);
             document.querySelectorAll('[id^="tab-"]').forEach(el => { el.style.display = 'none'; el.classList.add('hidden'); });
 
-            // BUTTON HIGHLIGHTING LOGIC FIXED HERE
             const buttons = ['overview', 'alerts', 'history', 'details'];
             buttons.forEach(b => {
                 const btn = document.getElementById('btn-' + b);
                 if(btn) {
-                    // Remove Active Classes
                     btn.classList.remove('bg-brand-orange', 'text-white', 'shadow-md');
-                    // Remove Inactive Classes to reset
                     btn.classList.remove('text-gray-500', 'hover:bg-red-50', 'hover:text-red-500', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-transparent', 'border');
 
                     if (b === tab) {
-                        // Apply Active State
                         btn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
                     } else {
-                        // Apply Inactive State based on button type
                         btn.classList.add('text-gray-500');
                         if (b === 'alerts') {
                             btn.classList.add('hover:bg-red-50', 'hover:text-red-500', 'border', 'border-transparent', 'hover:border-red-100');
@@ -563,14 +601,13 @@
 
         function loadBroadcasts() {
             db.collection('notifications')
-              .where('targetAudience', 'in', ['all', 'restaurant', 'specific']) // Include specific
+              .where('targetAudience', 'in', ['all', 'restaurant', 'specific'])
               .orderBy('createdAt', 'desc')
               .limit(10)
               .onSnapshot(snap => {
                   broadcastNotifs = [];
                   snap.forEach(doc => {
                       const d = doc.data();
-                      // Logic for Dropdown List
                       if(d.targetAudience === 'all' || d.targetAudience === 'restaurant' || (d.targetAudience === 'specific' && d.targetUserId === currentUser.uid)) {
                           broadcastNotifs.push({
                               type: 'broadcast',
@@ -652,6 +689,7 @@
             });
         }
 
+        // --- UPDATED LOAD ACTIVE PICKUPS (With View Receipt) ---
         function loadActivePickups() {
             db.collection('donations').where('restaurantId', '==', currentUser.uid).orderBy('createdAt', 'desc').onSnapshot(snap => {
                 const container = document.getElementById('scheduled-pickups-container'); if(!container) return; container.innerHTML = '';
@@ -663,7 +701,11 @@
                         container.innerHTML += `<div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-brand-orange relative mb-4"><h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center"><i class="fa-solid fa-box-open text-brand-orange mr-2"></i> Available Listing</h3><div class="grid md:grid-cols-2 gap-4 mb-4"><div><p class="text-xs text-gray-500 uppercase">Item</p><p class="font-bold text-gray-800">${d.foodName}</p></div><div><p class="text-xs text-gray-500 uppercase">Quantity</p><p class="font-bold text-gray-800">${d.servings} Servings</p></div></div><div class="text-sm text-gray-500 italic bg-orange-50 p-2 rounded text-center border border-orange-100 mb-3">Waiting for claim...</div><button onclick="confirmDeleteDonation('${doc.id}')" class="w-full py-2 bg-red-100 text-red-600 font-bold rounded-xl hover:bg-red-200 transition-colors flex items-center justify-center gap-2 text-sm"><i class="fa-solid fa-trash-can"></i> Delete Listing</button></div>`;
                     } else if(d.status === 'Claimed') {
                         activeCount++;
-                        container.innerHTML += `<div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-green-500 relative mb-4"><h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center"><i class="fa-solid fa-truck-fast text-green-500 mr-2"></i> Pickup Scheduled</h3><div class="grid md:grid-cols-2 gap-4 mb-4"><div><p class="text-xs text-gray-500 uppercase">Item</p><p class="font-bold text-gray-800">${d.foodName}</p></div><div><p class="text-xs text-gray-500 uppercase">Quantity</p><p class="font-bold text-gray-800">${d.servings} Servings</p></div><div class="md:col-span-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p class="text-xs text-gray-500 uppercase mb-1">Claimed By</p><p class="font-bold text-gray-800 flex items-center"><i class="fa-solid fa-hands-holding-child text-brand-orange mr-2"></i> ${d.orphanageName}</p><p class="text-sm text-gray-600 mt-1"><i class="fa-solid fa-phone text-gray-400 mr-2"></i> ${d.orphanagePhone || 'N/A'}</p><p class="text-sm text-gray-600 mt-1"><i class="fa-solid fa-location-dot text-gray-400 mr-2"></i> ${d.orphanageAddress || 'N/A'}</p></div></div><div class="text-sm text-gray-500 italic bg-green-50 p-2 rounded text-center border border-green-100">Waiting for orphanage confirmation...</div></div>`;
+                        // Pass a serializable object or primitive values to the showBillModal function
+                        // We need: docId, item, qty, restName, restPhone, orphName, orphPhone
+                        const billParams = `'${doc.id}', '${d.foodName}', '${d.servings}', '${d.restaurantName}', '${d.restaurantPhone || ""}', '${d.orphanageName}', '${d.orphanagePhone || ""}'`;
+                        
+                        container.innerHTML += `<div class="bg-white rounded-2xl p-6 shadow-xl border-l-4 border-green-500 relative mb-4"><h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center"><i class="fa-solid fa-truck-fast text-green-500 mr-2"></i> Pickup Scheduled</h3><div class="grid md:grid-cols-2 gap-4 mb-4"><div><p class="text-xs text-gray-500 uppercase">Item</p><p class="font-bold text-gray-800">${d.foodName}</p></div><div><p class="text-xs text-gray-500 uppercase">Quantity</p><p class="font-bold text-gray-800">${d.servings} Servings</p></div><div class="md:col-span-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p class="text-xs text-gray-500 uppercase mb-1">Claimed By</p><p class="font-bold text-gray-800 flex items-center"><i class="fa-solid fa-hands-holding-child text-brand-orange mr-2"></i> ${d.orphanageName}</p><p class="text-sm text-gray-600 mt-1"><i class="fa-solid fa-phone text-gray-400 mr-2"></i> ${d.orphanagePhone || 'N/A'}</p><p class="text-sm text-gray-600 mt-1"><i class="fa-solid fa-location-dot text-gray-400 mr-2"></i> ${d.orphanageAddress || 'N/A'}</p></div></div><div class="text-sm text-gray-500 italic bg-green-50 p-2 rounded text-center border border-green-100 mb-3">Waiting for orphanage confirmation...</div><button onclick="showBillModal(${billParams})" class="w-full py-3 bg-brand-dark text-white font-bold rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 text-sm"><i class="fa-solid fa-receipt"></i> View Receipt & QR</button></div>`;
                     }
                 });
                 if(activeCount === 0) container.innerHTML = `<div class="bg-orange-50 border border-orange-100 rounded-xl p-4 text-center text-orange-600 text-sm font-medium">No active listings. Post a donation!</div>`;
@@ -706,8 +748,7 @@
                         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
                         btn.disabled = true;
 
-                        // Create the doc first
-                        const docRef = await db.collection('donations').add({
+                        await db.collection('donations').add({
                             restaurantId: currentUser.uid,
                             restaurantName: userData.name,
                             restaurantEmail: currentUser.email,
@@ -720,15 +761,12 @@
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                             location: userData.location || null
                         });
-                        
-                        // Show Bill with the New Doc ID
-                        showBillModal(docRef.id, name, qty, userData.name);
 
                         form.reset();
                         base64Image = "";
                         document.getElementById('image-preview').classList.add('hidden');
                         document.getElementById('upload-placeholder').classList.remove('hidden');
-                        showToast("Donation posted successfully!");
+                        showToast("Donation posted! Waiting for orphanage to claim.");
                     } catch (err) { console.error(err); showToast("Failed to post donation", "error"); } 
                     finally { btn.innerHTML = originalHTML; btn.disabled = false; pendingAction = null; }
                 } else if (pendingAction.type === 'fulfill') {
@@ -736,18 +774,15 @@
                     const reqDoc = await db.collection('requests').doc(reqId).get(); const reqData = reqDoc.data();
                     await db.collection('requests').doc(reqId).update({ status: 'Fulfilled', fulfilledBy: currentUser.uid, restaurantName: userData.name, fulfilledAt: firebase.firestore.FieldValue.serverTimestamp() });
                     
-                    const docRef = await db.collection('donations').add({ restaurantId: currentUser.uid, restaurantName: userData.name, restaurantEmail: currentUser.email, restaurantAddress: userData.address, restaurantPhone: userData.phone, foodName: item, servings: parseInt(qty), imageUrl: null, status: "Claimed", claimedBy: orphId, orphanageName: orphName, orphanageEmail: reqData.orphanageEmail, orphanagePhone: reqData.orphanagePhone, orphanageAddress: reqData.orphanageAddress || '', createdAt: firebase.firestore.FieldValue.serverTimestamp(), claimedAt: firebase.firestore.FieldValue.serverTimestamp(), isFulfillment: true, originalRequestId: reqId, location: userData.location || null });
+                    await db.collection('donations').add({ restaurantId: currentUser.uid, restaurantName: userData.name, restaurantEmail: currentUser.email, restaurantAddress: userData.address, restaurantPhone: userData.phone, foodName: item, servings: parseInt(qty), imageUrl: null, status: "Claimed", claimedBy: orphId, orphanageName: orphName, orphanageEmail: reqData.orphanageEmail, orphanagePhone: reqData.orphanagePhone, orphanageAddress: reqData.orphanageAddress || '', createdAt: firebase.firestore.FieldValue.serverTimestamp(), claimedAt: firebase.firestore.FieldValue.serverTimestamp(), isFulfillment: true, originalRequestId: reqId, location: userData.location || null });
                     
                     await sendClaimEmail({
                         restaurant: { name: userData.name, email: currentUser.email, phone: userData.phone, address: userData.address, location: userData.location || null },
                         orphanage: { name: orphName, email: reqData.orphanageEmail, phone: reqData.orphanagePhone, address: reqData.orphanageAddress || '', location: reqData.location || null },
                         food: { name: item, quantity: qty }
                     });
-                    
-                    // Show Bill with the New Doc ID
-                    showBillModal(docRef.id, item, qty, userData.name);
 
-                    showToast(`Reserved ${item}.`); switchTab('history');
+                    showToast(`Request accepted! View Receipt in Active list.`); switchTab('overview');
                 } else if (pendingAction.type === 'deleteDonation') {
                     await db.collection('donations').doc(pendingAction.data.id).delete();
                     showToast("Listing deleted.");
@@ -755,27 +790,30 @@
             } catch (err) { console.error(err); showToast("Error: " + err.message, 'error'); }
         }
 
-        // --- BILL GENERATION LOGIC ---
-        function showBillModal(docId, item, qty, restName) {
+        // --- UPDATED BILL GENERATION LOGIC ---
+        function showBillModal(docId, item, qty, restName, restPhone, orphName, orphPhone) {
             const modal = document.getElementById('bill-modal');
             const content = document.getElementById('bill-modal-content');
             
             // Populate Data
             document.getElementById('bill-date').innerText = new Date().toLocaleDateString();
-            document.getElementById('bill-rest').innerText = restName;
+            document.getElementById('bill-rest-name').innerText = restName;
+            document.getElementById('bill-rest-phone').innerText = restPhone;
+            document.getElementById('bill-orph-name').innerText = orphName;
+            document.getElementById('bill-orph-phone').innerText = orphPhone;
             document.getElementById('bill-item').innerText = item;
-            document.getElementById('bill-qty').innerText = qty;
-            document.getElementById('bill-id').innerText = docId;
+            document.getElementById('bill-qty').innerText = qty + " Servings";
+            document.getElementById('bill-id').innerText = docId.slice(0, 8) + "...";
 
             // Generate QR
             document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById('qrcode'), {
-                text: docId,
-                width: 128,
-                height: 128,
-                colorDark : "#000000",
+                text: docId, // THIS IS THE ID ORPHANAGE SCANS
+                width: 120,
+                height: 120,
+                colorDark : "#1F2937",
                 colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
+                correctLevel : QRCode.CorrectLevel.M
             });
 
             // Show Modal
@@ -798,19 +836,19 @@
 
         function printBill() {
             const printContent = document.getElementById('printable-bill').innerHTML;
-            const originalContent = document.body.innerHTML;
             
-            // Simple Print Logic: Replace body with bill, print, then reload/restore
-            // A safer approach for single page apps is a new window or iframe
             const printWindow = window.open('', '', 'height=600,width=400');
-            printWindow.document.write('<html><head><title>Print Receipt</title>');
-            printWindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>'); // Load Tailwind for styling
-            printWindow.document.write('</head><body class="p-8 flex items-center justify-center">');
-            printWindow.document.write('<div class="border-2 border-dashed border-gray-400 p-8 rounded-xl w-full max-w-sm">');
+            printWindow.document.write('<html><head><title>FoodBridge Receipt</title>');
+            printWindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+            printWindow.document.write('</head><body class="p-8 flex items-center justify-center bg-gray-100">');
+            printWindow.document.write('<div class="bg-white p-6 rounded-xl border border-gray-300 w-full max-w-sm shadow-sm">');
             printWindow.document.write(printContent);
             printWindow.document.write('</div></body></html>');
             printWindow.document.close();
-            printWindow.print();
+            // Wait for tailwind to load roughly then print
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
         }
 
         function loadData() {
@@ -852,12 +890,10 @@
                     
                     const recipient = data.orphanageName || '-';
                     
-                    // Recent Activity
                     if (docCount <= 5 && recentList) { 
                         recentList.innerHTML += `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-gray-400 shadow-sm border border-gray-100"><i class="fa-solid fa-utensils"></i></div><div><h4 class="font-bold text-gray-800 text-sm">${data.foodName}</h4><p class="text-xs text-gray-500">${data.servings} Servings • ${dateStr}</p></div></div><div class="flex items-center">${statusBadge}</div></div>`; 
                     }
                     
-                    // History Table
                     if (historyBody) { 
                         historyBody.innerHTML += `
                         <tr class="hover:bg-gray-50 transition-colors">
@@ -886,7 +922,7 @@
             });
         }
 
-        async function saveProfile(e) { e.preventDefault(); const name = document.getElementById('detail-name').value; const phone = document.getElementById('detail-phone').value; const address = document.getElementById('detail-address').value; try { await db.collection('users').doc(currentUser.uid).update({ name, phone, address, location: { lat: currentLat, lng: currentLng } }); userData.name = name; userData.phone = phone; userData.address = address; userData.location = { lat: currentLat, lng: currentLng }; document.getElementById('nav-username').innerText = name; document.getElementById('sidebar-name').innerText = name; showToast("Profile Updated!"); } catch (err) { showToast("Error: " + err.message, 'error'); } }
+        async function saveProfile(e) { e.preventDefault(); const name = document.getElementById('detail-name').value; const phone = document.getElementById('detail-phone').value; const address = document.getElementById('detail-address').value; try { await db.collection('users').doc(currentUser.uid).update({ name, phone, address, location: { lat: currentLat, lng: currentLng } }); userData.name = name; userData.phone = phone; userData.address = address; userData.location = { lat: currentLat, lng: currentLng }; document.getElementById('sidebar-name').innerText = name; showToast("Profile Updated!"); } catch (err) { showToast("Error: " + err.message, 'error'); } }
         function previewImage(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { document.getElementById('image-preview').src = e.target.result; document.getElementById('image-preview').classList.remove('hidden'); document.getElementById('upload-placeholder').classList.add('hidden'); base64Image = e.target.result; }; reader.readAsDataURL(input.files[0]); } }
         function showToast(msg, type = 'success') { const t = document.getElementById('toast'); if (t) { const icon = t.querySelector('i'); t.classList.remove('bg-red-600', 'bg-brand-dark'); icon.classList.remove('fa-circle-check', 'fa-triangle-exclamation', 'text-green-400', 'text-red-400'); if (type === 'error') { t.classList.add('bg-red-600'); icon.classList.add('fa-triangle-exclamation', 'text-red-400'); } else { t.classList.add('bg-brand-dark'); icon.classList.add('fa-circle-check', 'text-green-400'); } document.getElementById('toast-message').innerText = msg; t.classList.remove('translate-y-32', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3000); } }
         function logout() { auth.signOut().then(() => { window.location.href = 'https://foodbridge.qzz.io/login'; }); }
