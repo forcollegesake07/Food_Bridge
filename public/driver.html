@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Volunteer Dashboard | FoodBridge</title>
-    
+    <script src="js/app-mode.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -85,6 +85,15 @@
     /* Adjust padding so content doesn't hide behind bottom bar */
     body.app-mode { padding-bottom: 80px; }
     body.app-mode #main-content { margin-left: 0 !important; width: 100% !important; }
+        /* --- APP MODE STYLES --- */
+.app-bottom-nav { display: none !important; }
+
+/* In App Mode: Hide Sidebar & Top Bar, Show Bottom Bar */
+body.app-mode aside { display: none !important; }
+body.app-mode .md\:hidden { display: none !important; } /* Hides top hamburger bar */
+body.app-mode .app-bottom-nav { display: flex !important; }
+body.app-mode { padding-bottom: 80px; } /* Make space for bottom bar */
+body.app-mode #main-scroll-container { padding-top: 20px !important; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 h-screen flex flex-col md:flex-row overflow-hidden">
@@ -229,6 +238,11 @@
                     </div>
 
                     <button type="submit" class="w-full py-4 bg-brand-blue text-white font-bold rounded-xl hover:bg-blue-600 transition-all shadow-lg transform active:scale-[0.99]">Save & Update Feed</button>
+                    <div class="px-6 pb-6">
+    <button onclick="logout()" class="w-full py-4 border border-red-100 bg-red-50 text-red-500 font-bold rounded-xl hover:bg-red-100 transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95">
+        <i class="fa-solid fa-right-from-bracket"></i> Log Out
+    </button>
+</div>
                 </form>
             </div>
         </div>
@@ -291,6 +305,24 @@
         <span class="text-[10px] font-bold">History</span>
     </button>
     <button onclick="switchTab('details')" id="nav-btn-details" class="flex flex-col items-center p-2 text-gray-400 hover:text-blue-600 transition active:scale-95">
+        <i class="fa-solid fa-user-gear text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Profile</span>
+    </button>
+</div>
+    <div class="app-bottom-nav fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 justify-around items-center py-2 z-50 shadow-[0_-5px_10px_rgba(0,0,0,0.05)] hidden">
+    <button onclick="switchTab('jobs')" id="nav-btn-jobs" class="flex flex-col items-center p-2 text-brand-blue">
+        <i class="fa-solid fa-map-location-dot text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Jobs</span>
+    </button>
+    <button onclick="switchTab('active')" id="nav-btn-active" class="flex flex-col items-center p-2 text-gray-400">
+        <i class="fa-solid fa-route text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Active</span>
+    </button>
+    <button onclick="switchTab('history')" id="nav-btn-history" class="flex flex-col items-center p-2 text-gray-400">
+        <i class="fa-solid fa-clock-rotate-left text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">History</span>
+    </button>
+    <button onclick="switchTab('details')" id="nav-btn-details" class="flex flex-col items-center p-2 text-gray-400">
         <i class="fa-solid fa-user-gear text-xl mb-1"></i>
         <span class="text-[10px] font-bold">Profile</span>
     </button>
