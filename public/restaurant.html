@@ -674,12 +674,6 @@ body.app-mode #main-scroll-container { padding-top: 20px !important; }
     if (tab === 'details') { setTimeout(initMap, 200); }
 }
 
-            const active = document.getElementById('tab-' + tab);
-            if (active) { active.style.display = 'block'; active.classList.remove('hidden'); }
-            window.currentTab = tab;
-            if (tab === 'details') { setTimeout(initMap, 200); }
-        }
-
         window.addEventListener("popstate", function (e) {
             if (e.state && e.state.tab) switchTab(e.state.tab, true);
             else switchTab("overview", true);
