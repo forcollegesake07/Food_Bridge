@@ -70,6 +70,21 @@
             }
             .mobile-modal-content.open { transform: translateY(0); }
         }
+        /* --- DEFAULT (WEBSITE MODE) --- */
+    /* Hide Bottom Bar by default */
+    .app-bottom-nav { display: none !important; }
+
+    /* --- APP MODE (ANDROID ONLY) --- */
+    /* Hide Sidebar and Top Hamburger Menu */
+    body.app-mode aside { display: none !important; } 
+    body.app-mode .md\:hidden.fixed.top-0 { display: none !important; } /* Hides the top hamburger bar */
+    
+    /* Show Bottom Bar */
+    body.app-mode .app-bottom-nav { display: flex !important; }
+    
+    /* Adjust padding so content doesn't hide behind bottom bar */
+    body.app-mode { padding-bottom: 80px; }
+    body.app-mode #main-content { margin-left: 0 !important; width: 100% !important; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 h-screen flex flex-col md:flex-row overflow-hidden">
@@ -262,6 +277,24 @@
             </div>
         </div>
     </div>
+    <div class="app-bottom-nav fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 justify-around items-center py-2 z-50 shadow-[0_-5px_10px_rgba(0,0,0,0.05)] hidden">
+    <button onclick="switchTab('jobs')" id="nav-btn-jobs" class="flex flex-col items-center p-2 text-blue-600 transition transform active:scale-95">
+        <i class="fa-solid fa-map-location-dot text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Jobs</span>
+    </button>
+    <button onclick="switchTab('active')" id="nav-btn-active" class="flex flex-col items-center p-2 text-gray-400 hover:text-blue-600 transition active:scale-95">
+        <i class="fa-solid fa-route text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Active</span>
+    </button>
+    <button onclick="switchTab('history')" id="nav-btn-history" class="flex flex-col items-center p-2 text-gray-400 hover:text-blue-600 transition active:scale-95">
+        <i class="fa-solid fa-clock-rotate-left text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">History</span>
+    </button>
+    <button onclick="switchTab('details')" id="nav-btn-details" class="flex flex-col items-center p-2 text-gray-400 hover:text-blue-600 transition active:scale-95">
+        <i class="fa-solid fa-user-gear text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Profile</span>
+    </button>
+</div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0", authDomain: "panel-9e1a6.firebaseapp.com", projectId: "panel-9e1a6", storageBucket: "panel-9e1a6.firebasestorage.app", messagingSenderId: "491001640513", appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0" };
