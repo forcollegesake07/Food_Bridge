@@ -902,9 +902,6 @@ body.app-mode #main-scroll-container { padding-top: 20px !important; }
         function deg2rad(deg) { return deg * (Math.PI/180); }
         function logout() { auth.signOut().then(() => window.location.href = 'login.html'); }
         function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toast-message').innerText = msg; t.classList.remove('translate-y-32','opacity-0'); setTimeout(() => t.classList.add('translate-y-32','opacity-0'), 3000); }
-        function toggleNotifications() { document.getElementById('notif-dropdown').classList.toggle('hidden'); }
-        // Notification stubs
-        function listenForBroadcasts() {} function loadBroadcasts() {}
     </script>
 </body>
 </html>
