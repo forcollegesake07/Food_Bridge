@@ -492,17 +492,21 @@ body.app-mode #main-scroll-container { padding-top: 20px !important; }
     </div>
 </div>
    <div class="app-bottom-nav fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 justify-around items-center py-2 z-50 shadow-[0_-5px_10px_rgba(0,0,0,0.05)] hidden">
-    <button onclick="switchTab('overview')" class="flex flex-col items-center p-2 text-brand-orange">
-        <i class="fa-solid fa-chart-pie text-xl mb-1"></i><span class="text-[10px] font-bold">Overview</span>
+    <button onclick="switchTab('overview')" id="nav-btn-overview" class="flex flex-col items-center p-2 text-brand-orange">
+        <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Overview</span>
     </button>
-    <button onclick="switchTab('alerts')" class="flex flex-col items-center p-2 text-gray-400">
-        <i class="fa-solid fa-bell text-xl mb-1"></i><span class="text-[10px] font-bold">Alerts</span>
+    <button onclick="switchTab('alerts')" id="nav-btn-alerts" class="flex flex-col items-center p-2 text-gray-400">
+        <i class="fa-solid fa-bell text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Alerts</span>
     </button>
-    <button onclick="switchTab('history')" class="flex flex-col items-center p-2 text-gray-400">
-        <i class="fa-solid fa-clock-rotate-left text-xl mb-1"></i><span class="text-[10px] font-bold">History</span>
+    <button onclick="switchTab('history')" id="nav-btn-history" class="flex flex-col items-center p-2 text-gray-400">
+        <i class="fa-solid fa-clock-rotate-left text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">History</span>
     </button>
-    <button onclick="switchTab('details')" class="flex flex-col items-center p-2 text-gray-400">
-        <i class="fa-solid fa-store text-xl mb-1"></i><span class="text-[10px] font-bold">Details</span>
+    <button onclick="switchTab('details')" id="nav-btn-details" class="flex flex-col items-center p-2 text-gray-400">
+        <i class="fa-solid fa-store text-xl mb-1"></i>
+        <span class="text-[10px] font-bold">Details</span>
     </button>
 </div>
     <script>
@@ -622,28 +626,53 @@ body.app-mode #main-scroll-container { padding-top: 20px !important; }
         window.currentTab = "overview"; 
 
         function switchTab(tab, fromPopState = false) {
-            if (!fromPopState) history.pushState({ tab }, "", "#" + tab);
-            document.querySelectorAll('[id^="tab-"]').forEach(el => { el.style.display = 'none'; el.classList.add('hidden'); });
+    if (!fromPopState) history.pushState({ tab }, "", "#" + tab);
+    
+    // 1. Hide all tab contents
+    document.querySelectorAll('[id^="tab-"]').forEach(el => { 
+        el.style.display = 'none'; 
+        el.classList.add('hidden'); 
+    });
 
-            const buttons = ['overview', 'alerts', 'history', 'details'];
-            buttons.forEach(b => {
-                const btn = document.getElementById('btn-' + b);
-                if(btn) {
-                    btn.classList.remove('bg-brand-orange', 'text-white', 'shadow-md');
-                    btn.classList.remove('text-gray-500', 'hover:bg-red-50', 'hover:text-red-500', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-transparent', 'border');
+    const tabs = ['overview', 'alerts', 'history', 'details'];
 
-                    if (b === tab) {
-                        btn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
-                    } else {
-                        btn.classList.add('text-gray-500');
-                        if (b === 'alerts') {
-                            btn.classList.add('hover:bg-red-50', 'hover:text-red-500', 'border', 'border-transparent', 'hover:border-red-100');
-                        } else {
-                            btn.classList.add('hover:bg-gray-50', 'hover:text-gray-900');
-                        }
-                    }
-                }
-            });
+    tabs.forEach(t => {
+        // --- UPDATE SIDEBAR BUTTONS ---
+        const sbBtn = document.getElementById('btn-' + t);
+        if (sbBtn) {
+            sbBtn.className = "w-full flex items-center px-5 py-3.5 text-sm font-semibold rounded-xl transition-all duration-200 active:scale-95 touch-manipulation";
+            if (t === tab) {
+                sbBtn.classList.add('bg-brand-orange', 'text-white', 'shadow-md');
+            } else {
+                sbBtn.classList.add('text-gray-500', 'hover:bg-gray-50', 'hover:text-gray-900');
+            }
+        }
+
+        // --- UPDATE BOTTOM BAR BUTTONS (The Fix) ---
+        const navBtn = document.getElementById('nav-btn-' + t);
+        if (navBtn) {
+            // Reset classes
+            navBtn.className = "flex flex-col items-center p-2 transition active:scale-95";
+            
+            if (t === tab) {
+                // Active State (Orange)
+                navBtn.classList.add('text-brand-orange', 'transform', 'scale-110');
+            } else {
+                // Inactive State (Gray)
+                navBtn.classList.add('text-gray-400');
+            }
+        }
+    });
+
+    // Show the active tab content
+    const activeContent = document.getElementById('tab-' + tab);
+    if (activeContent) {
+        activeContent.style.display = 'block';
+        activeContent.classList.remove('hidden');
+    }
+    window.currentTab = tab;
+    if (tab === 'details') { setTimeout(initMap, 200); }
+}
 
             const active = document.getElementById('tab-' + tab);
             if (active) { active.style.display = 'block'; active.classList.remove('hidden'); }
