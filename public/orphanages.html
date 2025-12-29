@@ -100,6 +100,13 @@
         /* Hide specific elements if library tries to inject them */
         #reader__dashboard_section_csr button { display: none !important; } 
         #reader__dashboard_section_swaplink { display: none !important; }
+        /* --- APP MODE STYLES --- */
+.app-bottom-nav { display: none !important; }
+body.app-mode aside { display: none !important; }
+body.app-mode .md\:hidden { display: none !important; }
+body.app-mode .app-bottom-nav { display: flex !important; }
+body.app-mode { padding-bottom: 80px; }
+body.app-mode #main-scroll-container { padding-top: 20px !important; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800 h-screen flex flex-col md:flex-row overflow-hidden selection:bg-brand-green selection:text-white">
@@ -418,21 +425,17 @@
     </div>
 </div>
     <div class="app-bottom-nav fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 justify-around items-center py-2 z-50 shadow-[0_-5px_10px_rgba(0,0,0,0.05)] hidden">
-    <button onclick="switchTab('overview')" id="nav-btn-overview" class="flex flex-col items-center p-2 text-brand-green transition transform active:scale-95">
-        <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
-        <span class="text-[10px] font-bold">Overview</span>
+    <button onclick="switchTab('jobs')" class="flex flex-col items-center p-2 text-blue-600">
+        <i class="fa-solid fa-map-location-dot text-xl mb-1"></i><span class="text-[10px] font-bold">Jobs</span>
     </button>
-    <button onclick="switchTab('alerts')" id="nav-btn-alerts" class="flex flex-col items-center p-2 text-gray-400 hover:text-brand-green transition active:scale-95">
-        <i class="fa-solid fa-utensils text-xl mb-1"></i>
-        <span class="text-[10px] font-bold">Food</span>
+    <button onclick="switchTab('active')" class="flex flex-col items-center p-2 text-gray-400">
+        <i class="fa-solid fa-route text-xl mb-1"></i><span class="text-[10px] font-bold">Active</span>
     </button>
-    <button onclick="switchTab('history')" id="nav-btn-history" class="flex flex-col items-center p-2 text-gray-400 hover:text-brand-green transition active:scale-95">
-        <i class="fa-solid fa-clock-rotate-left text-xl mb-1"></i>
-        <span class="text-[10px] font-bold">History</span>
+    <button onclick="switchTab('history')" class="flex flex-col items-center p-2 text-gray-400">
+        <i class="fa-solid fa-clock-rotate-left text-xl mb-1"></i><span class="text-[10px] font-bold">History</span>
     </button>
-    <button onclick="switchTab('details')" id="nav-btn-details" class="flex flex-col items-center p-2 text-gray-400 hover:text-brand-green transition active:scale-95">
-        <i class="fa-solid fa-hands-holding-child text-xl mb-1"></i>
-        <span class="text-[10px] font-bold">Profile</span>
+    <button onclick="switchTab('details')" class="flex flex-col items-center p-2 text-gray-400">
+        <i class="fa-solid fa-user-gear text-xl mb-1"></i><span class="text-[10px] font-bold">Profile</span>
     </button>
 </div>
     <script>
