@@ -568,7 +568,7 @@
         function startDataListener() {
             if (unsubscribe) return; // Already listening
 
-            const donationsRef = collection(db, 'artifacts', appId, 'public', 'data', 'donations');
+            const donationsRef = collection(db, 'donations');
             
             unsubscribe = onSnapshot(donationsRef, (snapshot) => {
                 // Success! We have live data (or empty data)
