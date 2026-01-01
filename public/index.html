@@ -2,657 +2,372 @@
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
+    <!-- Optimized Viewport for Mobile Performance -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FoodBridge | The Future of Giving</title>
+    <title>FoodBridge | Zero Waste Initiative</title>
     
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'%3E%3Cpath fill='%23F97316' d='M148 76.6C148 34.3 182.3 0 224.6 0c20.3 0 39.8 8.1 54.1 22.4l9.3 9.3 9.3-9.3C311.6 8.1 331.1 0 351.4 0C393.7 0 428 34.3 428 76.6c0 21.2-8.4 41.5-23.4 56.5L288 249.7 171.4 133.1C156.4 118.1 148 97.8 148 76.6zm338.9 239.3l-20.1-20.1c-4.7-4.7-12.3-4.7-17 0L288 457.6 126.1 295.8c-4.7-4.7-12.3-4.7-17 0L89 315.9c-25 25-25 65.5 0 90.5L253.3 570.8c19.1 19.1 50.3 19.1 69.4 0l164.2-164.2c25-25 25-65.5 0-90.5z'/%3E%3C/svg%3E">
 
-    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <!-- GSAP Core & Plugins -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://unpkg.com/split-type"></script> <!-- Text Splitting for Animations -->
-    
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#F97316">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/7541/7541900.png">
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { 
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                        display: ['Clash Display', 'sans-serif'],
-                        art: ['Syne', 'sans-serif']
-                    },
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
                     colors: {
-                        brand: { 
-                            orange: '#FF5500', 
-                            green: '#00D664', 
-                            blue: '#2E5CFF',
-                            black: '#030303',
-                            gray: '#0F0F0F'
+                        brand: { orange: '#F97316', green: '#10B981', dark: '#1F2937', light: '#FFF7ED' }
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out forwards' },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
                         }
-                    },
-                    backgroundImage: {
-                        'noise': "url('data:image/svg+xml,%3Csvg viewBox=\"0 0 200 200\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cfilter id=\"noiseFilter\"%3E%3CfeTurbulence type=\"fractalNoise\" baseFrequency=\"0.65\" numOctaves=\"3\" stitchTiles=\"stitch\"/%3E%3C/filter%3E%3Crect width=\"100%25\" height=\"100%25\" filter=\"url(%23noiseFilter)\" opacity=\"0.07\"/%3E%3C/svg%3E')",
-                    },
-                    cursor: {
-                        'none': 'none',
                     }
                 }
             }
         }
+        if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('SW registered: ', reg.scope))
+                .catch(err => console.log('SW registration failed: ', err));
+        });
+    }
     </script>
-
     <style>
-        /* CORE RESET & HACKS */
-        * { cursor: none; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #030303; color: #fff; overflow-x: hidden; }
-        ::selection { background: #FF5500; color: #000; }
+        /* Mobile Optimizations */
+        * { -webkit-tap-highlight-color: transparent; } /* Remove gray tap highlight */
         
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #030303; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #FF5500; }
-
-        /* CUSTOM CURSOR SYSTEM */
-        #cursor-dot, #cursor-outline {
-            position: fixed; top: 0; left: 0; transform: translate(-50%, -50%);
-            border-radius: 50%; pointer-events: none; z-index: 9999;
-            transition: opacity 0.3s ease-in-out, transform 0.1s;
-        }
-        #cursor-dot { width: 8px; height: 8px; background-color: #FF5500; }
-        #cursor-outline { 
-            width: 40px; height: 40px; 
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            transition: width 0.2s, height 0.2s, background-color 0.2s;
-        }
-        body.hovering #cursor-outline { width: 60px; height: 60px; background-color: rgba(255, 85, 0, 0.1); border-color: #FF5500; }
-
-        /* CINEMATIC PRELOADER */
-        #preloader {
-            position: fixed; inset: 0; background: #000; z-index: 10000;
-            display: flex; justify-content: center; items-center; flex-direction: column;
-        }
-        .loader-bar { width: 200px; height: 2px; background: #333; overflow: hidden; margin-top: 20px; }
-        .loader-progress { width: 0%; height: 100%; background: #FF5500; }
-
-        /* 3D TILT CARDS */
-        .tilt-card {
-            transform-style: preserve-3d;
-            transform: perspective(1000px);
-        }
-        .tilt-inner {
-            transform: translateZ(20px);
+        .fixed-bg-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+            will-change: transform; /* Hint for GPU acceleration */
         }
         
-        /* GLOW TEXT */
-        .glowing-text {
-            text-shadow: 0 0 10px rgba(255,255,255,0.1);
-            transition: text-shadow 0.3s;
-        }
-        .glowing-text:hover { text-shadow: 0 0 20px rgba(255, 85, 0, 0.6); }
-
-        /* HERO MASK */
-        .hero-mask {
-            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-        }
+        body { overflow-x: hidden; width: 100%; }
+        /* Prevent scroll jank on mobile */
+        html, body { height: 100%; -webkit-text-size-adjust: 100%; }
+        
+        /* Ensures footer stays at bottom even if content is short */
+        body { display: flex; flex-direction: column; min-height: 100vh; }
+        #main-content { flex-grow: 1; }
+        
+        /* Hardware accelerated animations */
+        .transform-gpu { transform: translateZ(0); }
     </style>
 </head>
-<body class="bg-noise">
+<body class="bg-gray-50 text-gray-800 font-sans selection:bg-brand-orange selection:text-white">
 
-    <!-- PRELOADER -->
-    <div id="preloader">
-        <div class="font-display font-bold text-4xl tracking-widest text-white mix-blend-difference">FOODBRIDGE</div>
-        <div class="loader-bar"><div class="loader-progress"></div></div>
-        <div class="mt-4 font-mono text-xs text-gray-500">CONNECTING COMMUNITIES...</div>
-    </div>
+    <div class="fixed-bg-layer"></div>
 
-    <!-- CUSTOM CURSOR -->
-    <div id="cursor-dot" class="hidden md:block"></div>
-    <div id="cursor-outline" class="hidden md:block"></div>
-
-    <!-- BACKGROUND FLUIDS -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div class="absolute w-[80vw] h-[80vw] bg-brand-orange/10 rounded-full blur-[120px] top-[-20%] left-[-20%] animate-pulse-slow parallax-bg" data-speed="0.2"></div>
-        <div class="absolute w-[60vw] h-[60vw] bg-brand-blue/10 rounded-full blur-[100px] bottom-[-10%] right-[-10%] animate-pulse-slow delay-1000 parallax-bg" data-speed="-0.2"></div>
-    </div>
-
-    <!-- NAVIGATION -->
-    <nav class="fixed w-full z-50 top-0 transition-all duration-300 backdrop-blur-md border-b border-white/5" id="navbar">
+    <nav class="bg-white/95 backdrop-blur-md shadow-md fixed w-full z-50 transition-all transform-gpu">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-24 items-center">
-                <a href="#" onclick="showPage('home')" class="magnet-target flex items-center gap-4 group">
-                    <div class="relative w-12 h-12">
-                        <div class="absolute inset-0 bg-brand-orange rounded-full blur opacity-20 group-hover:opacity-60 transition-opacity"></div>
-                        <div class="relative w-full h-full bg-gradient-to-br from-brand-orange to-red-600 rounded-full flex items-center justify-center text-white border border-white/10">
-                            <i class="fa-solid fa-heart text-lg"></i>
-                        </div>
+            <div class="flex justify-between h-20 items-center">
+                <button onclick="showPage('home')" class="flex items-center cursor-pointer group focus:outline-none touch-manipulation">
+                    <div class="bg-brand-orange/10 p-2 rounded-lg mr-2 group-hover:bg-brand-orange/20 transition">
+                        <i class="fa-solid fa-hand-holding-heart text-brand-orange text-2xl"></i>
                     </div>
-                    <div class="flex flex-col">
-                        <span class="font-display font-bold text-2xl tracking-tight leading-none">FoodBridge</span>
-                        <span class="text-[10px] uppercase tracking-[0.2em] text-gray-500 group-hover:text-brand-orange transition-colors">Zero Waste Initiative</span>
-                    </div>
-                </a>
-                
-                <div class="hidden md:flex items-center gap-1">
-                    <button onclick="scrollToSection('how-it-works')" class="magnet-target px-6 py-3 rounded-full text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all">How it Works</button>
-                    <button onclick="showPage('about')" class="magnet-target px-6 py-3 rounded-full text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all">Mission</button>
-                    <div class="w-px h-6 bg-white/10 mx-4"></div>
-                    <a href="login" class="magnet-target px-6 py-3 rounded-full text-sm font-bold text-white hover:text-brand-orange transition-all">Login</a>
-                    <a href="login?mode=signup" class="magnet-target relative px-8 py-3 rounded-full bg-white text-black font-bold text-sm overflow-hidden group">
-                        <div class="absolute inset-0 bg-brand-orange translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
-                        <span class="relative z-10 group-hover:text-white transition-colors">Join Us</span>
-                    </a>
+                    <span class="font-bold text-xl text-brand-dark tracking-wide">Food<span class="text-brand-green">Bridge</span></span>
+                </button>
+                <div class="hidden md:flex items-center space-x-8">
+                    <button onclick="showPage('home')" id="nav-home" class="text-brand-orange font-bold text-sm uppercase tracking-wide transition border-b-2 border-brand-orange pb-1 touch-manipulation">Home</button>
+                    <button onclick="showPage('about')" id="nav-about" class="text-gray-600 hover:text-brand-orange font-medium text-sm uppercase tracking-wide transition pb-1 border-b-2 border-transparent touch-manipulation">About Us</button>
                 </div>
-
-                <button onclick="toggleMobileMenu()" class="md:hidden text-white text-2xl magnet-target"><i class="fa-solid fa-bars-staggered"></i></button>
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="login" class="text-brand-dark hover:text-brand-orange font-bold transition touch-manipulation">Log In</a>
+                    <a href="login?mode=signup" class="bg-brand-orange hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-bold transition shadow-lg shadow-orange-200 transform hover:-translate-y-0.5 active:scale-95 touch-manipulation">Sign Up</a>
+                </div>
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-gray-600 text-2xl p-2 focus:outline-none active:bg-gray-100 rounded-lg transition touch-manipulation">
+                        <i class="fa-solid fa-bars" id="menu-icon"></i>
+                    </button>
+                </div>
             </div>
         </div>
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden fixed inset-0 bg-black/95 z-40 flex flex-col justify-center items-center gap-8 backdrop-blur-xl">
-            <button onclick="scrollToSection('how-it-works'); toggleMobileMenu()" class="text-3xl font-display font-bold">How it Works</button>
-            <button onclick="showPage('about'); toggleMobileMenu()" class="text-3xl font-display font-bold">Mission</button>
-            <a href="login" class="text-2xl text-brand-orange">Log In</a>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 absolute w-full left-0 top-20 shadow-lg animate-fade-in z-40 transform-gpu">
+            <div class="flex flex-col p-4 space-y-4">
+                <button onclick="showPage('home'); toggleMobileMenu()" class="text-left font-bold text-brand-dark hover:text-brand-orange py-3 border-b border-gray-50 text-lg active:bg-gray-50 transition touch-manipulation">Home</button>
+                <button onclick="showPage('about'); toggleMobileMenu()" class="text-left font-medium text-gray-600 hover:text-brand-orange py-3 border-b border-gray-50 text-lg active:bg-gray-50 transition touch-manipulation">About Us</button>
+                <div class="flex flex-col gap-3 pt-4">
+                    <a href="login" class="text-center w-full border border-brand-dark text-brand-dark py-3.5 rounded-xl font-bold active:bg-gray-100 transition touch-manipulation">Log In</a>
+                    <a href="login?mode=signup" class="text-center w-full bg-brand-orange text-white py-3.5 rounded-xl font-bold shadow-md active:bg-orange-600 active:scale-[0.98] transition touch-manipulation">Sign Up</a>
+                </div>
+            </div>
         </div>
     </nav>
 
-    <!-- MAIN CONTENT -->
-    <main id="main-content" class="relative z-10 pt-24">
-        
-        <!-- === HOME VIEW === -->
-        <div id="view-home">
+    <!-- Content Wrapper with flex-grow -->
+    <div id="main-content" class="pt-20">
+        <div id="view-home" class="animate-fade-in block transform-gpu">
+            <section class="min-h-screen flex items-center justify-center text-center text-white px-4 relative pb-10">
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-6 inline-block">
+                        <i class="fa-solid fa-hand-holding-heart text-5xl md:text-6xl text-brand-orange animate-bounce-slow"></i>
+                    </div>
+                    <span class="block text-brand-green font-bold tracking-widest uppercase mb-4 text-xs md:text-sm bg-white/10 w-fit mx-auto px-4 py-1 rounded-full backdrop-blur-sm border border-white/20">Zero Waste Initiative</span>
+                    <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 leading-tight drop-shadow-lg">
+                        Connect Surplus to <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-yellow-400">Those in Need</span>
+                    </h1>
+                    <p class="text-lg sm:text-xl md:text-2xl mb-10 text-gray-200 max-w-2xl mx-auto font-light">
+                        A real-time platform connecting restaurants with orphanages. 
+                        Stop wasting food. Start saving lives.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto">
+                        <button onclick="showPage('about')" class="w-full sm:w-auto bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white font-bold py-4 px-10 rounded-full transition transform hover:scale-105 active:scale-95 text-lg min-w-[200px] touch-manipulation">
+                            About Us
+                        </button>
+                        <a href="login?mode=signup" class="w-full sm:w-auto bg-brand-orange hover:bg-orange-600 text-white font-bold py-4 px-10 rounded-full shadow-xl shadow-orange-900/20 transition transform hover:scale-105 active:scale-95 text-lg min-w-[200px] touch-manipulation">
+                            Join the Mission <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce text-white/50 hidden sm:block">
+                    <i class="fa-solid fa-chevron-down text-2xl"></i>
+                </div>
+            </section>
             
-            <!-- HERO SECTION -->
-            <section class="min-h-[90vh] flex items-center relative px-4 hero-mask">
-                <div class="max-w-7xl mx-auto grid lg:grid-cols-12 gap-12 items-center w-full">
-                    
-                    <!-- Text Content -->
-                    <div class="lg:col-span-7 relative z-20">
-                        <div class="inline-flex items-center gap-3 mb-8 opacity-0 reveal-text">
-                            <span class="w-2 h-2 rounded-full bg-brand-green animate-pulse"></span>
-                            <span class="text-brand-green font-mono text-xs tracking-widest uppercase">Live Network • Real Impact</span>
-                        </div>
-                        
-                        <h1 class="font-display font-bold text-7xl md:text-9xl leading-[0.9] mb-8 mix-blend-difference glowing-text">
-                            <div class="overflow-hidden"><span class="block reveal-word">BRIDGE</span></div>
-                            <div class="overflow-hidden"><span class="block reveal-word text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-yellow-500">THE GAP</span></div>
-                        </h1>
-                        
-                        <p class="text-xl md:text-2xl text-gray-400 font-light max-w-xl leading-relaxed mb-12 opacity-0 reveal-text">
-                            A community-driven platform connecting surplus food to immediate need. No more waste. Just shared humanity.
-                        </p>
-                        
-                        <div class="flex flex-wrap gap-6 opacity-0 reveal-text">
-                            <a href="login?mode=signup" class="magnet-target group relative px-8 py-4 bg-brand-orange rounded-full overflow-hidden">
-                                <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                <span class="font-bold text-white relative z-10 flex items-center gap-2">
-                                    Donate Food <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-                                </span>
-                            </a>
-                            <button onclick="scrollToSection('live-stats')" class="magnet-target px-8 py-4 rounded-full border border-white/20 hover:bg-white/5 transition-colors font-medium flex items-center gap-3 group">
-                                <div class="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center group-hover:scale-110 transition-transform"><i class="fa-solid fa-play text-xs"></i></div>
-                                <span>See Live Impact</span>
-                            </button>
-                        </div>
+            <!-- REAL-TIME IMPACT STATISTICS -->
+            <section class="py-12 md:py-16 bg-white relative z-10 -mt-8 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-8 md:mb-10">
+                        <h2 class="text-2xl font-bold text-brand-dark">Our Live Impact</h2>
+                        <div class="w-12 h-1 bg-brand-green mx-auto rounded mt-2"></div>
                     </div>
-
-                    <!-- Visual Content (3D Hologram Effect) -->
-                    <div class="lg:col-span-5 relative h-[600px] flex items-center justify-center perspective-container opacity-0 reveal-image">
-                        <div class="tilt-card w-full h-full relative group cursor-pointer">
-                            <div class="absolute inset-0 bg-gradient-to-tr from-brand-orange/20 to-brand-blue/20 rounded-[40px] blur-2xl transform group-hover:scale-105 transition-transform duration-500"></div>
-                            <div class="absolute inset-0 border border-white/10 bg-white/5 backdrop-blur-2xl rounded-[40px] overflow-hidden">
-                                <!-- UPDATED: Added ID for dynamic image replacement -->
-                                <img id="hero-donation-img" src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-[2s] ease-out" alt="Impact" onerror="this.src='https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-                                
-                                <!-- Floating UI Elements in 3D -->
-                                <div class="absolute bottom-8 left-8 right-8 tilt-inner">
-                                    <div class="bg-black/50 backdrop-blur-md border border-white/10 p-6 rounded-3xl">
-                                        <div class="flex justify-between items-end">
-                                            <div>
-                                                <p class="text-xs text-gray-400 font-mono mb-1">RECENT ACTIVITY</p>
-                                                <!-- UPDATED: Added ID for dynamic text replacement -->
-                                                <p id="hero-donation-name" class="text-2xl font-bold text-white">Meal Secured</p>
-                                            </div>
-                                            <div class="w-10 h-10 rounded-full border border-brand-green/50 flex items-center justify-center text-brand-green animate-spin-slow">
-                                                <i class="fa-solid fa-check"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                        <!-- Stat 1 -->
+                        <div class="text-center p-3 md:p-4 group">
+                            <div class="w-12 h-12 md:w-16 md:h-16 mx-auto bg-orange-100 text-brand-orange rounded-full flex items-center justify-center text-2xl md:text-3xl mb-3 md:mb-4 group-hover:scale-110 transition duration-300">
+                                <i class="fa-solid fa-bowl-rice"></i>
                             </div>
+                            <h3 class="text-2xl md:text-4xl font-extrabold text-brand-dark mb-1" id="count-meals-today">0</h3>
+                            <p class="text-xs md:text-sm font-medium text-gray-500 uppercase tracking-wide">Meals Today</p>
+                        </div>
+                        <!-- Stat 2 -->
+                        <div class="text-center p-3 md:p-4 group">
+                            <div class="w-12 h-12 md:w-16 md:h-16 mx-auto bg-green-100 text-brand-green rounded-full flex items-center justify-center text-2xl md:text-3xl mb-3 md:mb-4 group-hover:scale-110 transition duration-300">
+                                <i class="fa-solid fa-earth-americas"></i>
+                            </div>
+                            <h3 class="text-2xl md:text-4xl font-extrabold text-brand-dark mb-1" id="count-meals-total">0</h3>
+                            <p class="text-xs md:text-sm font-medium text-gray-500 uppercase tracking-wide">Lifetime Meals</p>
+                        </div>
+                        <!-- Stat 3 -->
+                        <div class="text-center p-3 md:p-4 group">
+                            <div class="w-12 h-12 md:w-16 md:h-16 mx-auto bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl md:text-3xl mb-3 md:mb-4 group-hover:scale-110 transition duration-300">
+                                <i class="fa-solid fa-utensils"></i>
+                            </div>
+                            <h3 class="text-2xl md:text-4xl font-extrabold text-brand-dark mb-1" id="count-restaurants">0</h3>
+                            <p class="text-xs md:text-sm font-medium text-gray-500 uppercase tracking-wide">Restaurants</p>
+                        </div>
+                        <!-- Stat 4 -->
+                        <div class="text-center p-3 md:p-4 group">
+                            <div class="w-12 h-12 md:w-16 md:h-16 mx-auto bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-2xl md:text-3xl mb-3 md:mb-4 group-hover:scale-110 transition duration-300">
+                                <i class="fa-solid fa-hands-holding-child"></i>
+                            </div>
+                            <h3 class="text-2xl md:text-4xl font-extrabold text-brand-dark mb-1" id="count-orphanages">0</h3>
+                            <p class="text-xs md:text-sm font-medium text-gray-500 uppercase tracking-wide">Orphanages</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- LIVE DATA TICKER -->
-            <section id="live-stats" class="py-12 border-y border-white/5 bg-black/50 backdrop-blur-sm relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-                <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-12 text-center relative z-10">
-                    <div class="group">
-                        <p class="text-5xl md:text-6xl font-display font-bold text-white mb-2 tabular-nums group-hover:text-brand-orange transition-colors" id="count-meals-total">0</p>
-                        <p class="text-xs text-gray-500 uppercase font-bold tracking-[0.3em]">Meals Served</p>
+            <section class="py-16 md:py-24 bg-gray-50 border-t border-gray-200">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="text-center mb-12 md:mb-16">
+                        <span class="text-brand-green font-bold uppercase tracking-wider text-sm">Process</span>
+                        <h2 class="text-3xl font-bold text-brand-dark mt-2">How It Works</h2>
+                        <div class="w-16 h-1 bg-brand-orange mx-auto rounded mt-4"></div>
                     </div>
-                    <div class="group">
-                        <p class="text-5xl md:text-6xl font-display font-bold text-white mb-2 tabular-nums group-hover:text-brand-orange transition-colors" id="count-restaurants">0</p>
-                        <p class="text-xs text-gray-500 uppercase font-bold tracking-[0.3em]">Restaurants</p>
-                    </div>
-                    <div class="group">
-                        <p class="text-5xl md:text-6xl font-display font-bold text-white mb-2 tabular-nums group-hover:text-brand-green transition-colors" id="count-orphanages">0</p>
-                        <p class="text-xs text-gray-500 uppercase font-bold tracking-[0.3em]">Communities</p>
-                    </div>
-                    <div class="group">
-                        <p class="text-5xl md:text-6xl font-display font-bold text-white mb-2 group-hover:text-brand-blue transition-colors">∞<span class="text-xl align-top text-brand-blue">+</span></p>
-                        <p class="text-xs text-gray-500 uppercase font-bold tracking-[0.3em]">Future Hope</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- CHOOSE YOUR ROLE (Interactive 3D Cards) -->
-            <section class="py-32 px-4 max-w-[1400px] mx-auto">
-                <div class="text-center mb-24">
-                    <h2 class="font-display text-5xl md:text-7xl font-bold mb-6">How You Can Help</h2>
-                    <p class="text-gray-400 font-light text-xl">Every role plays a vital part in the mission.</p>
-                </div>
-
-                <div class="grid md:grid-cols-3 gap-8">
-                    
-                    <!-- Card 1: Restaurant -->
-                    <div class="tilt-card group h-[600px] relative cursor-pointer" onclick="window.location.href='restaurant.html'">
-                        <div class="absolute inset-0 bg-brand-orange/20 blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                        <div class="absolute inset-0 bg-[#0A0A0A] border border-white/10 rounded-[40px] overflow-hidden transition-colors group-hover:border-brand-orange/50">
-                            <img src="https://images.unsplash.com/photo-1556910103-1c02745a30bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover opacity-40 group-hover:opacity-20 transition-all duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0">
-                            <div class="absolute inset-0 flex flex-col justify-end p-10 tilt-inner">
-                                <div class="w-16 h-16 rounded-full border border-white/20 flex items-center justify-center text-3xl text-white mb-8 group-hover:bg-brand-orange group-hover:border-brand-orange transition-all duration-500">
-                                    <i class="fa-solid fa-utensils"></i>
-                                </div>
-                                <h3 class="font-display text-4xl font-bold text-white mb-4">Restaurants</h3>
-                                <p class="text-gray-400 font-light mb-8 group-hover:text-white transition-colors">Don't throw away good food. Turn surplus into smiles.</p>
-                                <span class="text-brand-orange text-sm font-bold uppercase tracking-widest flex items-center gap-4 group-hover:gap-6 transition-all">
-                                    Donate Now <i class="fa-solid fa-arrow-right"></i>
-                                </span>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
+                        <!-- Step 1 -->
+                        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm hover:shadow-2xl hover:-translate-y-2 hover:bg-orange-50 transition-all duration-300 border-b-4 border-brand-orange text-center group cursor-default">
+                            <div class="w-16 h-16 mx-auto bg-orange-50 rounded-full flex items-center justify-center text-brand-orange text-2xl mb-6 group-hover:scale-110 group-hover:bg-white transition duration-300"><i class="fa-solid fa-bowl-food"></i></div>
+                            <h3 class="font-bold text-xl mb-3 text-brand-dark group-hover:text-orange-700 transition">1. Post Surplus</h3>
+                            <p class="text-gray-600 text-sm">Restaurants upload details of leftover edible food instantly via a simple dashboard.</p>
+                        </div>
+                        <!-- Step 2 -->
+                        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm hover:shadow-2xl hover:-translate-y-2 hover:bg-green-50 transition-all duration-300 border-b-4 border-brand-green text-center group cursor-default">
+                            <div class="w-16 h-16 mx-auto bg-green-50 rounded-full flex items-center justify-center text-brand-green text-2xl mb-6 group-hover:scale-110 group-hover:bg-white transition duration-300"><i class="fa-solid fa-bolt"></i></div>
+                            <h3 class="font-bold text-xl mb-3 text-brand-dark group-hover:text-green-700 transition">2. Real-Time Alert</h3>
+                            <p class="text-gray-600 text-sm">Registered orphanages nearby receive immediate updates on their live feed.</p>
+                        </div>
+                        <!-- Step 3 -->
+                        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm hover:shadow-2xl hover:-translate-y-2 hover:bg-blue-50 transition-all duration-300 border-b-4 border-blue-500 text-center group cursor-default">
+                            <div class="w-16 h-16 mx-auto bg-blue-50 rounded-full flex items-center justify-center text-blue-500 text-2xl mb-6 group-hover:scale-110 group-hover:bg-white transition duration-300"><i class="fa-solid fa-hand-pointer"></i></div>
+                            <h3 class="font-bold text-xl mb-3 text-brand-dark group-hover:text-blue-700 transition">3. One-Click Claim</h3>
+                            <p class="text-gray-600 text-sm">Orphanages claim the donation, instantly reserving the food for pickup.</p>
+                        </div>
+                        <!-- Step 4 -->
+                        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm hover:shadow-2xl hover:-translate-y-2 hover:bg-purple-50 transition-all duration-300 border-b-4 border-purple-500 text-center group cursor-default">
+                            <div class="w-16 h-16 mx-auto bg-purple-50 rounded-full flex items-center justify-center text-purple-500 text-2xl mb-6 group-hover:scale-110 group-hover:bg-white transition duration-300"><i class="fa-solid fa-handshake"></i></div>
+                            <h3 class="font-bold text-xl mb-3 text-brand-dark group-hover:text-purple-700 transition">4. Connection</h3>
+                            <p class="text-gray-600 text-sm">Contact details are shared instantly to coordinate the pickup logistics.</p>
                         </div>
                     </div>
-
-                    <!-- Card 2: Orphanage -->
-                    <div class="tilt-card group h-[600px] relative cursor-pointer md:-mt-12" onclick="window.location.href='orphanages.html'">
-                        <div class="absolute inset-0 bg-brand-green/20 blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                        <div class="absolute inset-0 bg-[#0A0A0A] border border-white/10 rounded-[40px] overflow-hidden transition-colors group-hover:border-brand-green/50">
-                            <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover opacity-40 group-hover:opacity-20 transition-all duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0">
-                            <div class="absolute inset-0 flex flex-col justify-end p-10 tilt-inner">
-                                <div class="w-16 h-16 rounded-full border border-white/20 flex items-center justify-center text-3xl text-white mb-8 group-hover:bg-brand-green group-hover:border-brand-green transition-all duration-500">
-                                    <i class="fa-solid fa-hands-holding-child"></i>
-                                </div>
-                                <h3 class="font-display text-4xl font-bold text-white mb-4">Orphanages</h3>
-                                <p class="text-gray-400 font-light mb-8 group-hover:text-white transition-colors">Reliable, quality meals for your community.</p>
-                                <span class="text-brand-green text-sm font-bold uppercase tracking-widest flex items-center gap-4 group-hover:gap-6 transition-all">
-                                    Join Network <i class="fa-solid fa-arrow-right"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 3: Volunteer -->
-                    <div class="tilt-card group h-[600px] relative cursor-pointer" onclick="window.location.href='driver.html'">
-                        <div class="absolute inset-0 bg-brand-blue/20 blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                        <div class="absolute inset-0 bg-[#0A0A0A] border border-white/10 rounded-[40px] overflow-hidden transition-colors group-hover:border-brand-blue/50">
-                            <img src="https://images.unsplash.com/photo-1616954379462-8b35546a1651?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover opacity-40 group-hover:opacity-20 transition-all duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0">
-                            <div class="absolute inset-0 flex flex-col justify-end p-10 tilt-inner">
-                                <div class="w-16 h-16 rounded-full border border-white/20 flex items-center justify-center text-3xl text-white mb-8 group-hover:bg-brand-blue group-hover:border-brand-blue transition-all duration-500">
-                                    <i class="fa-solid fa-truck-fast"></i>
-                                </div>
-                                <h3 class="font-display text-4xl font-bold text-white mb-4">Volunteers</h3>
-                                <p class="text-gray-400 font-light mb-8 group-hover:text-white transition-colors">Be the bridge. Transport food. Make a difference.</p>
-                                <span class="text-brand-blue text-sm font-bold uppercase tracking-widest flex items-center gap-4 group-hover:gap-6 transition-all">
-                                    Volunteer <i class="fa-solid fa-arrow-right"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
-            <!-- HOW IT WORKS (Timeline) -->
-            <section id="how-it-works" class="py-32 bg-[#050505] relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:40px_40px] opacity-[0.03]"></div>
-                
-                <div class="max-w-6xl mx-auto px-4 relative z-10">
-                    <div class="text-center mb-32">
-                        <h2 class="font-display text-5xl md:text-6xl font-bold mb-4">Simple Process</h2>
-                        <p class="text-gray-500 font-mono text-sm uppercase tracking-widest">From surplus to sustenance in 3 steps</p>
-                    </div>
-
-                    <!-- Timeline Item 1 -->
-                    <div class="flex flex-col md:flex-row gap-12 md:gap-24 items-center mb-32 group">
-                        <div class="w-full md:w-1/2 text-right md:text-right">
-                            <span class="text-8xl font-display font-bold text-white/5 group-hover:text-brand-orange/10 transition-colors absolute -mt-10 -ml-10">01</span>
-                            <h3 class="text-3xl font-display font-bold text-white mb-4 relative z-10">1. List Food</h3>
-                            <p class="text-gray-400 leading-relaxed relative z-10">Restaurants list surplus food in seconds. Simple and fast.</p>
-                        </div>
-                        <div class="relative w-full md:w-1/2 pl-8 border-l border-white/10 md:border-none">
-                            <div class="md:absolute md:left-0 md:-ml-[1px] md:top-1/2 md:-translate-y-1/2 w-3 h-3 bg-brand-orange rounded-full shadow-[0_0_20px_#FF5500]"></div>
-                            <div class="bg-white/5 border border-white/10 p-8 rounded-3xl hover:border-brand-orange/50 transition-colors">
-                                <i class="fa-solid fa-cloud-arrow-up text-4xl text-brand-orange mb-4"></i>
-                                <div class="h-2 w-full bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-brand-orange w-3/4 animate-pulse"></div></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 2 -->
-                    <div class="flex flex-col md:flex-row-reverse gap-12 md:gap-24 items-center mb-32 group">
-                        <div class="w-full md:w-1/2 text-left">
-                            <span class="text-8xl font-display font-bold text-white/5 group-hover:text-brand-green/10 transition-colors absolute -mt-10 -ml-10">02</span>
-                            <h3 class="text-3xl font-display font-bold text-white mb-4 relative z-10">2. Instant Alert</h3>
-                            <p class="text-gray-400 leading-relaxed relative z-10">Nearby orphanages get notified instantly. First to claim secures the meal.</p>
-                        </div>
-                        <div class="relative w-full md:w-1/2 pr-8 border-r border-white/10 md:border-none md:text-right">
-                             <div class="md:absolute md:right-0 md:-mr-[1px] md:top-1/2 md:-translate-y-1/2 w-3 h-3 bg-brand-green rounded-full shadow-[0_0_20px_#00D664]"></div>
-                            <div class="bg-white/5 border border-white/10 p-8 rounded-3xl hover:border-brand-green/50 transition-colors text-left">
-                                <div class="flex justify-between items-center mb-4">
-                                    <i class="fa-solid fa-bell text-4xl text-brand-green"></i>
-                                    <span class="animate-ping w-3 h-3 bg-brand-green rounded-full"></span>
-                                </div>
-                                <div class="space-y-2">
-                                    <div class="h-2 w-2/3 bg-white/10 rounded-full"></div>
-                                    <div class="h-2 w-1/2 bg-white/10 rounded-full"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 3 -->
-                    <div class="flex flex-col md:flex-row gap-12 md:gap-24 items-center group">
-                        <div class="w-full md:w-1/2 text-right md:text-right">
-                            <span class="text-8xl font-display font-bold text-white/5 group-hover:text-brand-blue/10 transition-colors absolute -mt-10 -ml-10">03</span>
-                            <h3 class="text-3xl font-display font-bold text-white mb-4 relative z-10">3. Pickup & Delivery</h3>
-                            <p class="text-gray-400 leading-relaxed relative z-10">Volunteers or staff pick up the food. Hunger is fought, one meal at a time.</p>
-                        </div>
-                        <div class="relative w-full md:w-1/2 pl-8 border-l border-white/10 md:border-none">
-                            <div class="md:absolute md:left-0 md:-ml-[1px] md:top-1/2 md:-translate-y-1/2 w-3 h-3 bg-brand-blue rounded-full shadow-[0_0_20px_#2E5CFF]"></div>
-                            <div class="bg-white/5 border border-white/10 p-8 rounded-3xl hover:border-brand-blue/50 transition-colors">
-                                <i class="fa-solid fa-check-circle text-4xl text-brand-blue mb-4"></i>
-                                <p class="text-2xl font-bold">Delivered.</p>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </section>
         </div>
 
-        <!-- ABOUT VIEW -->
-        <div id="view-about" class="hidden min-h-screen pt-20 px-4">
-            <div class="max-w-4xl mx-auto py-20 text-center">
-                <h1 class="font-display text-6xl font-bold mb-8">Our Mission</h1>
-                <div class="prose prose-invert prose-lg mx-auto text-left bg-white/5 p-12 rounded-[40px] border border-white/10">
-                    <p class="text-2xl text-white font-light leading-relaxed mb-8">
-                        "Hunger is not a scarcity problem. It is a logistics problem."
-                    </p>
-                    <p class="text-gray-400 mb-8">
-                        We are building the digital bridge to solve the oldest problem in human history. By connecting localized abundance with localized need, we make sure no good food goes to waste while people go hungry.
-                    </p>
-                    <div class="grid grid-cols-2 gap-4 mt-12">
-                         <div class="p-6 bg-black rounded-2xl border border-white/10">
-                             <h4 class="text-brand-orange font-bold text-xl mb-2">Zero Waste</h4>
-                             <p class="text-sm text-gray-500">Saving good food from landfills.</p>
-                         </div>
-                         <div class="p-6 bg-black rounded-2xl border border-white/10">
-                             <h4 class="text-brand-green font-bold text-xl mb-2">100% Impact</h4>
-                             <p class="text-sm text-gray-500">Every donation helps a real person.</p>
-                         </div>
+        <div id="view-about" class="hidden animate-fade-in bg-white min-h-screen transform-gpu">
+            <section class="py-16 md:py-20 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-96 h-96 bg-brand-orange/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 w-96 h-96 bg-brand-green/5 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div class="text-center mb-12 md:mb-16">
+                        <span class="text-brand-orange font-bold uppercase tracking-wider text-sm mb-2 block">Our Mission</span>
+                        <h1 class="text-4xl md:text-5xl font-bold text-brand-dark mb-6">Bridging the Gap</h1>
+                        <p class="text-lg md:text-xl text-gray-500 max-w-3xl mx-auto">We are building a world where excess food doesn't fill landfills, but fills stomachs.</p>
                     </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="bg-black border-t border-white/10 pt-24 pb-12 relative z-10">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="grid md:grid-cols-4 gap-12 mb-16">
-                <div class="col-span-1 md:col-span-2">
-                    <a href="#" class="flex items-center gap-4 mb-8">
-                        <div class="w-10 h-10 bg-brand-orange rounded-full flex items-center justify-center text-white">
-                            <i class="fa-solid fa-heart"></i>
+                    <div class="grid md:grid-cols-2 gap-10 md:gap-16 items-start">
+                        <div class="relative group">
+                            <div class="absolute -top-4 -left-4 w-24 h-24 bg-brand-orange/20 rounded-full -z-10 group-hover:scale-110 transition duration-500 hidden md:block"></div>
+                            <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Volunteers serving food" class="rounded-3xl shadow-2xl w-full object-cover h-64 sm:h-96 md:h-[500px]">
+                            <div class="absolute -bottom-6 -right-6 bg-white p-6 rounded-2xl shadow-xl border-l-4 border-brand-green max-w-xs hidden lg:block animate-fade-in">
+                                <p class="font-bold text-gray-800 text-lg italic">"Hunger is not a scarcity issue, it's a logistics issue."</p>
+                            </div>
                         </div>
-                        <span class="font-display font-bold text-3xl">FoodBridge</span>
-                    </a>
-                    <p class="text-gray-500 max-w-sm mb-8">Technology serving humanity.</p>
-                    <div class="flex gap-4">
-                        <a href="#" class="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all magnet-target"><i class="fa-brands fa-github text-xl"></i></a>
-                        <a href="#" class="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all magnet-target"><i class="fa-brands fa-twitter text-xl"></i></a>
+                        <div class="space-y-6 md:space-y-8">
+                            <div>
+                                <h3 class="text-2xl font-bold text-brand-dark mb-4">The Paradox of Plenty</h3>
+                                <p class="text-lg text-gray-600 leading-relaxed">It started with a simple observation in our local community: restaurants often prepare significantly more food than they sell. Due to unpredictable demand and stringent freshness standards, perfectly edible, high-quality meals end up in the trash at the end of every shift.</p>
+                            </div>
+                            <div class="bg-brand-light p-6 md:p-8 rounded-2xl border border-orange-100 shadow-sm hover:shadow-md transition">
+                                <div class="flex items-start">
+                                    <i class="fa-solid fa-chart-pie text-brand-orange text-3xl mr-5 mt-1"></i>
+                                    <div><h4 class="font-bold text-brand-dark text-xl mb-2">The Data</h4><p class="text-gray-600">Research indicates that nearly <span class="font-bold text-brand-dark">40% of food produced</span> is wasted globally. In the restaurant industry specifically, surplus food accounts for a massive portion of this waste.</p></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-brand-dark mb-4">Our Solution</h3>
+                                <p class="text-lg text-gray-600 leading-relaxed"><strong>FoodBridge</strong> creates a digital highway between these two groups. We empower restaurants to turn potential waste into immediate aid, ensuring that surplus food reaches the plates of those who need it most, instantly and efficiently.</p>
+                            </div>
+                            <div class="pt-4"><a href="login?mode=signup" class="inline-flex items-center text-brand-green font-bold text-lg hover:underline active:text-green-700 transition touch-manipulation">Join us as a Restaurant or Orphanage <i class="fa-solid fa-arrow-right ml-2"></i></a></div>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <h4 class="font-bold text-white mb-8">Platform</h4>
-                    <ul class="space-y-4 text-gray-500">
-                        <li><a href="restaurant.html" class="hover:text-white transition-colors">Restaurants</a></li>
-                        <li><a href="orphanages.html" class="hover:text-white transition-colors">Orphanages</a></li>
-                        <li><a href="driver.html" class="hover:text-white transition-colors">Volunteers</a></li>
-                    </ul>
+            </section>
+        </div>
+    </div>
+
+    <!-- Footer - Pushed to bottom via flex-grow on main-content -->
+    <footer class="bg-brand-dark text-white py-12 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0 text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start mb-2">
+                        <!-- ICON HERE -->
+                        <i class="fa-solid fa-hand-holding-heart text-brand-orange text-xl mr-2"></i>
+                        <span class="font-bold text-2xl">FoodBridge</span>
+                    </div>
+                    <p class="text-gray-400 text-sm">Connecting food to those who need it most.</p>
                 </div>
-                <div>
-                    <h4 class="font-bold text-white mb-8">Legal</h4>
-                    <ul class="space-y-4 text-gray-500">
-                        <li><a href="terms&conditions.html" class="hover:text-white transition-colors">Terms of Service</a></li>
-                        <li><a href="terms&conditions.html#privacy" class="hover:text-white transition-colors">Privacy Policy</a></li>
-                    </ul>
+                <div class="flex space-x-6 justify-center">
+                    <a href="#" class="text-gray-400 hover:text-white transition transform hover:scale-110 active:scale-95 touch-manipulation"><i class="fa-brands fa-github text-2xl"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition transform hover:scale-110 active:scale-95 touch-manipulation"><i class="fa-brands fa-linkedin text-2xl"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition transform hover:scale-110 active:scale-95 touch-manipulation"><i class="fa-brands fa-instagram text-2xl"></i></a>
                 </div>
             </div>
-            <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-600 font-mono">
-                <p>&copy; 2025 FOODBRIDGE.</p>
-                <p>DESIGNED FOR HUMANITY.</p>
+            
+            <!-- Updated Copyright Section with Terms Link -->
+            <div class="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
+                <p>&copy; 2025 FoodBridge Project. Built for a better world.</p>
+                <div class="mt-4 md:mt-0 space-x-4">
+                    <a href="terms&conditions" class="hover:text-brand-orange transition active:text-orange-400 touch-manipulation">Terms & Conditions</a>
+                    <span class="text-gray-700">|</span>
+                    <a href="terms&conditions#privacy" class="hover:text-brand-orange transition active:text-orange-400 touch-manipulation">Privacy Policy</a>
+                </div>
             </div>
         </div>
     </footer>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- PRELOADER ---
-        window.addEventListener('load', () => {
-            const tl = gsap.timeline();
-            tl.to('.loader-progress', { width: '100%', duration: 1.5, ease: "power2.inOut" })
-              .to('.loader-bar', { height: 0, duration: 0.5, ease: "power2.inOut" })
-              .to('#preloader', { y: '-100%', duration: 1, ease: "expo.inOut" })
-              .from('.reveal-word', { y: 100, opacity: 0, stagger: 0.1, duration: 1, ease: "power4.out" }, "-=0.5")
-              .to('.reveal-text', { opacity: 1, y: 0, duration: 1, stagger: 0.2 }, "-=0.5")
-              .to('.reveal-image', { opacity: 1, scale: 1, duration: 1.5, ease: "power2.out" }, "-=1");
-        });
-
-        // --- FIREBASE SETUP (MANDATORY PATTERN) ---
+        // --- FIREBASE INITIALIZATION & LOGIC ---
         const firebaseConfig = { apiKey: "AIzaSyDB-qF6Ac93Tj3LR3DI6aTuUtkFNRMDai0", authDomain: "panel-9e1a6.firebaseapp.com", projectId: "panel-9e1a6", storageBucket: "panel-9e1a6.firebasestorage.app", messagingSenderId: "491001640513", appId: "1:491001640513:web:ddbf48cf060ae10d0e38c0" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const auth = firebase.auth();
-        const appId = '1:491001640513:web:ddbf48cf060ae10d0e38c0'; // reusing appID or provided global
 
-        // 1. Authenticate FIRST
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await auth.signInWithCustomToken(__initial_auth_token);
-            } else {
-                await auth.signInAnonymously();
-            }
-        };
+        // 1. Fetch Users (Restaurants & Orphanages)
+        db.collection('users').where('role', '==', 'restaurant').onSnapshot(snap => {
+            animateValue("count-restaurants", 0, snap.size, 1000);
+        });
+        db.collection('users').where('role', '==', 'orphanage').onSnapshot(snap => {
+            animateValue("count-orphanages", 0, snap.size, 1000);
+        });
 
-        // 2. Wrap Listeners in Auth State Change
-        initAuth();
-        auth.onAuthStateChanged((user) => {
-            if (!user) return; // Wait for user
+        // 2. Fetch Donations (Total & Today)
+        db.collection('donations').onSnapshot(snap => {
+            let total = 0;
+            let today = 0;
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-            // --- REAL-TIME LISTENERS ---
-            db.collection('users').where('role', '==', 'restaurant').onSnapshot(snap => animateNumber("count-restaurants", snap.size));
-            db.collection('users').where('role', '==', 'orphanage').onSnapshot(snap => animateNumber("count-orphanages", snap.size));
+            snap.forEach(doc => {
+                const data = doc.data();
+                const servings = parseInt(data.servings || 0);
+                total += servings;
+                
+                // Firestore timestamp check
+                if (data.createdAt && data.createdAt.toDate() >= startOfDay) {
+                    today += servings;
+                }
+            });
             
-            // UPDATED: Combined donation listener to fetch total servings AND the latest donation
-            db.collection('donations').onSnapshot(snap => {
-                let total = 0;
-                let latestDonation = null;
-                let latestTime = 0;
-
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    // 1. Calculate Total Servings
-                    total += parseInt(data.servings || 0);
-                    
-                    // 2. Find Latest Donation
-                    let time = 0;
-                    // Handle Firestore Timestamp or Date string
-                    if (data.createdAt && typeof data.createdAt.toMillis === 'function') {
-                        time = data.createdAt.toMillis();
-                    } else if (data.createdAt) {
-                        time = new Date(data.createdAt).getTime();
-                    }
-                    
-                    if (time > latestTime) {
-                        latestTime = time;
-                        latestDonation = data;
-                    }
-                });
-
-                // Update Stats
-                animateNumber("count-meals-total", total);
-
-                // Update Hero Card Image & Text if we have a donation
-                if (latestDonation) {
-                    const imgEl = document.getElementById('hero-donation-img');
-                    const nameEl = document.getElementById('hero-donation-name');
-                    
-                    // Force update visuals
-                    if (imgEl && latestDonation.imageurl) {
-                        imgEl.src = latestDonation.imageurl;
-                        // Add fade effect on change
-                        gsap.fromTo(imgEl, {opacity: 0.5}, {opacity: 1, duration: 0.5});
-                    }
-                    if (nameEl && latestDonation.foodname) {
-                        nameEl.textContent = latestDonation.foodname;
-                        // Add glow effect on change
-                        gsap.fromTo(nameEl, {textShadow: "0 0 0px white"}, {textShadow: "0 0 20px white", duration: 0.5, yoyo: true, repeat: 1});
-                    }
-                }
-            });
+            animateValue("count-meals-total", 0, total, 1500);
+            animateValue("count-meals-today", 0, today, 1000);
         });
 
-        // --- CUSTOM MAGNETIC CURSOR ---
-        const cursorDot = document.getElementById('cursor-dot');
-        const cursorOutline = document.getElementById('cursor-outline');
-        
-        window.addEventListener('mousemove', (e) => {
-            const posX = e.clientX;
-            const posY = e.clientY;
-            cursorDot.style.left = `${posX}px`;
-            cursorDot.style.top = `${posY}px`;
-            gsap.to(cursorOutline, { x: posX, y: posY, duration: 0.15, ease: "power2.out" });
-        });
-
-        document.querySelectorAll('.magnet-target').forEach(elem => {
-            elem.addEventListener('mouseenter', () => {
-                document.body.classList.add('hovering');
-                gsap.to(cursorOutline, { scale: 1.5, duration: 0.2 });
-            });
-            elem.addEventListener('mouseleave', () => {
-                document.body.classList.remove('hovering');
-                gsap.to(cursorOutline, { scale: 1, duration: 0.2 });
-                gsap.to(elem, { x: 0, y: 0, duration: 0.2 });
-            });
-            elem.addEventListener('mousemove', (e) => {
-                const rect = elem.getBoundingClientRect();
-                const x = e.clientX - rect.left - rect.width / 2;
-                const y = e.clientY - rect.top - rect.height / 2;
-                gsap.to(elem, { x: x * 0.2, y: y * 0.2, duration: 0.2 });
-            });
-        });
-
-        // --- 3D TILT EFFECT ---
-        document.querySelectorAll('.tilt-card').forEach(card => {
-            card.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                const rotateX = ((y - centerY) / centerY) * -10;
-                const rotateY = ((x - centerX) / centerX) * 10;
-                gsap.to(card, { rotationX: rotateX, rotationY: rotateY, duration: 0.1, ease: "none" });
-            });
-            card.addEventListener('mouseleave', () => {
-                gsap.to(card, { rotationX: 0, rotationY: 0, duration: 0.5, ease: "power2.out" });
-            });
-        });
-
-        // --- SCROLL PARALLAX ---
-        gsap.registerPlugin(ScrollTrigger);
-        gsap.utils.toArray('.parallax-bg').forEach(layer => {
-            const speed = layer.getAttribute('data-speed');
-            gsap.to(layer, {
-                y: (i, target) => ScrollTrigger.maxScroll(window) * speed,
-                ease: "none",
-                scrollTrigger: {
-                    trigger: "body",
-                    start: "top top",
-                    end: "bottom bottom",
-                    scrub: 0
-                }
-            });
-        });
-
-        // --- STATS ANIMATION ---
-        function animateNumber(id, endValue) {
+        // Simple counter animation
+        function animateValue(id, start, end, duration) {
             const obj = document.getElementById(id);
             if(!obj) return;
-            gsap.to(obj, { 
-                innerHTML: endValue, 
-                duration: 2, 
-                snap: { innerHTML: 1 }, 
-                ease: "power2.out",
-                scrollTrigger: { trigger: obj, start: "top 85%" }
-            });
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
         }
 
-        // --- PAGE NAV ---
-        function showPage(pageId) {
-            const home = document.getElementById('view-home');
-            const about = document.getElementById('view-about');
-            const content = document.getElementById('main-content');
-            
-            gsap.to(content, { opacity: 0, y: -20, duration: 0.3, onComplete: () => {
-                window.scrollTo(0, 0);
-                if (pageId === 'home') { home.classList.remove('hidden'); about.classList.add('hidden'); }
-                else { home.classList.add('hidden'); about.classList.remove('hidden'); }
-                gsap.to(content, { opacity: 1, y: 0, duration: 0.5 });
-            }});
-        }
-
-        function scrollToSection(id) {
-            showPage('home');
-            setTimeout(() => document.getElementById(id).scrollIntoView({ behavior: 'smooth' }), 400);
-        }
-
+        // --- PAGE NAVIGATION LOGIC ---
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
-            if (menu.classList.contains('hidden')) {
-                menu.classList.remove('hidden');
-                gsap.fromTo(menu, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+            const icon = document.getElementById('menu-icon');
+            menu.classList.toggle('hidden');
+            if (menu.classList.contains('hidden')) { icon.classList.remove('fa-xmark'); icon.classList.add('fa-bars'); } else { icon.classList.remove('fa-bars'); icon.classList.add('fa-xmark'); }
+        }
+        function showPage(pageId) {
+            const homeView = document.getElementById('view-home'); const aboutView = document.getElementById('view-about');
+            const navHome = document.getElementById('nav-home'); const navAbout = document.getElementById('nav-about');
+            if (pageId === 'home') {
+                homeView.classList.remove('hidden'); aboutView.classList.add('hidden');
+                navHome.classList.add('text-brand-orange', 'border-brand-orange'); navHome.classList.remove('text-gray-600', 'border-transparent');
+                navAbout.classList.remove('text-brand-orange', 'border-brand-orange'); navAbout.classList.add('text-gray-600', 'border-transparent');
             } else {
-                gsap.to(menu, { opacity: 0, duration: 0.3, onComplete: () => menu.classList.add('hidden') });
+                homeView.classList.add('hidden'); aboutView.classList.remove('hidden');
+                navAbout.classList.add('text-brand-orange', 'border-brand-orange'); navAbout.classList.remove('text-gray-600', 'border-transparent');
+                navHome.classList.remove('text-brand-orange', 'border-brand-orange'); navHome.classList.add('text-gray-600', 'border-transparent');
             }
+            window.scrollTo(0, 0);
         }
     </script>
 </body>
 </html>
+
+
