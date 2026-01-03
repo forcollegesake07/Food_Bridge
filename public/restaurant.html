@@ -1294,7 +1294,7 @@ function closeChatModal() {
     function toggleChat() { document.getElementById('chat-window').classList.toggle('hidden'); }
     async function sendMessage(e) {
         e.preventDefault();
-        const input = document.getElementById('chat-input');
+        const input = document.getElementById('bot-input');
         const msg = input.value.trim();
         if (!msg) return;
         const box = document.getElementById('chat-messages');
