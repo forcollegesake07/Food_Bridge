@@ -4,7 +4,7 @@ const Brevo = require("@getbrevo/brevo");
 const admin = require("firebase-admin"); 
 const path = require("path");
 const fs = require("fs"); 
-
+require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 10000;
 
