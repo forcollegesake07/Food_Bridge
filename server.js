@@ -7,6 +7,16 @@ const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+// --- ADD THIS AI SETUP ---
+const OpenAI = require("openai");
+let openai;
+if (process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    console.log("✅ OpenAI Agent Initialized");
+} else {
+    console.log("⚠️ OPENAI_API_KEY missing. AI running in Mock Mode.");
+}
+// -------------------------
 
 /* ============================
    FIREBASE SETUP
@@ -105,6 +115,42 @@ app.post("/api/confirm-receipt", async (req, res) => {
     res.status(500).json({ error: "Email failed" });
   }
 });
+// --- NEW AI CHAT ENDPOINT ---
+app.post("/api/chat", async (req, res) => {
+    try {
+        const { message, role } = req.body;
+        
+        // 1. Mock Mode (Fallback if no key)
+        if (!openai) {
+            let reply = "I am a basic bot (Add OpenAI Key to enable real AI).";
+            if (message.toLowerCase().includes("hello")) reply = "Hello! How can I help you with FoodBridge?";
+            if (message.toLowerCase().includes("donate")) reply = "You can donate food by clicking the 'Donate' button in your dashboard.";
+            return res.json({ reply });
+        }
+
+        // 2. Real AI Mode
+        const systemPrompts = {
+            restaurant: "You are a helpful assistant for Restaurant staff using FoodBridge. Help them donate food and track waste.",
+            orphanage: "You are a caring assistant for Orphanage staff. Help them find food donations and manage requests.",
+            driver: "You are a logistics assistant for Drivers. Help them navigate to pickups and deliveries."
+        };
+
+        const completion = await openai.chat.completions.create({
+            messages: [
+                { role: "system", content: systemPrompts[role] || "You are a helpful assistant." },
+                { role: "user", content: message }
+            ],
+            model: "gpt-3.5-turbo",
+        });
+
+        res.json({ reply: completion.choices[0].message.content });
+
+    } catch (error) {
+        console.error("AI Error:", error);
+        res.status(500).json({ reply: "Sorry, I'm having trouble connecting to the brain." });
+    }
+});
+// -----------------------------
 
 app.listen(PORT, () => {
   console.log(`🚀 FoodBridge backend running on port ${PORT}`);
